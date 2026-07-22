@@ -16,7 +16,6 @@ export default function ClockWidget({
   onRemove,
 }: ClockWidgetProps): JSX.Element {
   const config = widget.config as ClockConfig;
-  const format: string = config.format ?? 'HH:mm:ss';
   const [now, setNow] = useState<string>('');
 
   useEffect(() => {

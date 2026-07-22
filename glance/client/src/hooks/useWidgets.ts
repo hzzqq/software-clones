@@ -2,20 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { widgetsApi, CreateWidgetInput, UpdateWidgetInput } from '../api/widgets';
 import { ApiError } from '../api/client';
 import { Widget, WidgetDTO, WidgetLayout } from '../types';
-
-/** Parses the raw API widget (JSON strings) into the client `Widget`. */
-function parseDto(d: WidgetDTO): Widget {
-  return {
-    id: d.id,
-    type: d.type as Widget['type'],
-    title: d.title,
-    layout: JSON.parse(d.layoutJson) as WidgetLayout,
-    config: JSON.parse(d.configJson),
-    enabled: d.enabled === 1,
-    createdAt: d.createdAt,
-    updatedAt: d.updatedAt,
-  };
-}
+import { parseDto, normalizeLayout } from '../utils/widget';
 
 /** Loads and mutates the dashboard widgets. */
 export function useWidgets() {
@@ -67,8 +54,9 @@ export function useWidgets() {
   // Optimistic layout update + persistence (called from drag/resize stop).
   const updateLayout = useCallback(
     async (id: number, layout: WidgetLayout): Promise<void> => {
-      setWidgets((prev) => prev.map((x) => (x.id === id ? { ...x, layout } : x)));
-      await widgetsApi.update(id, { layout });
+      const safe = normalizeLayout(layout);
+      setWidgets((prev) => prev.map((x) => (x.id === id ? { ...x, layout: safe } : x)));
+      await widgetsApi.update(id, { layout: safe });
     },
     []
   );

@@ -17,6 +17,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import {
   BookmarkItem,
   ClockConfig,
+  NotesConfig,
   RssConfig,
   StatusConfig,
   StatusItem,
@@ -44,6 +45,7 @@ const TYPE_LABELS: Record<WidgetType, string> = {
   bookmarks: '书签',
   status: '状态监控',
   clock: '时钟',
+  notes: '便签',
 };
 
 const DEFAULT_LAYOUT: WidgetLayout = { x: 0, y: 0, w: 4, h: 4 };
@@ -61,6 +63,8 @@ function defaultConfig(type: WidgetType): WidgetConfig {
       return { items: [] } as StatusConfig;
     case 'clock':
       return { timezone: '', format: 'HH:mm:ss' } as ClockConfig;
+    case 'notes':
+      return { text: '' } as NotesConfig;
     default:
       return { timezone: '', format: 'HH:mm:ss' } as ClockConfig;
   }
@@ -201,6 +205,19 @@ function ConfigEditor({ type, config, onChange }: ConfigEditorProps): JSX.Elemen
             onChange={(e) => onChange({ ...c, format: e.target.value })}
           />
         </Stack>
+      );
+    }
+    case 'notes': {
+      const c = config as NotesConfig;
+      return (
+        <TextField
+          label="便签内容"
+          multiline
+          minRows={4}
+          fullWidth
+          value={c.text ?? ''}
+          onChange={(e) => onChange({ ...c, text: e.target.value })}
+        />
       );
     }
     default:

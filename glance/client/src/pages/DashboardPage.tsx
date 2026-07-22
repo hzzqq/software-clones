@@ -10,6 +10,7 @@ import WeatherWidget from '../components/widgets/WeatherWidget';
 import BookmarksWidget from '../components/widgets/BookmarksWidget';
 import StatusWidget from '../components/widgets/StatusWidget';
 import ClockWidget from '../components/widgets/ClockWidget';
+import NotesWidget from '../components/widgets/NotesWidget';
 import { useWidgets } from '../hooks/useWidgets';
 import { CreateWidgetInput, UpdateWidgetInput } from '../api/widgets';
 import { configApi } from '../api/config';
@@ -18,6 +19,7 @@ import { Widget, WidgetLayout } from '../types';
 interface WidgetHandlers {
   onConfigure: (widget: Widget) => void;
   onRemove: (widget: Widget) => void;
+  onCommit: (widget: Widget, text: string) => void;
 }
 
 /** Dispatches a widget to the matching component based on its type. */
@@ -41,6 +43,8 @@ function renderWidget(
       return <StatusWidget {...common} />;
     case 'clock':
       return <ClockWidget {...common} />;
+    case 'notes':
+      return <NotesWidget {...common} onCommit={(t) => handlers.onCommit(widget, t)} />;
     default:
       return (
         <Box sx={{ p: 2, color: 'text.secondary' }}>未知组件类型：{widget.type}</Box>
@@ -95,6 +99,13 @@ export default function DashboardPage(): JSX.Element {
       await removeWidget(id);
     },
     [removeWidget]
+  );
+
+  const handleCommit = useCallback(
+    async (widget: Widget, text: string): Promise<void> => {
+      await updateWidget(widget.id, { config: { ...widget.config, text } });
+    },
+    [updateWidget]
   );
 
   const onLayoutChange = useCallback(
@@ -193,7 +204,11 @@ export default function DashboardPage(): JSX.Element {
           widgets={widgets}
           onLayoutChange={onLayoutChange}
           renderItem={(widget) =>
-            renderWidget(widget, { onConfigure: openEdit, onRemove: handleDelete })
+            renderWidget(widget, {
+              onConfigure: openEdit,
+              onRemove: (w) => handleDelete(w.id),
+              onCommit: handleCommit,
+            })
           }
         />
       )}

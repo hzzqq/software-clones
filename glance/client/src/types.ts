@@ -1,6 +1,6 @@
 /** Shared domain types for the Glance dashboard app. */
 
-export type WidgetType = 'rss' | 'weather' | 'bookmarks' | 'status' | 'clock';
+export type WidgetType = 'rss' | 'weather' | 'bookmarks' | 'status' | 'clock' | 'notes';
 
 export interface WidgetLayout {
   x: number;
@@ -38,12 +38,16 @@ export interface ClockConfig {
   timezone?: string;
   format?: string;
 }
+export interface NotesConfig {
+  text: string;
+}
 export type WidgetConfig =
   | RssConfig
   | WeatherConfig
   | BookmarksConfig
   | StatusConfig
-  | ClockConfig;
+  | ClockConfig
+  | NotesConfig;
 
 /** Parsed widget as used by the client (layout/config are objects). */
 export interface Widget {

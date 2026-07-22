@@ -11,6 +11,7 @@ interface CacheEntry {
 }
 
 const TTL_MS = 60_000;
+const FETCH_TIMEOUT_MS = 5000;
 const cache = new Map<string, CacheEntry>();
 
 /**
@@ -26,7 +27,16 @@ export async function fetchWeather(lat: number, lon: number): Promise<WeatherNow
   }
 
   const url: string = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`;
-  const res = await fetch(url);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  let res: Response;
+  try {
+    res = await fetch(url, { signal: controller.signal });
+  } catch {
+    throw new Error('Open-Meteo 请求超时或网络不可达');
+  } finally {
+    clearTimeout(timer);
+  }
   if (!res.ok) {
     throw new Error(`Open-Meteo 请求失败：${res.status}`);
   }
