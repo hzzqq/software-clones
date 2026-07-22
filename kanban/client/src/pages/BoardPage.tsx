@@ -130,6 +130,7 @@ export default function BoardPage(): JSX.Element {
         filterTagId={filterTagId}
         onFilterChange={setFilterTagId}
         onDeleteBoard={() => void deleteBoard()}
+        onTagsChanged={() => board.reload()}
       />
       <DndProvider onDragEnd={onDragEnd} onDragStart={onDragStart} overlay={overlay}>
         <Board

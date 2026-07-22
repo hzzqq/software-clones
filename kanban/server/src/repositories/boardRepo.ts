@@ -53,14 +53,14 @@ interface BoardRow {
   created_at: string;
   updated_at: string;
 }
-interface ListRow {
+export interface ListRow {
   id: number;
   board_id: number;
   title: string;
   position: number;
   created_at: string;
 }
-interface CardRow {
+export interface CardRow {
   id: number;
   list_id: number;
   title: string;
@@ -72,7 +72,7 @@ interface CardRow {
   created_at: string;
   updated_at: string;
 }
-interface TagRow {
+export interface TagRow {
   id: number;
   board_id: number;
   name: string;

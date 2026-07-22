@@ -9,7 +9,10 @@ import {
   Typography,
 } from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import EditNoteIcon from '@mui/icons-material/EditNote';
+import { useState } from 'react';
 import { Board, Tag } from '../types';
+import TagEditDialog from './TagEditDialog';
 
 interface ToolbarProps {
   board: Board;
@@ -17,16 +20,19 @@ interface ToolbarProps {
   filterTagId: number | null;
   onFilterChange: (tagId: number | null) => void;
   onDeleteBoard: () => void;
+  onTagsChanged: () => void;
 }
 
-/** Board header: name, tag filter, and delete. */
+/** Board header: name, tag filter, edit tags, and delete. */
 export default function Toolbar({
   board,
   tags,
   filterTagId,
   onFilterChange,
   onDeleteBoard,
+  onTagsChanged,
 }: ToolbarProps): JSX.Element {
+  const [editOpen, setEditOpen] = useState<boolean>(false);
   return (
     <Stack
       direction={{ xs: 'column', md: 'row' }}
@@ -41,6 +47,13 @@ export default function Toolbar({
         </Typography>
       </Box>
       <Stack direction="row" spacing={1} alignItems="center">
+        <Button
+          variant="outlined"
+          startIcon={<EditNoteIcon />}
+          onClick={() => setEditOpen(true)}
+        >
+          编辑标签
+        </Button>
         <FormControl size="small" sx={{ minWidth: 160 }}>
           <InputLabel>按标签筛选</InputLabel>
           <Select
@@ -65,6 +78,12 @@ export default function Toolbar({
           删除看板
         </Button>
       </Stack>
+      <TagEditDialog
+        open={editOpen}
+        tags={tags}
+        onClose={() => setEditOpen(false)}
+        onSaved={onTagsChanged}
+      />
     </Stack>
   );
 }

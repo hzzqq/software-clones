@@ -68,15 +68,31 @@ export default function Column({
 
       <SortableContext items={cards.map((c) => String(c.id))}>
         <Box sx={{ overflowY: 'auto', flexGrow: 1, minHeight: 40 }}>
-          {cards.map((c) => (
-            <Card
-              key={c.id}
-              card={c}
-              tags={tags}
-              onClick={() => onOpenCard(c.id)}
-              onToggleComplete={onToggleComplete}
-            />
-          ))}
+          {cards.length === 0 ? (
+            <Box
+              sx={{
+                border: '1px dashed',
+                borderColor: 'divider',
+                borderRadius: 1,
+                p: 2,
+                textAlign: 'center',
+                color: 'text.secondary',
+                fontSize: 13,
+              }}
+            >
+              暂无卡片，拖拽到此或上方输入框添加
+            </Box>
+          ) : (
+            cards.map((c) => (
+              <Card
+                key={c.id}
+                card={c}
+                tags={tags}
+                onClick={() => onOpenCard(c.id)}
+                onToggleComplete={onToggleComplete}
+              />
+            ))
+          )}
         </Box>
       </SortableContext>
 

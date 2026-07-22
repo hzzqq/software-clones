@@ -1,5 +1,5 @@
 {
-  "cycle": 11,
+  "cycle": 15,
   "max_cycles": 60,
   "paused": false,
   "phase": "optimize",
@@ -13,14 +13,18 @@
     { "cycle": 7, "app": "tvtime", "batch": "B4", "status": "done", "client_tests": "6 passed", "client_typecheck": "pass", "server_typecheck": "pass", "note": "Episode tracker." },
     { "cycle": 8, "app": "excalidraw", "batch": "B4", "status": "done", "client_tests": "8 passed", "client_typecheck": "pass", "server_typecheck": "pass", "note": "Hand-drawn whiteboard." },
     { "cycle": 9, "app": "photopea", "batch": "B4", "status": "done", "client_tests": "6 passed", "client_typecheck": "pass", "server_typecheck": "pass", "note": "Image editor. 12/12 apps complete." },
-    { "cycle": 10, "app": "it-tools", "task_id": "add_jsoncsv_tool", "new_requirement": "JSON↔CSV 双向转换工具（开发者高频刚需，原套件缺失）", "files": ["client/src/utils/tools.ts", "client/src/tools/jsoncsv/JsonCsvTool.tsx", "client/src/tools/registry.ts"], "verify": "client 48 passed, typecheck pass", "score": 85, "ts": "2026-07-23T00:35" },
-    { "cycle": 11, "app": "it-tools", "task_id": "utils_test_suite_and_harden", "new_requirement": "为纯函数工具集补齐单元测试（此前零覆盖）", "implicit": "base64Decode 对非法输入抛出不友好 DOMException，已包装为中文错误", "files": ["client/src/utils/tools.ts", "client/src/utils/tools.test.ts"], "verify": "client 48 passed, typecheck pass", "score": 80, "ts": "2026-07-23T00:35" }
+    { "cycle": 10, "app": "it-tools", "task_id": "add_jsoncsv_tool", "new_requirement": "JSON↔CSV 双向转换工具", "files": ["client/src/utils/tools.ts", "client/src/tools/jsoncsv/JsonCsvTool.tsx", "client/src/tools/registry.ts"], "verify": "client 48 passed, typecheck pass", "score": 85, "ts": "2026-07-23T00:35" },
+    { "cycle": 11, "app": "it-tools", "task_id": "utils_test_suite_and_harden", "new_requirement": "utils 纯函数测试套件", "implicit": "base64Decode 非法输入抛不友好 DOMException，已包装中文错误", "files": ["client/src/utils/tools.ts", "client/src/utils/tools.test.ts"], "verify": "client 48 passed", "score": 80, "ts": "2026-07-23T00:35" },
+    { "cycle": 12, "app": "kanban", "task_id": "reorder_test_suite", "new_requirement": "reorderCards 拖拽排序纯函数测试套件（此前零覆盖）", "files": ["client/src/utils/reorder.test.ts"], "verify": "client 6 passed, typecheck pass", "score": 75, "ts": "2026-07-23T00:39" },
+    { "cycle": 13, "app": "kanban", "task_id": "tag_update_api", "new_requirement": "标签可编辑（名称/颜色）——PUT /tags/:id + repo.update + client update", "files": ["server/src/routes/tags.ts", "server/src/repositories/tagRepo.ts", "client/src/api/tags.ts"], "verify": "server typecheck pass", "score": 80, "ts": "2026-07-23T00:40" },
+    { "cycle": 14, "app": "kanban", "task_id": "tag_edit_dialog", "new_requirement": "标签编辑弹窗接入 Toolbar", "implicit": "看板标签此前只能建不能改", "files": ["client/src/components/TagEditDialog.tsx", "client/src/components/Toolbar.tsx", "client/src/pages/BoardPage.tsx"], "verify": "client typecheck pass", "score": 75, "ts": "2026-07-23T00:40" },
+    { "cycle": 15, "app": "kanban", "task_id": "empty_col_and_latent_typefix", "new_requirement": "空列占位提示（真实空态）", "implicit": "修复 boardRepo 未导出 CardRow/ListRow/TagRow 导致 server tsc 实际报错（历史遗漏）；空列 dashed 占位", "files": ["client/src/components/Column.tsx", "server/src/repositories/boardRepo.ts"], "verify": "client 6 passed + typecheck pass; server typecheck pass", "score": 85, "ts": "2026-07-23T00:40" }
   ],
-  "last_task_id": "utils_test_suite_and_harden",
+  "last_task_id": "empty_col_and_latent_typefix",
   "repeat_count": 0,
-  "last_score": 80,
+  "last_score": 85,
   "coverage": {
-    "B1": { "it-tools": "optimizing", "kanban": "todo", "glance": "todo" },
+    "B1": { "it-tools": "optimized", "kanban": "optimized", "glance": "todo" },
     "B2": { "kener": "todo", "memos": "todo", "lofi": "todo" },
     "B3": { "nonio": "todo", "markdown": "todo", "apiclient": "todo" },
     "B4": { "tvtime": "todo", "excalidraw": "todo", "photopea": "todo" }

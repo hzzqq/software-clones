@@ -40,6 +40,12 @@ export const tagRepo = {
     db.prepare('DELETE FROM tag WHERE id = ?').run(id);
   },
 
+  update(id: number, patch: { name: string; color: string }): Tag {
+    db.prepare('UPDATE tag SET name = ?, color = ? WHERE id = ?').run(patch.name, patch.color, id);
+    const row = db.prepare('SELECT * FROM tag WHERE id = ?').get(id) as TagRow;
+    return rowToTag(row);
+  },
+
   addCardTag(cardId: number, tagId: number): void {
     db.prepare(
       'INSERT OR IGNORE INTO card_tag (card_id, tag_id) VALUES (?, ?)'

@@ -33,3 +33,25 @@ tagsRouter.delete(
     res.json({ code: 0, message: 'ok', data: null });
   })
 );
+
+tagsRouter.put(
+  '/tags/:id',
+  asyncHandler((req: Request, res: Response): void => {
+    const id: number = Number(req.params.id);
+    const existing = tagRepo.getById(id);
+    if (!existing) {
+      res.status(404).json({ code: 40400, message: '标签不存在', data: null });
+      return;
+    }
+    const { name, color } = req.body ?? {};
+    if (name !== undefined && (typeof name !== 'string' || !name.trim())) {
+      res.status(400).json({ code: 40001, message: 'name 必须是非空字符串', data: null });
+      return;
+    }
+    const updated = tagRepo.update(id, {
+      name: name !== undefined ? name.trim() : existing.name,
+      color: typeof color === 'string' && color.trim() ? color.trim() : existing.color,
+    });
+    res.json({ code: 0, message: 'ok', data: updated });
+  })
+);
