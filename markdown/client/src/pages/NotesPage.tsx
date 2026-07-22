@@ -20,7 +20,7 @@ import { noteApi } from '../api/notes';
 import type { Note } from '../types';
 import NoteList from '../components/NoteList';
 import MarkdownPreview from '../components/MarkdownPreview';
-import { parseTags, countWords } from '../utils/markdown';
+import { parseTags, countWords, countCodeBlocks, estimateReadingTime } from '../utils/markdown';
 
 type ViewMode = 'edit' | 'split' | 'preview';
 
@@ -200,7 +200,8 @@ export default function NotesPage(): JSX.Element {
                   <Chip key={t} size="small" label={`#${t}`} />
                 ))}
                 <Typography variant="caption" color="text.secondary">
-                  {countWords(active.content)} 词 {saving ? '· 保存中…' : ''}
+                  {countWords(active.content)} 词 · 约 {estimateReadingTime(active.content)} 分钟 ·{' '}
+                  {countCodeBlocks(active.content)} 个代码块 {saving ? '· 保存中…' : ''}
                 </Typography>
               </Stack>
             </Stack>

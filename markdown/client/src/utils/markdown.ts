@@ -24,9 +24,21 @@ export function countWords(text: string): number {
     .replace(/```[\s\S]*?```/g, ' ')
     .replace(/[#>*_`~\-]+/g, ' ')
     .replace(/!?\[[^\]]*\]\([^)]*\)/g, ' ')
+    .trim();
+  if (!cleaned) return 0;
+  // 中日韩文字按字符计，其余按空白分词（避免中文被算成 1 个词）。
+  const cjk = (cleaned.match(/[㐀-䶿一-鿿぀-ヿ가-힯]/g) ?? []).length;
+  const nonCjk = cleaned
+    .replace(/[㐀-䶿一-鿿぀-ヿ가-힯]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
-  return cleaned ? cleaned.split(' ').length : 0;
+  const words = nonCjk ? nonCjk.split(' ').length : 0;
+  return cjk + words;
+}
+
+/** 估算阅读时长（分钟），中文约 250 字/分钟折中。至少 1 分钟。 */
+export function estimateReadingTime(text: string): number {
+  return Math.max(1, Math.round(countWords(text) / 250));
 }
 
 /** 从内容推导标题：首个 # 标题，否则首行。 */
