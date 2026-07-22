@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: 'Inter', 'Roboto', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background-color: #0f172a;
+  color: #e2e8f0;
+}
+
+/* react-grid-layout dark tweaks */
+.react-grid-item.react-grid-placeholder {
+  background: #3b82f6 !important;
+  opacity: 0.3;
+  border-radius: 12px;
+}
+.react-grid-item > .react-resizable-handle::after {
+  border-right-color: #94a3b8;
+  border-bottom-color: #94a3b8;
+}
+.widget-drag-handle {
+  cursor: grab;
+}
+.widget-drag-handle:active {
+  cursor: grabbing;
+}

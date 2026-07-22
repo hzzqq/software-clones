@@ -1,0 +1,28 @@
+{
+  "cycle": 11,
+  "max_cycles": 60,
+  "paused": false,
+  "phase": "optimize",
+  "log": [
+    { "cycle": 1, "app": "kener", "batch": "B2", "status": "done", "client_tests": "3 passed", "note": "Status-page clone." },
+    { "cycle": 2, "app": "memos", "batch": "B2", "status": "done", "client_tests": "5 passed", "client_typecheck": "pass", "server_typecheck": "pass", "note": "Lightweight notes clone." },
+    { "cycle": 3, "app": "lofi", "batch": "B2", "status": "done", "client_tests": "4 passed", "client_typecheck": "pass", "server_typecheck": "pass", "note": "Lo-fi radio clone." },
+    { "cycle": 4, "app": "nonio", "batch": "B3", "status": "done", "client_tests": "8 passed", "client_typecheck": "pass", "server_typecheck": "pass", "note": "Community forum." },
+    { "cycle": 5, "app": "markdown", "batch": "B3", "status": "done", "client_tests": "8 passed", "client_typecheck": "pass", "server_typecheck": "pass", "note": "Markdown notes." },
+    { "cycle": 6, "app": "apiclient", "batch": "B3", "status": "done", "client_tests": "10 passed", "client_typecheck": "pass", "server_typecheck": "pass", "note": "Web API client." },
+    { "cycle": 7, "app": "tvtime", "batch": "B4", "status": "done", "client_tests": "6 passed", "client_typecheck": "pass", "server_typecheck": "pass", "note": "Episode tracker." },
+    { "cycle": 8, "app": "excalidraw", "batch": "B4", "status": "done", "client_tests": "8 passed", "client_typecheck": "pass", "server_typecheck": "pass", "note": "Hand-drawn whiteboard." },
+    { "cycle": 9, "app": "photopea", "batch": "B4", "status": "done", "client_tests": "6 passed", "client_typecheck": "pass", "server_typecheck": "pass", "note": "Image editor. 12/12 apps complete." },
+    { "cycle": 10, "app": "it-tools", "task_id": "add_jsoncsv_tool", "new_requirement": "JSON↔CSV 双向转换工具（开发者高频刚需，原套件缺失）", "files": ["client/src/utils/tools.ts", "client/src/tools/jsoncsv/JsonCsvTool.tsx", "client/src/tools/registry.ts"], "verify": "client 48 passed, typecheck pass", "score": 85, "ts": "2026-07-23T00:35" },
+    { "cycle": 11, "app": "it-tools", "task_id": "utils_test_suite_and_harden", "new_requirement": "为纯函数工具集补齐单元测试（此前零覆盖）", "implicit": "base64Decode 对非法输入抛出不友好 DOMException，已包装为中文错误", "files": ["client/src/utils/tools.ts", "client/src/utils/tools.test.ts"], "verify": "client 48 passed, typecheck pass", "score": 80, "ts": "2026-07-23T00:35" }
+  ],
+  "last_task_id": "utils_test_suite_and_harden",
+  "repeat_count": 0,
+  "last_score": 80,
+  "coverage": {
+    "B1": { "it-tools": "optimizing", "kanban": "todo", "glance": "todo" },
+    "B2": { "kener": "todo", "memos": "todo", "lofi": "todo" },
+    "B3": { "nonio": "todo", "markdown": "todo", "apiclient": "todo" },
+    "B4": { "tvtime": "todo", "excalidraw": "todo", "photopea": "todo" }
+  }
+}

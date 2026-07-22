@@ -1,0 +1,265 @@
+import { useEffect, useState } from 'react';
+import {
+  Box,
+  Typography,
+  Stack,
+  Tabs,
+  Tab,
+  List,
+  ListItemButton,
+  ListItemText,
+  IconButton,
+  TextField,
+  Button,
+  Chip,
+  Divider,
+  Tooltip,
+  Alert,
+  CircularProgress,
+} from '@mui/material';
+import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import HistoryIcon from '@mui/icons-material/History';
+import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined';
+import { proxyApi } from '../api/proxy';
+import { requestApi } from '../api/requests';
+import { historyApi } from '../api/history';
+import type { HttpMethod, ProxyResponse, SavedRequest, HistoryItem } from '../types';
+import RequestBuilder from '../components/RequestBuilder';
+import ResponseViewer from '../components/ResponseViewer';
+import { parseHeadersText, parseKeyValueText, headersToText as h2t } from '../utils/http';
+
+interface Draft {
+  method: HttpMethod;
+  url: string;
+  paramsText: string;
+  headersText: string;
+  body: string;
+}
+
+const EMPTY: Draft = { method: 'GET', url: '', paramsText: '', headersText: '', body: '' };
+
+function methodColor(m: HttpMethod): 'success' | 'info' | 'warning' | 'error' | 'primary' {
+  switch (m) {
+    case 'GET':
+      return 'success';
+    case 'POST':
+      return 'info';
+    case 'PUT':
+    case 'PATCH':
+      return 'warning';
+    case 'DELETE':
+      return 'error';
+    default:
+      return 'primary';
+  }
+}
+
+export default function ApiClientPage(): JSX.Element {
+  const [draft, setDraft] = useState<Draft>(EMPTY);
+  const [response, setResponse] = useState<ProxyResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const [sideTab, setSideTab] = useState(0);
+  const [requests, setRequests] = useState<SavedRequest[]>([]);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [name, setName] = useState('');
+
+  const refreshRequests = async () => {
+    try {
+      setRequests(await requestApi.list());
+    } catch {
+      /* ignore */
+    }
+  };
+  const refreshHistory = async () => {
+    try {
+      setHistory(await historyApi.list());
+    } catch {
+      /* ignore */
+    }
+  };
+
+  useEffect(() => {
+    void refreshRequests();
+    void refreshHistory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const set = (patch: Partial<Draft>) => setDraft((d) => ({ ...d, ...patch }));
+
+  const send = async () => {
+    if (!draft.url.trim()) return;
+    setLoading(true);
+    setError(null);
+    setResponse(null);
+    try {
+      const resp = await proxyApi.send({
+        method: draft.method,
+        url: draft.url,
+        params: parseKeyValueText(draft.paramsText),
+        headers: parseHeadersText(draft.headersText),
+        body: draft.body,
+      });
+      setResponse(resp);
+      void refreshHistory();
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadSaved = (r: SavedRequest) => {
+    setDraft({
+      method: r.method,
+      url: r.url,
+      paramsText: Object.entries(r.params)
+        .map(([k, v]) => `${k}=${v}`)
+        .join('\n'),
+      headersText: h2t(r.headers),
+      body: r.body,
+    });
+    setName(r.name || '');
+  };
+
+  const save = async () => {
+    try {
+      await requestApi.create({
+        name: name || undefined,
+        method: draft.method,
+        url: draft.url,
+        params: parseKeyValueText(draft.paramsText),
+        headers: parseHeadersText(draft.headersText),
+        body: draft.body,
+      });
+      setName('');
+      void refreshRequests();
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  };
+
+  const removeSaved = async (id: number) => {
+    try {
+      await requestApi.remove(id);
+      void refreshRequests();
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const loadHistory = (h: HistoryItem) => {
+    setDraft((d) => ({ ...d, method: h.method, url: h.url }));
+  };
+
+  const clearHistory = async () => {
+    try {
+      await historyApi.clear();
+      void refreshHistory();
+    } catch {
+      /* ignore */
+    }
+  };
+
+  return (
+    <Box sx={{ display: 'flex', height: 'calc(100vh - 64px)' }}>
+      {/* 侧栏 */}
+      <Box sx={{ width: 300, borderRight: '1px solid', borderColor: 'divider', display: 'flex', flexDirection: 'column' }}>
+        <Tabs value={sideTab} onChange={(_e, v) => setSideTab(v)}>
+          <Tab icon={<FolderOutlinedIcon />} label="集合" />
+          <Tab icon={<HistoryIcon />} label="历史" />
+        </Tabs>
+        <Box sx={{ flexGrow: 1, overflowY: 'auto' }}>
+          {sideTab === 0 ? (
+            <List dense>
+              {requests.length === 0 && (
+                <Typography variant="body2" color="text.secondary" sx={{ p: 2 }}>
+                  暂无保存的请求。
+                </Typography>
+              )}
+              {requests.map((r) => (
+                <ListItemButton key={r.id} onClick={() => loadSaved(r)}>
+                  <ListItemText
+                    primary={
+                      <Stack direction="row" spacing={0.5} alignItems="center">
+                        <Chip size="small" label={r.method} color={methodColor(r.method)} />
+                        <Typography noWrap>{r.name || r.url}</Typography>
+                      </Stack>
+                    }
+                    secondary={r.url}
+                    secondaryTypographyProps={{ noWrap: true }}
+                  />
+                  <Tooltip title="删除">
+                    <IconButton edge="end" size="small" onClick={(e) => { e.stopPropagation(); void removeSaved(r.id); }}>
+                      <DeleteOutlineIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                </ListItemButton>
+              ))}
+            </List>
+          ) : (
+            <List dense>
+              {history.length === 0 && (
+                <Typography variant="body2" color="text.secondary" sx={{ p: 2 }}>
+                  暂无历史。
+                </Typography>
+              )}
+              {history.map((h) => (
+                <ListItemButton key={h.id} onClick={() => loadHistory(h)}>
+                  <ListItemText
+                    primary={
+                      <Stack direction="row" spacing={0.5} alignItems="center">
+                        <Chip size="small" label={h.method} color={methodColor(h.method)} />
+                        <Typography noWrap>{h.url}</Typography>
+                      </Stack>
+                    }
+                    secondary={`${h.status} · ${h.timeMs}ms`}
+                  />
+                </ListItemButton>
+              ))}
+              {history.length > 0 && (
+                <Button size="small" color="error" onClick={clearHistory} sx={{ m: 1 }}>
+                  清空历史
+                </Button>
+              )}
+            </List>
+          )}
+        </Box>
+      </Box>
+
+      {/* 主区 */}
+      <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {error && <Alert severity="error" sx={{ m: 1 }}>{error}</Alert>}
+        <Box sx={{ borderBottom: '1px solid', borderColor: 'divider' }}>
+          <RequestBuilder
+            method={draft.method}
+            url={draft.url}
+            paramsText={draft.paramsText}
+            headersText={draft.headersText}
+            body={draft.body}
+            loading={loading}
+            onMethod={(m) => set({ method: m })}
+            onUrl={(u) => set({ url: u })}
+            onParams={(t) => set({ paramsText: t })}
+            onHeaders={(t) => set({ headersText: t })}
+            onBody={(b) => set({ body: b })}
+            onSend={send}
+          />
+          <Stack direction="row" spacing={1} alignItems="center" sx={{ px: 1.5, pb: 1 }}>
+            <TextField size="small" label="名称（可选）" value={name} onChange={(e) => setName(e.target.value)} sx={{ width: 200 }} />
+            <Button variant="outlined" startIcon={<SaveOutlinedIcon />} onClick={save} disabled={!draft.url.trim()}>
+              保存到集合
+            </Button>
+            {loading && <CircularProgress size={18} />}
+          </Stack>
+        </Box>
+        <Divider />
+        <Box sx={{ flexGrow: 1, overflowY: 'auto' }}>
+          <ResponseViewer response={response} loading={loading} />
+        </Box>
+      </Box>
+    </Box>
+  );
+}
