@@ -3,10 +3,10 @@
  * 不依赖网络，便于单元测试。
  */
 
-/** 将 "Key: Value" 多行文本解析为对象。 */
+/** 将 "Key: Value" 多行文本解析为对象。兼容 Windows CRLF（\r 不会残留在值里）。 */
 export function parseHeadersText(text: string): Record<string, string> {
   const out: Record<string, string> = {};
-  for (const line of text.split('\n')) {
+  for (const line of text.split(/\r?\n/)) {
     const idx = line.indexOf(':');
     if (idx > 0) {
       const k = line.slice(0, idx).trim();
@@ -24,10 +24,10 @@ export function headersToText(headers: Record<string, string>): string {
     .join('\n');
 }
 
-/** 将 key=value 多行文本解析为对象（用于 query params）。 */
+/** 将 key=value 多行文本解析为对象（用于 query params）。兼容 Windows CRLF。 */
 export function parseKeyValueText(text: string): Record<string, string> {
   const out: Record<string, string> = {};
-  for (const line of text.split('\n')) {
+  for (const line of text.split(/\r?\n/)) {
     const idx = line.indexOf('=');
     if (idx > 0) {
       const k = line.slice(0, idx).trim();

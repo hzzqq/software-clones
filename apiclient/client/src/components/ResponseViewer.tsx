@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { Box, Chip, Typography, Tabs, Tab, Stack } from '@mui/material';
+import { Box, Chip, Typography, Tabs, Tab, Stack, IconButton, Tooltip } from '@mui/material';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import CheckIcon from '@mui/icons-material/Check';
 import type { ProxyResponse } from '../types';
 import { statusKind, tryPrettyJson, headersToText } from '../utils/http';
 
@@ -10,6 +12,18 @@ interface Props {
 
 export default function ResponseViewer({ response, loading }: Props): JSX.Element {
   const [tab, setTab] = useState(0);
+  const [copied, setCopied] = useState(false);
+
+  const copyBody = async () => {
+    if (!response) return;
+    try {
+      await navigator.clipboard.writeText(tab === 1 ? tryPrettyJson(response.body) : response.body);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      /* 剪贴板不可用时静默 */
+    }
+  };
 
   if (loading) {
     return (
@@ -38,8 +52,14 @@ export default function ResponseViewer({ response, loading }: Props): JSX.Elemen
           size="small"
         />
         <Typography variant="caption" color="text.secondary">
-          {response.timeMs} ms
+          {response.timeMs} ms · {response.body.length} 字节
         </Typography>
+        <Box sx={{ flexGrow: 1 }} />
+        <Tooltip title={copied ? '已复制' : '复制内容'}>
+          <IconButton size="small" onClick={copyBody} aria-label="复制响应内容">
+            {copied ? <CheckIcon fontSize="small" /> : <ContentCopyIcon fontSize="small" />}
+          </IconButton>
+        </Tooltip>
       </Stack>
       <Tabs value={tab} onChange={(_e, v) => setTab(v)}>
         <Tab label="Body" />

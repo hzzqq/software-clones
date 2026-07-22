@@ -11,6 +11,14 @@ describe('parseHeadersText', () => {
   it('忽略格式错误行', () => {
     expect(parseHeadersText('no colon here')).toEqual({});
   });
+  it('兼容 Windows CRLF（值不含残留 \\r）', () => {
+    expect(parseHeadersText('A: 1\r\nB: 2\r\n')).toEqual({ A: '1', B: '2' });
+  });
+  it('保留值中的冒号（如 Date 头）', () => {
+    expect(parseHeadersText('Date: Wed, 21 Oct 2026 07:28:00 GMT')).toEqual({
+      Date: 'Wed, 21 Oct 2026 07:28:00 GMT',
+    });
+  });
 });
 
 describe('headersToText', () => {
@@ -22,6 +30,12 @@ describe('headersToText', () => {
 describe('parseKeyValueText', () => {
   it('解析 params', () => {
     expect(parseKeyValueText('q=hello\npage=2')).toEqual({ q: 'hello', page: '2' });
+  });
+  it('兼容 Windows CRLF', () => {
+    expect(parseKeyValueText('q=hello\r\npage=2\r')).toEqual({ q: 'hello', page: '2' });
+  });
+  it('值中的 = 被保留（仅首个 = 作为分隔）', () => {
+    expect(parseKeyValueText('token=abc=def')).toEqual({ token: 'abc=def' });
   });
 });
 

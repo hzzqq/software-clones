@@ -16,11 +16,14 @@ import {
   Tooltip,
   Alert,
   CircularProgress,
+  InputAdornment,
 } from '@mui/material';
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import HistoryIcon from '@mui/icons-material/History';
 import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined';
+import SearchIcon from '@mui/icons-material/Search';
+import ClearIcon from '@mui/icons-material/Clear';
 import { proxyApi } from '../api/proxy';
 import { requestApi } from '../api/requests';
 import { historyApi } from '../api/history';
@@ -64,6 +67,7 @@ export default function ApiClientPage(): JSX.Element {
   const [sideTab, setSideTab] = useState(0);
   const [requests, setRequests] = useState<SavedRequest[]>([]);
   const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [sideQuery, setSideQuery] = useState('');
   const [name, setName] = useState('');
 
   const refreshRequests = async () => {
@@ -88,6 +92,14 @@ export default function ApiClientPage(): JSX.Element {
   }, []);
 
   const set = (patch: Partial<Draft>) => setDraft((d) => ({ ...d, ...patch }));
+
+  const sideNeedle = sideQuery.trim().toLowerCase();
+  const filteredRequests = sideNeedle
+    ? requests.filter((r) => `${r.method} ${r.name} ${r.url}`.toLowerCase().includes(sideNeedle))
+    : requests;
+  const filteredHistory = sideNeedle
+    ? history.filter((h) => `${h.method} ${h.url} ${h.status}`.toLowerCase().includes(sideNeedle))
+    : history;
 
   const send = async () => {
     if (!draft.url.trim()) return;
@@ -171,6 +183,29 @@ export default function ApiClientPage(): JSX.Element {
           <Tab icon={<FolderOutlinedIcon />} label="集合" />
           <Tab icon={<HistoryIcon />} label="历史" />
         </Tabs>
+        <Box sx={{ p: 1 }}>
+          <TextField
+            fullWidth
+            size="small"
+            placeholder="筛选集合 / 历史…"
+            value={sideQuery}
+            onChange={(e) => setSideQuery(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon fontSize="small" />
+                </InputAdornment>
+              ),
+              endAdornment: sideQuery ? (
+                <InputAdornment position="end">
+                  <IconButton size="small" onClick={() => setSideQuery('')} aria-label="清空筛选">
+                    <ClearIcon fontSize="small" />
+                  </IconButton>
+                </InputAdornment>
+              ) : null,
+            }}
+          />
+        </Box>
         <Box sx={{ flexGrow: 1, overflowY: 'auto' }}>
           {sideTab === 0 ? (
             <List dense>
@@ -179,7 +214,7 @@ export default function ApiClientPage(): JSX.Element {
                   暂无保存的请求。
                 </Typography>
               )}
-              {requests.map((r) => (
+              {filteredRequests.map((r) => (
                 <ListItemButton key={r.id} onClick={() => loadSaved(r)}>
                   <ListItemText
                     primary={
@@ -206,7 +241,7 @@ export default function ApiClientPage(): JSX.Element {
                   暂无历史。
                 </Typography>
               )}
-              {history.map((h) => (
+              {filteredHistory.map((h) => (
                 <ListItemButton key={h.id} onClick={() => loadHistory(h)}>
                   <ListItemText
                     primary={
