@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Box, Button, Grid, Stack, TextField, Typography } from '@mui/material';
+import { Box, Button, Grid, IconButton, InputAdornment, Stack, TextField, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import SearchIcon from '@mui/icons-material/Search';
+import ClearIcon from '@mui/icons-material/Clear';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PlayerBar from '../components/PlayerBar';
 import StationCard from '../components/StationCard';
@@ -15,6 +17,7 @@ export default function RadioPage(): JSX.Element {
   const [playing, setPlaying] = useState(false);
   const [volume, setVolume] = useState(0.7);
   const [category, setCategory] = useState<string | undefined>(undefined);
+  const [q, setQ] = useState('');
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState({ name: '', streamUrl: '', description: '', category: 'lofi' });
@@ -33,6 +36,16 @@ export default function RadioPage(): JSX.Element {
   }, [category]);
 
   const categories = useMemo(() => Array.from(new Set(stations.map((s) => s.category))), [stations]);
+
+  const filtered = useMemo(() => {
+    const needle = q.trim().toLowerCase();
+    if (!needle) return stations;
+    return stations.filter(
+      (s) =>
+        s.name.toLowerCase().includes(needle) ||
+        (s.description ?? '').toLowerCase().includes(needle),
+    );
+  }, [stations, q]);
 
   const handlePlay = (s: Station) => {
     if (selected?.id === s.id) setPlaying((p) => !p);
@@ -71,6 +84,29 @@ export default function RadioPage(): JSX.Element {
           新增电台
         </Button>
       </Stack>
+
+      <TextField
+        fullWidth
+        size="small"
+        placeholder="搜索电台名称或描述…"
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+        sx={{ mt: 2 }}
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <SearchIcon fontSize="small" />
+            </InputAdornment>
+          ),
+          endAdornment: q ? (
+            <InputAdornment position="end">
+              <IconButton size="small" onClick={() => setQ('')} aria-label="清空搜索">
+                <ClearIcon fontSize="small" />
+              </IconButton>
+            </InputAdornment>
+          ) : null,
+        }}
+      />
 
       {featured && (
         <Box
@@ -144,9 +180,13 @@ export default function RadioPage(): JSX.Element {
         <Typography color="text.secondary" sx={{ mt: 2 }}>
           加载中…
         </Typography>
+      ) : filtered.length === 0 ? (
+        <Typography color="text.secondary" sx={{ mt: 2 }}>
+          {q ? `没有匹配“${q}”的电台` : '该分类下还没有电台，点击右上角新增一个吧。'}
+        </Typography>
       ) : (
         <Grid container spacing={2} sx={{ mt: 1 }}>
-          {stations.map((s) => (
+          {filtered.map((s) => (
             <Grid item xs={12} sm={6} md={4} key={s.id}>
               <StationCard station={s} active={selected?.id === s.id} onPlay={handlePlay} />
             </Grid>

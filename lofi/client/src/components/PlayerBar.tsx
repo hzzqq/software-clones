@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Box, IconButton, Slider, Stack, Typography } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
@@ -25,14 +25,24 @@ export default function PlayerBar({
   onLike,
 }: Props): JSX.Element {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [errored, setErrored] = useState(false);
 
+  // Reload the stream source only when the station actually changes.
   useEffect(() => {
     const a = audioRef.current;
     if (!a || !station) return;
+    setErrored(false);
     a.src = station.streamUrl;
-    if (playing) a.play().catch(() => undefined);
+    a.load();
+  }, [station]);
+
+  // Play / pause independently so toggling does not restart the stream.
+  useEffect(() => {
+    const a = audioRef.current;
+    if (!a || !station) return;
+    if (playing) a.play().catch(() => setErrored(true));
     else a.pause();
-  }, [station, playing]);
+  }, [playing, station]);
 
   useEffect(() => {
     if (audioRef.current) audioRef.current.volume = volume;
@@ -52,7 +62,7 @@ export default function PlayerBar({
         py: 1.5,
       }}
     >
-      <audio ref={audioRef} />
+      <audio ref={audioRef} onError={() => setErrored(true)} />
       <Stack direction="row" spacing={2} alignItems="center">
         <Visualizer playing={playing && !!station} />
         <Box sx={{ minWidth: 160, flexGrow: 1 }}>
@@ -60,7 +70,11 @@ export default function PlayerBar({
             {station ? station.name : '未选择电台'}
           </Typography>
           <Typography variant="caption" color="text.secondary" noWrap>
-            {station ? categoryLabel(station.category) : '从列表中选择一个电台开始播放'}
+            {errored
+              ? '播放失败，请检查电台流地址'
+              : station
+              ? categoryLabel(station.category)
+              : '从列表中选择一个电台开始播放'}
           </Typography>
         </Box>
         <IconButton color="primary" onClick={onToggle} disabled={!station}>
