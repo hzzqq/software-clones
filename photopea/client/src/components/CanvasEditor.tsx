@@ -1,16 +1,25 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  Avatar,
   Box,
-  Stack,
-  ToggleButton,
-  ToggleButtonGroup,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
   IconButton,
-  TextField,
-  Slider,
+  List,
+  ListItemButton,
+  ListItemText,
   Menu,
   MenuItem,
-  Divider,
-  Button,
+  Slider,
+  Stack,
+  TextField,
+  ToggleButton,
+  ToggleButtonGroup,
+  Typography,
 } from '@mui/material';
 import OpenWithIcon from '@mui/icons-material/OpenWith';
 import BrushIcon from '@mui/icons-material/Brush';
@@ -24,6 +33,7 @@ import RedoIcon from '@mui/icons-material/Redo';
 import SaveIcon from '@mui/icons-material/Save';
 import DownloadIcon from '@mui/icons-material/Download';
 import FileOpenIcon from '@mui/icons-material/FileOpen';
+import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import FilterIcon from '@mui/icons-material/Filter';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
@@ -32,7 +42,7 @@ import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import { uid, applyFilter } from '../utils/image';
 import { designApi } from '../api/designs';
-import type { Layer, Tool, FilterKind } from '../types';
+import type { Layer, Tool, FilterKind, Design } from '../types';
 
 const WIDTH = 900;
 const HEIGHT = 600;
@@ -107,6 +117,12 @@ export default function CanvasEditor(): JSX.Element {
   const [name, setName] = useState('未命名设计');
   const [version, setVersion] = useState(0);
   const [busy, setBusy] = useState(false);
+  const designIdRef = useRef<number | null>(null);
+  const saveTimer = useRef<number>(0);
+  const [saveStatus, setSaveStatus] = useState<'' | 'saved' | 'updated' | 'error'>('');
+  const [loadOpen, setLoadOpen] = useState(false);
+  const [designList, setDesignList] = useState<Design[]>([]);
+  const [loadBusy, setLoadBusy] = useState(false);
 
   const selectLayer = useCallback((id: string): void => {
     selectedIdRef.current = id;
@@ -429,11 +445,125 @@ export default function CanvasEditor(): JSX.Element {
     const url = mainRef.current?.toDataURL('image/png');
     if (!url) return;
     setBusy(true);
-    designApi
-      .create({ name: name || '未命名设计', thumbnail: url, data: url })
-      .then(() => setBusy(false))
-      .catch(() => setBusy(false));
+    const payload = { name: name || '未命名设计', thumbnail: url, data: url };
+    const isUpdate = designIdRef.current != null;
+    const op = isUpdate
+      ? designApi.update(designIdRef.current as number, payload)
+      : designApi.create(payload);
+    op
+      .then((d) => {
+        designIdRef.current = d.id;
+        setBusy(false);
+        setSaveStatus(isUpdate ? 'updated' : 'saved');
+        window.clearTimeout(saveTimer.current);
+        saveTimer.current = window.setTimeout(() => setSaveStatus(''), 2000);
+      })
+      .catch(() => {
+        setBusy(false);
+        setSaveStatus('error');
+        window.clearTimeout(saveTimer.current);
+        saveTimer.current = window.setTimeout(() => setSaveStatus(''), 3000);
+      });
   }, [name]);
+
+  const openLoad = useCallback((): void => {
+    setLoadBusy(true);
+    designApi
+      .list()
+      .then((list) => {
+        setDesignList(list);
+        setLoadBusy(false);
+        setLoadOpen(true);
+      })
+      .catch(() => setLoadBusy(false));
+  }, []);
+
+  const loadDesign = useCallback(
+    (d: Design): void => {
+      const url = d.data;
+      pushUndo();
+      layersRef.current = [];
+      const layer = makeLayer(1);
+      layersRef.current.push(layer);
+      selectLayer(layer.id);
+      designIdRef.current = d.id;
+      setName(d.name);
+      loadDataUrl(layer.canvas, url).then(() => {
+        composite();
+        setVersion((v) => v + 1);
+        setLoadOpen(false);
+      });
+    },
+    [pushUndo, selectLayer, composite]
+  );
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent): void => {
+      const target = e.target as HTMLElement | null;
+      const typing =
+        !!target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable);
+      if (e.ctrlKey || e.metaKey) {
+        const k = e.key.toLowerCase();
+        if (k === 'z') {
+          e.preventDefault();
+          if (e.shiftKey) redo();
+          else undo();
+        } else if (k === 'y') {
+          e.preventDefault();
+          redo();
+        } else if (k === 's') {
+          e.preventDefault();
+          saveDesign();
+        }
+        return;
+      }
+      if (typing) return;
+      switch (e.key) {
+        case 'Delete':
+        case 'Backspace':
+          if (selectedIdRef.current) removeLayer(selectedIdRef.current);
+          break;
+        case 'Escape':
+          setTool('select');
+          break;
+        case 'v':
+        case 'V':
+          setTool('select');
+          break;
+        case 'b':
+        case 'B':
+          setTool('brush');
+          break;
+        case 'e':
+        case 'E':
+          setTool('eraser');
+          break;
+        case 'r':
+        case 'R':
+          setTool('rect');
+          break;
+        case 'o':
+        case 'O':
+          setTool('ellipse');
+          break;
+        case 'l':
+        case 'L':
+          setTool('line');
+          break;
+        case 't':
+        case 'T':
+          setTool('text');
+          break;
+        default:
+          break;
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [undo, redo, saveDesign, removeLayer, setTool]);
 
   useEffect(() => {
     if (layersRef.current.length === 0) {
@@ -534,6 +664,9 @@ export default function CanvasEditor(): JSX.Element {
         <IconButton onClick={() => fileRef.current?.click()} aria-label="打开图片">
           <FileOpenIcon />
         </IconButton>
+        <IconButton onClick={openLoad} aria-label="打开设计" disabled={loadBusy}>
+          <FolderOpenIcon />
+        </IconButton>
         <IconButton onClick={(e) => setFilterAnchor(e.currentTarget)} aria-label="滤镜">
           <FilterIcon />
         </IconButton>
@@ -543,6 +676,15 @@ export default function CanvasEditor(): JSX.Element {
         <Button variant="contained" startIcon={<SaveIcon />} onClick={saveDesign} disabled={busy}>
           {busy ? '保存中…' : '保存'}
         </Button>
+        {saveStatus === 'saved' && (
+          <Typography variant="caption" color="success.main">已保存</Typography>
+        )}
+        {saveStatus === 'updated' && (
+          <Typography variant="caption" color="success.main">已更新</Typography>
+        )}
+        {saveStatus === 'error' && (
+          <Typography variant="caption" color="error.main">保存失败</Typography>
+        )}
 
         <Menu
           anchorEl={filterAnchor}
@@ -670,6 +812,31 @@ export default function CanvasEditor(): JSX.Element {
           sx={{ width: 240 }}
         />
       </Box>
+
+      <Dialog open={loadOpen} onClose={() => setLoadOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>打开设计</DialogTitle>
+        <DialogContent>
+          {loadBusy ? (
+            <Typography variant="body2">加载中…</Typography>
+          ) : designList.length === 0 ? (
+            <Typography variant="body2" color="text.secondary">
+              暂无可加载的设计，请先保存。
+            </Typography>
+          ) : (
+            <List dense>
+              {designList.map((d) => (
+                <ListItemButton key={d.id} onClick={() => loadDesign(d)}>
+                  <Avatar variant="rounded" src={d.thumbnail} sx={{ mr: 1, width: 40, height: 28 }} />
+                  <ListItemText primary={d.name} secondary={`#${d.id}`} />
+                </ListItemButton>
+              ))}
+            </List>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setLoadOpen(false)}>关闭</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
