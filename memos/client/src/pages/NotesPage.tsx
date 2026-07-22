@@ -1,6 +1,17 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Stack, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
+import {
+  Box,
+  IconButton,
+  InputAdornment,
+  Stack,
+  TextField,
+  ToggleButton,
+  ToggleButtonGroup,
+  Typography,
+} from '@mui/material';
+import SearchIcon from '@mui/icons-material/Search';
+import ClearIcon from '@mui/icons-material/Clear';
 import Composer from '../components/Composer';
 import NoteCard from '../components/NoteCard';
 import TagFilter from '../components/TagFilter';
@@ -13,8 +24,9 @@ export default function NotesPage(): JSX.Element {
   const navigate = useNavigate();
   const [archived, setArchived] = useState(false);
   const [activeTag, setActiveTag] = useState<string | undefined>(undefined);
+  const [q, setQ] = useState('');
   const [tags, setTags] = useState<{ id: number; name: string; count: number }[]>([]);
-  const { notes, loading, error, reload } = useNotes({ archived, tag: activeTag });
+  const { notes, loading, error, reload } = useNotes({ archived, tag: activeTag, q });
 
   const refreshTags = () => tagApi.list().then(setTags).catch(() => undefined);
   useEffect(() => {
@@ -67,6 +79,29 @@ export default function NotesPage(): JSX.Element {
         </ToggleButtonGroup>
       </Stack>
 
+      <TextField
+        fullWidth
+        size="small"
+        placeholder="搜索笔记内容…"
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+        sx={{ mt: 2 }}
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <SearchIcon fontSize="small" />
+            </InputAdornment>
+          ),
+          endAdornment: q ? (
+            <InputAdornment position="end">
+              <IconButton size="small" onClick={() => setQ('')} aria-label="清空搜索">
+                <ClearIcon fontSize="small" />
+              </IconButton>
+            </InputAdornment>
+          ) : null,
+        }}
+      />
+
       {!archived && <Composer onSubmit={handleCreate} />}
 
       <Box sx={{ mt: 2 }}>
@@ -98,6 +133,7 @@ export default function NotesPage(): JSX.Element {
               onPin={handlePin}
               onUnpin={handleUnpin}
               onDelete={handleDelete}
+              onTagClick={setActiveTag}
             />
           ))}
         </Stack>

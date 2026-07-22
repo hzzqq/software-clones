@@ -33,4 +33,17 @@ describe('formatRelativeTime', () => {
     expect(formatRelativeTime(new Date(now - 3 * 3600 * 1000).toISOString())).toBe('3 小时前');
     expect(formatRelativeTime(new Date(now - 2 * 86400 * 1000).toISOString())).toBe('2 天前');
   });
+  it('formats months and years', () => {
+    const now = Date.now();
+    expect(formatRelativeTime(new Date(now - 60 * 86400 * 1000).toISOString())).toBe('2 个月前');
+    expect(formatRelativeTime(new Date(now - 400 * 86400 * 1000).toISOString())).toBe('1 年前');
+  });
+  it('returns empty string for invalid input', () => {
+    expect(formatRelativeTime('')).toBe('');
+    expect(formatRelativeTime('not-a-date')).toBe('');
+  });
+  it('treats future timestamps as 刚刚 (clock skew guard)', () => {
+    const future = new Date(Date.now() + 5 * 60 * 1000).toISOString();
+    expect(formatRelativeTime(future)).toBe('刚刚');
+  });
 });

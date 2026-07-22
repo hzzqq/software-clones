@@ -23,6 +23,7 @@ interface Props {
   onPin: (note: Note) => void;
   onUnpin: (note: Note) => void;
   onDelete: (note: Note) => void;
+  onTagClick?: (tag: string) => void;
 }
 
 const visColor: Record<Note['visibility'], 'success' | 'warning' | 'default'> = {
@@ -47,7 +48,14 @@ export default function NoteCard(props: Props): JSX.Element {
         {note.tags.length > 0 && (
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mt: 1 }}>
             {note.tags.map((t) => (
-              <Chip key={t} size="small" variant="outlined" label={`#${t}`} />
+              <Chip
+                key={t}
+                size="small"
+                variant="outlined"
+                label={`#${t}`}
+                clickable={!!props.onTagClick}
+                onClick={props.onTagClick ? () => props.onTagClick?.(t) : undefined}
+              />
             ))}
           </Stack>
         )}

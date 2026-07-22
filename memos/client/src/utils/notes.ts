@@ -24,6 +24,8 @@ export function formatRelativeTime(iso: string): string {
   const then = new Date(iso).getTime();
   if (Number.isNaN(then)) return '';
   const diff = Date.now() - then;
+  // Future timestamps (e.g. clock skew) collapse to "刚刚" instead of negative units.
+  if (diff < 0) return '刚刚';
   const sec = Math.floor(diff / 1000);
   if (sec < 60) return '刚刚';
   const min = Math.floor(sec / 60);
