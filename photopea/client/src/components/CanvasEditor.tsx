@@ -124,6 +124,7 @@ export default function CanvasEditor(): JSX.Element {
   const [designList, setDesignList] = useState<Design[]>([]);
   const [loadBusy, setLoadBusy] = useState(false);
   const [exportScale, setExportScale] = useState(1);
+  const [brightnessVal, setBrightnessVal] = useState(1.2);
 
   const selectLayer = useCallback((id: string): void => {
     selectedIdRef.current = id;
@@ -433,6 +434,15 @@ export default function CanvasEditor(): JSX.Element {
     [pushUndo, getSelected, composite]
   );
 
+  const clearLayer = useCallback((): void => {
+    const sel = getSelected();
+    if (!sel) return;
+    pushUndo();
+    ctxOf(sel).clearRect(0, 0, WIDTH, HEIGHT);
+    composite();
+    setVersion((v) => v + 1);
+  }, [pushUndo, getSelected, composite]);
+
   const exportPng = useCallback((scale = 1): void => {
     const main = mainRef.current;
     if (!main) return;
@@ -716,9 +726,30 @@ export default function CanvasEditor(): JSX.Element {
         >
           <MenuItem onClick={() => { applyImageFilter('grayscale'); setFilterAnchor(null); }}>灰度</MenuItem>
           <MenuItem onClick={() => { applyImageFilter('invert'); setFilterAnchor(null); }}>反色</MenuItem>
-          <MenuItem onClick={() => { applyImageFilter('brightness', 1.3); setFilterAnchor(null); }}>亮度 +</MenuItem>
-          <MenuItem onClick={() => { applyImageFilter('brightness', 0.7); setFilterAnchor(null); }}>亮度 -</MenuItem>
           <MenuItem onClick={() => { applyImageFilter('sepia'); setFilterAnchor(null); }}>复古</MenuItem>
+          <Box sx={{ px: 2, py: 1, minWidth: 200 }} onClick={(e) => e.stopPropagation()}>
+            <Typography variant="caption">亮度（{brightnessVal.toFixed(1)}×）</Typography>
+            <Slider
+              min={0.3}
+              max={2}
+              step={0.1}
+              value={brightnessVal}
+              onChange={(_e, v) => setBrightnessVal(v as number)}
+            />
+            <Button
+              size="small"
+              fullWidth
+              variant="outlined"
+              onClick={() => {
+                applyImageFilter('brightness', brightnessVal);
+                setFilterAnchor(null);
+              }}
+            >
+              应用亮度
+            </Button>
+          </Box>
+          <Divider />
+          <MenuItem onClick={() => { clearLayer(); setFilterAnchor(null); }}>清空当前图层</MenuItem>
         </Menu>
       </Stack>
 
