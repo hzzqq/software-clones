@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Box, Stack, ToggleButton, ToggleButtonGroup, IconButton, TextField, MenuItem, Divider } from '@mui/material';
+import { Box, Stack, ToggleButton, ToggleButtonGroup, IconButton, TextField, MenuItem, Divider, Dialog, DialogTitle, DialogContent, DialogActions, List, ListItemButton, ListItemText, Typography, Button } from '@mui/material';
 import UndoIcon from '@mui/icons-material/Undo';
 import RedoIcon from '@mui/icons-material/Redo';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import SaveIcon from '@mui/icons-material/Save';
 import DownloadIcon from '@mui/icons-material/Download';
+import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import GestureIcon from '@mui/icons-material/Gesture';
 import CropSquareIcon from '@mui/icons-material/CropSquare';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
@@ -12,7 +13,7 @@ import NorthEastIcon from '@mui/icons-material/NorthEast';
 import TitleIcon from '@mui/icons-material/Title';
 import rough from 'roughjs';
 import type { RoughCanvas } from 'roughjs/bin/canvas';
-import type { CanvasElement, Point, Tool } from '../types';
+import type { CanvasElement, Point, Scene, Tool } from '../types';
 import { normalizeRect, hitTest, uid } from '../utils/geometry';
 import { sceneApi } from '../api/scenes';
 
@@ -30,6 +31,10 @@ export default function Whiteboard({ elements, setElements }: Props): JSX.Elemen
   const [stroke, setStroke] = useState(COLORS[0]);
   const [strokeWidth, setStrokeWidth] = useState(2);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [saveStatus, setSaveStatus] = useState<string | null>(null);
+  const [loadOpen, setLoadOpen] = useState(false);
+  const [scenes, setScenes] = useState<Scene[]>([]);
+  const sceneIdRef = useRef<number | null>(null);
 
   const drawing = useRef<CanvasElement | null>(null);
   const dragInfo = useRef<{ id: string; offset: Point } | null>(null);
@@ -187,11 +192,46 @@ export default function Whiteboard({ elements, setElements }: Props): JSX.Elemen
 
   const saveScene = async () => {
     try {
-      await sceneApi.create({ name: `白板 ${new Date().toLocaleString()}`, data: JSON.stringify(elements) });
-    } catch (err) {
-      console.error(err);
+      const payload = JSON.stringify(elements);
+      if (sceneIdRef.current != null) {
+        await sceneApi.update(sceneIdRef.current, { data: payload });
+      } else {
+        const created = await sceneApi.create({ name: `白板 ${new Date().toLocaleString()}`, data: payload });
+        sceneIdRef.current = created.id;
+      }
+      setSaveStatus('已保存');
+    } catch {
+      setSaveStatus('保存失败');
+    }
+    setTimeout(() => setSaveStatus(null), 2000);
+  };
+
+  const openLoad = async () => {
+    try {
+      setScenes(await sceneApi.list());
+      setLoadOpen(true);
+    } catch {
+      setSaveStatus('加载列表失败');
+      setTimeout(() => setSaveStatus(null), 2000);
     }
   };
+  const loadScene = (s: Scene) => {
+    try {
+      const els = JSON.parse(s.data) as CanvasElement[];
+      setElements(els);
+      sceneIdRef.current = s.id;
+      setSelectedId(null);
+      undoStack.current = [];
+      redoStack.current = [];
+      setLoadOpen(false);
+      setSaveStatus(`已载入「${s.name}」`);
+      setTimeout(() => setSaveStatus(null), 2000);
+    } catch {
+      setSaveStatus('解析场景失败');
+      setTimeout(() => setSaveStatus(null), 2000);
+    }
+  };
+
   const exportPng = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -200,6 +240,34 @@ export default function Whiteboard({ elements, setElements }: Props): JSX.Elemen
     link.href = canvas.toDataURL('image/png');
     link.click();
   };
+
+  // 键盘快捷键：撤销/重做/删除选中/取消选择
+  const shortcutRef = useRef({ undo, redo, deleteSelected, selectedId });
+  shortcutRef.current = { undo, redo, deleteSelected, selectedId };
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+      const mod = e.ctrlKey || e.metaKey;
+      const key = e.key.toLowerCase();
+      if (mod && key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        shortcutRef.current.undo();
+      } else if (mod && (key === 'y' || (e.shiftKey && key === 'z'))) {
+        e.preventDefault();
+        shortcutRef.current.redo();
+      } else if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (shortcutRef.current.selectedId) {
+          e.preventDefault();
+          shortcutRef.current.deleteSelected();
+        }
+      } else if (e.key === 'Escape') {
+        setSelectedId(null);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -231,9 +299,34 @@ export default function Whiteboard({ elements, setElements }: Props): JSX.Elemen
         <IconButton onClick={deleteSelected} aria-label="删除选中" disabled={!selectedId}><DeleteSweepIcon /></IconButton>
         <IconButton onClick={clearAll} aria-label="清空"><DeleteSweepIcon /></IconButton>
         <Divider orientation="vertical" flexItem />
+        <IconButton onClick={openLoad} aria-label="打开已存白板"><FolderOpenIcon /></IconButton>
         <IconButton onClick={saveScene} aria-label="保存"><SaveIcon /></IconButton>
         <IconButton onClick={exportPng} aria-label="导出 PNG"><DownloadIcon /></IconButton>
+        {saveStatus && (
+          <Typography variant="caption" color={saveStatus.includes('失败') ? 'error' : 'success.main'} sx={{ ml: 1 }}>
+            {saveStatus}
+          </Typography>
+        )}
       </Stack>
+      <Dialog open={loadOpen} onClose={() => setLoadOpen(false)} fullWidth maxWidth="xs">
+        <DialogTitle>打开已存白板</DialogTitle>
+        <DialogContent>
+          {scenes.length === 0 ? (
+            <Typography variant="body2" color="text.secondary">暂无保存的白板。</Typography>
+          ) : (
+            <List dense>
+              {scenes.map((s) => (
+                <ListItemButton key={s.id} onClick={() => loadScene(s)}>
+                  <ListItemText primary={s.name} secondary={new Date(s.updatedAt).toLocaleString()} />
+                </ListItemButton>
+              ))}
+            </List>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setLoadOpen(false)}>关闭</Button>
+        </DialogActions>
+      </Dialog>
       <Box sx={{ flexGrow: 1, position: 'relative', overflow: 'hidden', bgcolor: '#fafafa' }}>
         <canvas
           ref={canvasRef}
