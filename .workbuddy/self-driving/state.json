@@ -1,5 +1,5 @@
 {
-  "cycle": 46,
+  "cycle": 49,
   "max_cycles": 60,
   "paused": false,
   "phase": "optimize",
@@ -49,11 +49,14 @@
     { "cycle": 43, "app": "excalidraw", "task_id": "load_scene_dialog", "new_requirement": "打开已存白板对话框（列表→载入，重置撤销栈）", "files": ["client/src/components/Whiteboard.tsx"], "verify": "client 8 passed + typecheck pass", "score": 82 },
     { "cycle": 44, "app": "photopea", "task_id": "keyboard_shortcuts", "new_requirement": "键盘快捷键：Ctrl+Z/Y 撤销重做、Delete 删除选中图层、Esc 取消选择、V/B/E/R/O/L/T 切换工具、Ctrl+S 保存", "files": ["client/src/components/CanvasEditor.tsx"], "verify": "client 6 passed + typecheck pass", "score": 82 },
     { "cycle": 45, "app": "photopea", "task_id": "save_reuse", "implicit": "保存改为复用已存设计(id 记忆 + PATCH 更新)，避免反复新建；保存结果带 已保存/已更新/失败 状态提示(不再静默)", "files": ["client/src/components/CanvasEditor.tsx"], "verify": "client 6 passed + typecheck pass", "score": 82 },
-    { "cycle": 46, "app": "photopea", "task_id": "load_design_dialog", "new_requirement": "打开已存设计对话框（列表→载入为单图层，重置撤销栈、回填名称与 id）", "files": ["client/src/components/CanvasEditor.tsx"], "verify": "client 6 passed + typecheck pass", "score": 84 }
+    { "cycle": 46, "app": "photopea", "task_id": "load_design_dialog", "new_requirement": "打开已存设计对话框（列表→载入为单图层，重置撤销栈、回填名称与 id）", "files": ["client/src/components/CanvasEditor.tsx"], "verify": "client 6 passed + typecheck pass", "score": 84 },
+    { "cycle": 47, "app": "photopea", "task_id": "sepia_filter", "new_requirement": "新增 sepia 复古滤镜（纯函数+类型+菜单入口+单测）", "files": ["client/src/utils/image.ts", "client/src/types.ts", "client/src/components/CanvasEditor.tsx", "client/src/utils/image.test.ts"], "verify": "client 7 passed + typecheck pass", "score": 80 },
+    { "cycle": 48, "app": "photopea", "task_id": "export_scale", "new_requirement": "导出 PNG 支持 1x/2x/3x 倍率（离屏 canvas 缩放）", "files": ["client/src/components/CanvasEditor.tsx"], "verify": "client 7 passed + typecheck pass", "score": 75 },
+    { "cycle": 49, "app": "photopea", "task_id": "undo_baseline", "implicit": "初始化即压入基线快照，支持撤销回空白画布（此前无法撤销到初始态）", "files": ["client/src/components/CanvasEditor.tsx"], "verify": "client 7 passed + typecheck pass", "score": 78 }
   ],
-  "last_task_id": "load_design_dialog",
+  "last_task_id": "undo_baseline",
   "repeat_count": 0,
-  "last_score": 84,
+  "last_score": 78,
   "coverage": {
     "B1": { "it-tools": "optimized", "kanban": "optimized", "glance": "optimized" },
     "B2": { "kener": "optimized", "memos": "optimized", "lofi": "optimized" },

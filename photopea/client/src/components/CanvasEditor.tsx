@@ -123,6 +123,7 @@ export default function CanvasEditor(): JSX.Element {
   const [loadOpen, setLoadOpen] = useState(false);
   const [designList, setDesignList] = useState<Design[]>([]);
   const [loadBusy, setLoadBusy] = useState(false);
+  const [exportScale, setExportScale] = useState(1);
 
   const selectLayer = useCallback((id: string): void => {
     selectedIdRef.current = id;
@@ -432,11 +433,18 @@ export default function CanvasEditor(): JSX.Element {
     [pushUndo, getSelected, composite]
   );
 
-  const exportPng = useCallback((): void => {
-    const url = mainRef.current?.toDataURL('image/png');
-    if (!url) return;
+  const exportPng = useCallback((scale = 1): void => {
+    const main = mainRef.current;
+    if (!main) return;
+    const off = document.createElement('canvas');
+    off.width = WIDTH * scale;
+    off.height = HEIGHT * scale;
+    const octx = off.getContext('2d');
+    if (!octx) return;
+    octx.drawImage(main, 0, 0, off.width, off.height);
+    const url = off.toDataURL('image/png');
     const a = document.createElement('a');
-    a.download = 'photopea.png';
+    a.download = `photopea${scale > 1 ? '@' + scale + 'x' : ''}.png`;
     a.href = url;
     a.click();
   }, []);
@@ -571,6 +579,7 @@ export default function CanvasEditor(): JSX.Element {
       layersRef.current.push(layer);
       selectLayer(layer.id);
     }
+    pushUndo();
     composite();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -670,7 +679,21 @@ export default function CanvasEditor(): JSX.Element {
         <IconButton onClick={(e) => setFilterAnchor(e.currentTarget)} aria-label="滤镜">
           <FilterIcon />
         </IconButton>
-        <IconButton onClick={exportPng} aria-label="导出 PNG">
+        <TextField
+          select
+          size="small"
+          label="导出"
+          value={exportScale}
+          onChange={(e) => setExportScale(Number(e.target.value))}
+          sx={{ width: 80 }}
+        >
+          {[1, 2, 3].map((s) => (
+            <MenuItem key={s} value={s}>
+              {s}x
+            </MenuItem>
+          ))}
+        </TextField>
+        <IconButton onClick={() => exportPng(exportScale)} aria-label="导出 PNG">
           <DownloadIcon />
         </IconButton>
         <Button variant="contained" startIcon={<SaveIcon />} onClick={saveDesign} disabled={busy}>
@@ -695,6 +718,7 @@ export default function CanvasEditor(): JSX.Element {
           <MenuItem onClick={() => { applyImageFilter('invert'); setFilterAnchor(null); }}>反色</MenuItem>
           <MenuItem onClick={() => { applyImageFilter('brightness', 1.3); setFilterAnchor(null); }}>亮度 +</MenuItem>
           <MenuItem onClick={() => { applyImageFilter('brightness', 0.7); setFilterAnchor(null); }}>亮度 -</MenuItem>
+          <MenuItem onClick={() => { applyImageFilter('sepia'); setFilterAnchor(null); }}>复古</MenuItem>
         </Menu>
       </Stack>
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { clamp, grayscale, invert, brightness, uid, applyFilter } from './image';
+import { clamp, grayscale, invert, brightness, sepia, uid, applyFilter } from './image';
 
 function makeData(): Uint8ClampedArray {
   // 2 个像素：红 (255,0,0) 与 绿 (0,255,0)
@@ -42,6 +42,15 @@ describe('image utils', () => {
     const d = makeData();
     applyFilter(d, 'invert');
     expect(d[0]).toBe(0);
+  });
+
+  it('sepia 复古棕调', () => {
+    const d = makeData();
+    sepia(d);
+    // 红(255,0,0): R≈100 G≈89 B≈69
+    expect(Math.round(d[0])).toBe(100);
+    expect(Math.round(d[1])).toBe(89);
+    expect(Math.round(d[2])).toBe(69);
   });
 
   it('uid 返回非空字符串', () => {
