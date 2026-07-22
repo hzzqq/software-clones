@@ -12,8 +12,11 @@ import {
   CircularProgress,
   Alert,
   Stack,
+  InputAdornment,
+  IconButton,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import ClearIcon from '@mui/icons-material/Clear';
 import { channelApi } from '../api/channels';
 import { postApi } from '../api/posts';
 import type { Channel, Post } from '../types';
@@ -107,7 +110,21 @@ export default function HomePage(): JSX.Element {
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         sx={{ my: 1 }}
+        InputProps={{
+          endAdornment: query ? (
+            <InputAdornment position="end">
+              <IconButton size="small" onClick={() => setQuery('')} aria-label="清空搜索">
+                <ClearIcon fontSize="small" />
+              </IconButton>
+            </InputAdornment>
+          ) : null,
+        }}
       />
+      {query && !loading && (
+        <Typography variant="caption" color="text.secondary">
+          找到 {filtered.length} 条匹配“{query}”的帖子
+        </Typography>
+      )}
 
       {loading && <CircularProgress sx={{ display: 'block', mx: 'auto', my: 4 }} />}
       {error && <Alert severity="error" sx={{ my: 2 }}>{error}</Alert>}

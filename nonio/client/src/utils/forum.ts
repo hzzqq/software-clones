@@ -33,21 +33,46 @@ export function slugify(name: string): string {
 /**
  * 将扁平评论列表组装为有层级的评论树（parentId 决定层级）。
  * 异常 parent 会退化为根级，保证不丢数据。
+ * 同时：① 按 createdAt 升序排序（根与每一层子节点）；
+ *       ② 检测并打断循环 parent 引用（A→B→A），避免渲染时无限递归。
  */
 export function buildCommentTree(comments: Comment[]): CommentNode[] {
   const nodes = new Map<number, CommentNode>();
+  const parentOf = new Map<number, number>();
   const roots: CommentNode[] = [];
+
   for (const c of comments) {
+    if (c.parentId != null) parentOf.set(c.id, c.parentId);
     nodes.set(c.id, { ...c, children: [] });
   }
+
+  // 从 id 沿 parent 链向上走：若遇到 target 或遇到既有环，返回 true（应打断）。
+  const reaches = (id: number, target: number): boolean => {
+    const seen = new Set<number>();
+    let cur: number | undefined = id;
+    while (cur != null) {
+      if (cur === target) return true;
+      if (seen.has(cur)) return true; // 父链中已存在环 → 打断
+      seen.add(cur);
+      cur = parentOf.get(cur);
+    }
+    return false;
+  };
+
   for (const c of comments) {
     const node = nodes.get(c.id)!;
-    if (c.parentId != null && nodes.has(c.parentId)) {
+    if (c.parentId != null && nodes.has(c.parentId) && !reaches(c.parentId, c.id)) {
       nodes.get(c.parentId)!.children.push(node);
     } else {
       roots.push(node);
     }
   }
+
+  const sortByTime = (list: CommentNode[]) => {
+    list.sort((a, b) => +new Date(a.createdAt) - +new Date(b.createdAt));
+    for (const n of list) sortByTime(n.children);
+  };
+  sortByTime(roots);
   return roots;
 }
 

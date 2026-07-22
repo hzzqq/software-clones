@@ -56,4 +56,27 @@ describe('buildCommentTree', () => {
   it('countComments 统计含嵌套', () => {
     expect(countComments(tree)).toBe(5);
   });
+  it('按 createdAt 升序排序（根与子层）', () => {
+    const ordered: Comment[] = [
+      { ...mkComment(1, null), createdAt: '2026-01-03T00:00:00Z' },
+      { ...mkComment(2, 1), createdAt: '2026-01-01T00:00:00Z' },
+      { ...mkComment(3, 1), createdAt: '2026-01-02T00:00:00Z' },
+    ];
+    const t = buildCommentTree(ordered);
+    expect(t[0].id).toBe(1);
+    expect(t[0].children.map((c) => c.id)).toEqual([2, 3]);
+  });
+  it('打断循环 parent 引用（A↔B 双双退化为根，不无限递归）', () => {
+    const cyclic: Comment[] = [mkComment(1, 2), mkComment(2, 1)];
+    const t = buildCommentTree(cyclic);
+    expect(t.length).toBe(2);
+    // 任何一个节点都不应把对方作为子节点（环已被打断）
+    expect(t.some((n) => n.children.some((c) => c.id === n.id))).toBe(false);
+  });
+  it('自引用 parent 退化为根', () => {
+    const selfRef: Comment[] = [{ ...mkComment(7, 7) }];
+    const t = buildCommentTree(selfRef);
+    expect(t.length).toBe(1);
+    expect(t[0].children.length).toBe(0);
+  });
 });
