@@ -11,8 +11,12 @@ import {
   CircularProgress,
   Alert,
   Stack,
+  InputAdornment,
+  IconButton,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import SearchIcon from '@mui/icons-material/Search';
+import ClearIcon from '@mui/icons-material/Clear';
 import { showApi } from '../api/shows';
 import type { Show } from '../types';
 import ShowCard from '../components/ShowCard';
@@ -21,8 +25,13 @@ export default function ShowsPage(): JSX.Element {
   const [shows, setShows] = useState<Show[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [q, setQ] = useState('');
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ title: '', totalEpisodes: '12', note: '' });
+
+  const filtered = q.trim()
+    ? shows.filter((s) => s.title.toLowerCase().includes(q.trim().toLowerCase()))
+    : shows;
 
   const load = async () => {
     setLoading(true);
@@ -74,6 +83,29 @@ export default function ShowsPage(): JSX.Element {
         </Button>
       </Stack>
 
+      <TextField
+        fullWidth
+        size="small"
+        placeholder="搜索剧集名称…"
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+        sx={{ my: 2 }}
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <SearchIcon fontSize="small" />
+            </InputAdornment>
+          ),
+          endAdornment: q ? (
+            <InputAdornment position="end">
+              <IconButton size="small" onClick={() => setQ('')} aria-label="清空搜索">
+                <ClearIcon fontSize="small" />
+              </IconButton>
+            </InputAdornment>
+          ) : null,
+        }}
+      />
+
       {loading && <CircularProgress sx={{ display: 'block', mx: 'auto', my: 4 }} />}
       {error && <Alert severity="error" sx={{ my: 2 }}>{error}</Alert>}
       {!loading && !error && shows.length === 0 && (
@@ -81,7 +113,12 @@ export default function ShowsPage(): JSX.Element {
           还没有追的剧，点「添加剧集」开始记录吧。
         </Typography>
       )}
-      {!loading && shows.map((s) => <ShowCard key={s.id} show={s} onDelete={handleDelete} />)}
+      {!loading && !error && shows.length > 0 && filtered.length === 0 && (
+        <Typography color="text.secondary" sx={{ textAlign: 'center', my: 4 }}>
+          没有匹配“{q}”的剧集。
+        </Typography>
+      )}
+      {!loading && filtered.map((s) => <ShowCard key={s.id} show={s} onDelete={handleDelete} />)}
 
       <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="xs">
         <DialogTitle>添加剧集</DialogTitle>

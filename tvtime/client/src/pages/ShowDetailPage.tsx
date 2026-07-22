@@ -89,6 +89,12 @@ export default function ShowDetailPage(): JSX.Element {
         <Chip size="small" label={`${pct}%`} color={isComplete(show.watchedCount, show.totalEpisodes) ? 'success' : 'default'} />
       </Stack>
 
+      {!isComplete(show.watchedCount, show.totalEpisodes) && nextUnwatched(episodes) != null && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          接下来看：第 {nextUnwatched(episodes)} 集
+        </Alert>
+      )}
+
       <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
         <Button variant="contained" startIcon={<SkipNextIcon />} onClick={markNext} disabled={nextUnwatched(episodes) == null}>
           标记下一集
