@@ -1,5 +1,5 @@
 {
-  "cycle": 59,
+  "cycle": 62,
   "max_cycles": 80,
   "paused": false,
   "phase": "optimize",
@@ -62,9 +62,12 @@
     { "cycle": 56, "app": "kanban", "task_id": "board_stats", "new_requirement": "看板统计（总数/已完成）展示于工具栏", "files": ["client/src/components/Toolbar.tsx", "client/src/pages/BoardPage.tsx"], "verify": "client 10 passed + typecheck pass", "score": 72 },
     { "cycle": 57, "app": "glance", "task_id": "widget_search", "new_requirement": "仪表盘组件搜索过滤（抽 filterWidgets 纯函数+测试，标题/类型匹配）", "files": ["client/src/utils/filterWidgets.ts", "client/src/utils/filterWidgets.test.ts", "client/src/pages/DashboardPage.tsx"], "verify": "client 13 passed + typecheck pass", "score": 80 },
     { "cycle": 58, "app": "glance", "task_id": "clear_all_widgets", "new_requirement": "清空所有组件（批量删除 + 确认弹窗）", "files": ["client/src/pages/DashboardPage.tsx"], "verify": "client 13 passed + typecheck pass", "score": 76 },
-    { "cycle": 59, "app": "glance", "task_id": "delete_confirm", "new_requirement": "删除单个组件前确认弹窗（避免误删）", "files": ["client/src/pages/DashboardPage.tsx"], "verify": "client 13 passed + typecheck pass", "score": 74 }
+    { "cycle": 59, "app": "glance", "task_id": "delete_confirm", "new_requirement": "删除单个组件前确认弹窗（避免误删）", "files": ["client/src/pages/DashboardPage.tsx"], "verify": "client 13 passed + typecheck pass", "score": 74 },
+    { "cycle": 60, "app": "kener", "task_id": "auto_refresh", "new_requirement": "自动刷新开关（每 30s 重新探测全部服务）", "files": ["client/src/pages/DashboardPage.tsx"], "verify": "client 6 passed + typecheck pass", "score": 76 },
+    { "cycle": 61, "app": "kener", "task_id": "incidents_panel", "new_requirement": "进行中事件面板（incidentsApi 已有接口此前无 UI）", "files": ["client/src/pages/DashboardPage.tsx", "client/src/api/incidents.ts"], "verify": "client 6 passed + typecheck pass", "score": 80 },
+    { "cycle": 62, "app": "kener", "task_id": "service_sort", "new_requirement": "服务列表排序（严重程度/名称/延迟）", "files": ["client/src/pages/DashboardPage.tsx"], "verify": "client 6 passed + typecheck pass", "score": 74 }
   ],
-  "last_task_id": "delete_confirm",
+  "last_task_id": "service_sort",
   "repeat_count": 0,
   "last_score": 74,
   "coverage": {
