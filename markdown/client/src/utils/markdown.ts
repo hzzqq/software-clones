@@ -2,6 +2,7 @@
  * Markdown 笔记纯函数工具：标签解析、字数统计、标题推导。
  * 不依赖网络 / DOM，便于单元测试。
  */
+import type { Note } from '../types';
 
 /** 从文本提取 #标签。 */
 export function parseTags(text: string): string[] {
@@ -53,4 +54,55 @@ export function deriveTitle(content: string): string {
 /** 统计内容中的代码块数量。 */
 export function countCodeBlocks(text: string): number {
   return (text.match(/```/g) ?? []).length / 2;
+}
+
+/** 单个标题的结构（层级、原文、锚点 id）。 */
+export interface Heading {
+  level: number;
+  text: string;
+  id: string;
+}
+
+/** 将标题文本转为稳定锚点 id（去 HTML 标签 + 中文保留）。 */
+export function slugifyHeading(text: string, index: number): string {
+  const base =
+    text
+      .replace(/<[^>]+>/g, '')
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9一-鿿]+/g, '-')
+      .replace(/^-+|-+$/g, '') || `h${index}`;
+  return `${base}-${index}`;
+}
+
+/**
+ * 从 markdown 内容提取 H1–H3 标题（跳过代码块内的 # 注释）。
+ * 顺序与渲染后的 <h1>/<h2>/<h3> 一一对应，便于生成锚点。
+ */
+export function extractHeadings(content: string): Heading[] {
+  const lines = content.split('\n');
+  const out: Heading[] = [];
+  let inFence = false;
+  let idx = 0;
+  for (const line of lines) {
+    if (/^\s*```/.test(line)) {
+      inFence = !inFence;
+      continue;
+    }
+    if (inFence) continue;
+    const m = /^(#{1,3})\s+(.+)$/.exec(line);
+    if (m) {
+      const text = m[2].trim();
+      out.push({ level: m[1].length, text: text.replace(/<[^>]+>/g, ''), id: slugifyHeading(text, idx++) });
+    }
+  }
+  return out;
+}
+
+/** 侧栏笔记排序：置顶优先，其次按更新时间倒序。 */
+export function sortNotes(notes: Note[]): Note[] {
+  return [...notes].sort((a, b) => {
+    if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+    return +new Date(b.updatedAt) - +new Date(a.updatedAt);
+  });
 }

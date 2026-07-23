@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import {
   Box,
   Typography,
@@ -12,15 +12,18 @@ import {
   Tooltip,
   Divider,
   Chip,
+  Menu,
+  MenuItem,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import PushPinIcon from '@mui/icons-material/PushPin';
+import ListAltIcon from '@mui/icons-material/ListAlt';
 import { noteApi } from '../api/notes';
 import type { Note } from '../types';
 import NoteList from '../components/NoteList';
 import MarkdownPreview from '../components/MarkdownPreview';
-import { parseTags, countWords, countCodeBlocks, estimateReadingTime } from '../utils/markdown';
+import { parseTags, countWords, countCodeBlocks, estimateReadingTime, extractHeadings, sortNotes } from '../utils/markdown';
 
 type ViewMode = 'edit' | 'split' | 'preview';
 
@@ -32,7 +35,16 @@ export default function NotesPage(): JSX.Element {
   const [query, setQuery] = useState('');
   const [mode, setMode] = useState<ViewMode>('split');
   const [saving, setSaving] = useState(false);
+  const [outlineAnchor, setOutlineAnchor] = useState<null | HTMLElement>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const headings = useMemo(() => (active ? extractHeadings(active.content) : []), [active]);
+  const sortedNotes = useMemo(() => sortNotes(notes), [notes]);
+
+  const jumpToHeading = (id: string) => {
+    setOutlineAnchor(null);
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   const loadList = useCallback(async () => {
     setLoading(true);
@@ -140,11 +152,11 @@ export default function NotesPage(): JSX.Element {
         </Stack>
         <Divider />
         <Box sx={{ flexGrow: 1, overflowY: 'auto' }}>
-          {loading ? (
-            <CircularProgress sx={{ display: 'block', mx: 'auto', my: 3 }} />
-          ) : (
-            <NoteList notes={notes} activeId={active?.id ?? null} onSelect={selectNote} />
-          )}
+            {loading ? (
+              <CircularProgress sx={{ display: 'block', mx: 'auto', my: 3 }} />
+            ) : (
+              <NoteList notes={sortedNotes} activeId={active?.id ?? null} onSelect={selectNote} />
+            )}
         </Box>
       </Box>
 
@@ -195,6 +207,27 @@ export default function NotesPage(): JSX.Element {
                 <ToggleButton value="split">分屏</ToggleButton>
                 <ToggleButton value="preview">预览</ToggleButton>
               </ToggleButtonGroup>
+              <Tooltip title="大纲">
+                <span>
+                  <IconButton
+                    onClick={(e) => setOutlineAnchor(e.currentTarget)}
+                    disabled={!active || headings.length === 0}
+                  >
+                    <ListAltIcon />
+                  </IconButton>
+                </span>
+              </Tooltip>
+              <Menu anchorEl={outlineAnchor} open={!!outlineAnchor} onClose={() => setOutlineAnchor(null)}>
+                {headings.map((h) => (
+                  <MenuItem
+                    key={h.id}
+                    onClick={() => jumpToHeading(h.id)}
+                    sx={{ pl: 2 + (h.level - 1) * 2 }}
+                  >
+                    {h.text}
+                  </MenuItem>
+                ))}
+              </Menu>
               <Stack direction="row" spacing={1} alignItems="center">
                 {active.tags.map((t) => (
                   <Chip key={t} size="small" label={`#${t}`} />

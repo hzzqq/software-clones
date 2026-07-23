@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { parseTags, countWords, deriveTitle, countCodeBlocks, estimateReadingTime } from './markdown';
+import { parseTags, countWords, deriveTitle, countCodeBlocks, estimateReadingTime, extractHeadings, sortNotes } from './markdown';
+import type { Note } from '../types';
 
 describe('parseTags', () => {
   it('提取去重标签', () => {
@@ -48,5 +49,37 @@ describe('deriveTitle', () => {
 describe('countCodeBlocks', () => {
   it('成对计数', () => {
     expect(countCodeBlocks('```js\nx\n```\n```py\ny\n```')).toBe(2);
+  });
+});
+
+describe('extractHeadings', () => {
+  const md = '# 标题一\n正文\n## 子标题\n```\n# 不是标题\n```\n### 三级';
+  const hs = extractHeadings(md);
+  it('跳过代码块内的 #', () => {
+    expect(hs.map((h) => h.text)).toEqual(['标题一', '子标题', '三级']);
+  });
+  it('记录层级', () => {
+    expect(hs.map((h) => h.level)).toEqual([1, 2, 3]);
+  });
+  it('生成唯一锚点 id', () => {
+    const ids = hs.map((h) => h.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+});
+
+describe('sortNotes', () => {
+  const mk = (id: number, pinned: boolean, updatedAt: string): Note => ({
+    id, title: `n${id}`, content: '', folder: '', tags: [], pinned, createdAt: '', updatedAt,
+  });
+  const notes = [mk(1, false, '2026-01-01'), mk(2, true, '2026-03-01'), mk(3, false, '2026-02-01')];
+  const sorted = sortNotes(notes);
+  it('置顶优先', () => {
+    expect(sorted[0].id).toBe(2);
+  });
+  it('非置顶按更新时间倒序', () => {
+    expect(sorted.map((n) => n.id)).toEqual([2, 3, 1]);
+  });
+  it('不修改原数组', () => {
+    expect(notes).toHaveLength(3);
   });
 });
