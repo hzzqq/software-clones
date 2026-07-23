@@ -86,5 +86,19 @@ export function useFavorites() {
     [favorites, add, remove]
   );
 
-  return { favorites, isFavorite, toggle, backendOk };
+  const clearAll = useCallback(async (): Promise<void> => {
+    if (backendOk) {
+      try {
+        await Promise.all(
+          favorites.filter((f) => f.id > 0).map((f) => favoritesApi.remove(f.id))
+        );
+      } catch {
+        setBackendOk(false);
+      }
+    }
+    setLocalFavs([]);
+    setFavorites([]);
+  }, [backendOk, favorites, setLocalFavs]);
+
+  return { favorites, isFavorite, toggle, clearAll, backendOk };
 }

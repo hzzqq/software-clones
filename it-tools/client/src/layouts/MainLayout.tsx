@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
   AppBar,
@@ -10,13 +10,16 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
+  TextField,
   Toolbar,
   Typography,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import StarIcon from '@mui/icons-material/Star';
 import SettingsIcon from '@mui/icons-material/Settings';
+import HistoryIcon from '@mui/icons-material/History';
 import ExtensionIcon from '@mui/icons-material/Extension';
+import { filterTools } from '../utils/search';
 
 import { tools } from '../tools/registry';
 
@@ -43,7 +46,15 @@ const groups = groupByCategory();
  */
 export default function MainLayout(): JSX.Element {
   const [mobileOpen, setMobileOpen] = useState<boolean>(false);
+  const [query, setQuery] = useState<string>('');
   const navigate = useNavigate();
+
+  const filteredGroups = useMemo(() => {
+    if (!query.trim()) return groups;
+    return groups
+      .map((g) => ({ ...g, items: filterTools(query, g.items) }))
+      .filter((g) => g.items.length > 0);
+  }, [query]);
 
   const drawerContent = (
     <Box sx={{ overflow: 'auto' }}>
@@ -53,9 +64,18 @@ export default function MainLayout(): JSX.Element {
           IT Tools
         </Typography>
       </Toolbar>
+      <Box sx={{ px: 2, py: 1 }}>
+        <TextField
+          size="small"
+          fullWidth
+          placeholder="搜索工具…"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+      </Box>
       <Divider />
       <List dense>
-        {groups.map((group) => (
+        {filteredGroups.map((group) => (
           <Box key={group.category} sx={{ mb: 0.5 }}>
             <Typography
               variant="overline"
@@ -116,6 +136,21 @@ export default function MainLayout(): JSX.Element {
             <SettingsIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText primary="设置" primaryTypographyProps={{ fontSize: 14 }} />
+        </ListItemButton>
+        <ListItemButton
+          component={NavLink}
+          to="/history"
+          onClick={() => setMobileOpen(false)}
+          sx={{
+            borderRadius: 1.5,
+            mx: 1,
+            '&.active': { bgcolor: 'primary.main', color: 'primary.contrastText' },
+          }}
+        >
+          <ListItemIcon sx={{ minWidth: 36 }}>
+            <HistoryIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText primary="最近使用" primaryTypographyProps={{ fontSize: 14 }} />
         </ListItemButton>
       </List>
     </Box>

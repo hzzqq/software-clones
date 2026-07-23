@@ -1,6 +1,6 @@
 {
-  "cycle": 50,
-  "max_cycles": 60,
+  "cycle": 53,
+  "max_cycles": 80,
   "paused": false,
   "phase": "optimize",
   "log": [
@@ -53,11 +53,14 @@
     { "cycle": 47, "app": "photopea", "task_id": "sepia_filter", "new_requirement": "新增 sepia 复古滤镜（纯函数+类型+菜单入口+单测）", "files": ["client/src/utils/image.ts", "client/src/types.ts", "client/src/components/CanvasEditor.tsx", "client/src/utils/image.test.ts"], "verify": "client 7 passed + typecheck pass", "score": 80 },
     { "cycle": 48, "app": "photopea", "task_id": "export_scale", "new_requirement": "导出 PNG 支持 1x/2x/3x 倍率（离屏 canvas 缩放）", "files": ["client/src/components/CanvasEditor.tsx"], "verify": "client 7 passed + typecheck pass", "score": 75 },
     { "cycle": 49, "app": "photopea", "task_id": "undo_baseline", "implicit": "初始化即压入基线快照，支持撤销回空白画布（此前无法撤销到初始态）", "files": ["client/src/components/CanvasEditor.tsx"], "verify": "client 7 passed + typecheck pass", "score": 78 },
-    { "cycle": 50, "app": "photopea", "task_id": "brightness_slider_clear", "new_requirement": "亮度改为连续滑块(0.3x–2x 应用)；新增清空当前图层动作", "files": ["client/src/components/CanvasEditor.tsx"], "verify": "client 7 passed + typecheck pass", "score": 80 }
+    { "cycle": 50, "app": "photopea", "task_id": "brightness_slider_clear", "new_requirement": "亮度改为连续滑块(0.3x–2x 应用)；新增清空当前图层动作", "files": ["client/src/components/CanvasEditor.tsx"], "verify": "client 7 passed + typecheck pass", "score": 80 },
+    { "cycle": 51, "app": "it-tools", "task_id": "search_filter", "new_requirement": "抽屉工具搜索过滤（抽 filterTools 纯函数+测试）", "files": ["client/src/layouts/MainLayout.tsx", "client/src/utils/search.ts", "client/test/search.test.ts"], "verify": "client 53 passed + typecheck pass", "score": 80 },
+    { "cycle": 52, "app": "it-tools", "task_id": "favorites_clear_all", "new_requirement": "收藏夹清空全部（确认弹窗 + useFavorites.clearAll）", "files": ["client/src/hooks/useFavorites.ts", "client/src/pages/FavoritesPage.tsx"], "verify": "client 53 passed + typecheck pass", "score": 76 },
+    { "cycle": 53, "app": "it-tools", "task_id": "history_page", "new_requirement": "新增「最近使用」历史页（historyApi 已有列表接口，此前无页面）+ 抽屉入口", "files": ["client/src/pages/HistoryPage.tsx", "client/src/router.tsx", "client/src/layouts/MainLayout.tsx"], "verify": "client 53 passed + typecheck pass", "score": 82 }
   ],
-  "last_task_id": "brightness_slider_clear",
+  "last_task_id": "history_page",
   "repeat_count": 0,
-  "last_score": 80,
+  "last_score": 82,
   "coverage": {
     "B1": { "it-tools": "optimized", "kanban": "optimized", "glance": "optimized" },
     "B2": { "kener": "optimized", "memos": "optimized", "lofi": "optimized" },
