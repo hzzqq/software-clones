@@ -13,7 +13,7 @@ import {
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import EditNoteIcon from '@mui/icons-material/EditNote';
 import { useState } from 'react';
-import { Board, Tag } from '../types';
+import { Board, Tag, PRIORITY_LABELS } from '../types';
 import TagEditDialog from './TagEditDialog';
 
 interface ToolbarProps {
@@ -21,6 +21,8 @@ interface ToolbarProps {
   tags: Tag[];
   filterTagId: number | null;
   onFilterChange: (tagId: number | null) => void;
+  filterPriority: number | null;
+  onFilterPriorityChange: (p: number | null) => void;
   onDeleteBoard: () => void;
   onTagsChanged: () => void;
   searchQuery: string;
@@ -39,6 +41,8 @@ export default function Toolbar({
   tags,
   filterTagId,
   onFilterChange,
+  filterPriority,
+  onFilterPriorityChange,
   onDeleteBoard,
   onTagsChanged,
   searchQuery,
@@ -111,6 +115,21 @@ export default function Toolbar({
             {tags.map((t) => (
               <MenuItem key={t.id} value={t.id}>
                 {t.name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        <FormControl size="small" sx={{ minWidth: 160 }}>
+          <InputLabel>按优先级筛选</InputLabel>
+          <Select
+            label="按优先级筛选"
+            value={filterPriority ?? ''}
+            onChange={(e) => onFilterPriorityChange(e.target.value === '' ? null : Number(e.target.value))}
+          >
+            <MenuItem value="">全部</MenuItem>
+            {Object.entries(PRIORITY_LABELS).map(([p, label]) => (
+              <MenuItem key={p} value={Number(p)}>
+                {label}
               </MenuItem>
             ))}
           </Select>

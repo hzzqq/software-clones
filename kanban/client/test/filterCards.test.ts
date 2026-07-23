@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { filterCardsByQuery, sortCards, countCardsByPriority, dueSoonCards, overdueCards } from '../src/utils/filterCards';
+import { filterCardsByQuery, sortCards, countCardsByPriority, dueSoonCards, overdueCards, filterCardsByPriority } from '../src/utils/filterCards';
 import type { Card } from '../src/types';
 
 function mk(id: number, title: string, description = ''): Card {
@@ -135,5 +135,27 @@ describe('overdueCards', () => {
   });
   it('空列表返回空数组', () => {
     expect(overdueCards([])).toEqual([]);
+  });
+});
+
+describe('filterCardsByPriority', () => {
+  const cards: Card[] = [
+    { id: 1, listId: 1, title: 'a', description: '', dueDate: null, priority: 0, completed: 0, position: 0, createdAt: '', updatedAt: '', tagIds: [] },
+    { id: 2, listId: 1, title: 'b', description: '', dueDate: null, priority: 2, completed: 0, position: 1, createdAt: '', updatedAt: '', tagIds: [] },
+    { id: 3, listId: 1, title: 'c', description: '', dueDate: null, priority: 2, completed: 1, position: 2, createdAt: '', updatedAt: '', tagIds: [] },
+  ];
+  it('null 返回全部', () => {
+    expect(filterCardsByPriority(cards, null)).toHaveLength(3);
+  });
+  it('按优先级筛选（含已完成）', () => {
+    expect(filterCardsByPriority(cards, 2).map((c) => c.id)).toEqual([2, 3]);
+  });
+  it('无匹配返回空', () => {
+    expect(filterCardsByPriority(cards, 3)).toHaveLength(0);
+  });
+  it('不修改入参', () => {
+    const before = cards.map((c) => c.id);
+    filterCardsByPriority(cards, 2);
+    expect(cards.map((c) => c.id)).toEqual(before);
   });
 });

@@ -76,3 +76,12 @@ export function overdueCards(cards: Card[]): Card[] {
     (c) => c.completed !== 1 && c.dueDate !== null && new Date(c.dueDate).getTime() < now
   );
 }
+
+/**
+ * 按优先级精确筛选（不修改入参）。
+ * priority 为 null 时返回全部；否则只保留 c.priority === priority 的卡片。
+ */
+export function filterCardsByPriority(cards: Card[], priority: number | null): Card[] {
+  if (priority === null) return cards;
+  return cards.filter((c) => c.priority === priority);
+}
