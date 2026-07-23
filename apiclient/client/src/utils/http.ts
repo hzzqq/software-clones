@@ -97,3 +97,51 @@ export function buildCurlCommand(input: {
   }
   return parts.join(' \\\n');
 }
+
+/** 请求类条目排序维度。 */
+export type RequestSort = 'name' | 'method' | 'createdAt' | 'updatedAt';
+
+/**
+ * 对「请求类」条目（集合项 / 历史项通用）排序，不修改入参。
+ * - name：按 名称或URL 升序（无名称置后）
+ * - method：按方法名升序，同名再按名称
+ * - createdAt / updatedAt：按时间倒序（最新在前）
+ */
+export function sortRequests<T extends {
+  method: string;
+  name?: string;
+  url?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}>(items: T[], by: RequestSort = 'name'): T[] {
+  const arr = [...items];
+  if (by === 'name') {
+    return arr.sort((a, b) => {
+      const la = (a.name ?? a.url ?? '').trim().toLowerCase();
+      const lb = (b.name ?? b.url ?? '').trim().toLowerCase();
+      if (!la && !lb) return 0;
+      if (!la) return 1;
+      if (!lb) return -1;
+      return la.localeCompare(lb);
+    });
+  }
+  if (by === 'method') {
+    return arr.sort((a, b) => {
+      const r = a.method.localeCompare(b.method);
+      if (r !== 0) return r;
+      const la = (a.name ?? a.url ?? '').toLowerCase();
+      const lb = (b.name ?? b.url ?? '').toLowerCase();
+      return la.localeCompare(lb);
+    });
+  }
+  // createdAt / updatedAt 倒序
+  const key = by;
+  return arr.sort((a, b) => {
+    const ta = a[key] ?? '';
+    const tb = b[key] ?? '';
+    if (!ta && !tb) return 0;
+    if (!ta) return 1;
+    if (!tb) return -1;
+    return tb.localeCompare(ta);
+  });
+}

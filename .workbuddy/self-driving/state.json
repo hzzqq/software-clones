@@ -1,5 +1,5 @@
 {
-  "cycle": 86,
+  "cycle": 90,
   "max_cycles": 90,
   "paused": false,
   "phase": "optimize",
@@ -89,11 +89,15 @@
     { "cycle": 83, "app": "glance", "task_id": "sort_widgets", "new_requirement": "sortWidgets 纯函数(标题/类型/更新时间)+测试；仪表盘新增排序下拉", "files": ["client/src/utils/filterWidgets.ts", "client/src/utils/filterWidgets.test.ts", "client/src/pages/DashboardPage.tsx"], "verify": "client 17 passed + typecheck pass", "score": 78 },
     { "cycle": 84, "app": "kener", "task_id": "format_duration", "new_requirement": "formatDuration+incidentDurationSeconds 纯函数+测试；进行中事件展示已持续时长", "files": ["client/src/utils/format.ts", "client/src/utils/format.test.ts", "client/src/pages/DashboardPage.tsx"], "verify": "client 15 passed + typecheck pass", "score": 80 },
     { "cycle": 85, "app": "memos", "task_id": "group_notes_by_tag", "new_requirement": "groupNotesByTag 纯函数+测试；笔记页新增「共N篇·M字·K标签」统计条", "files": ["client/src/utils/notes.ts", "client/src/utils/notes.test.ts", "client/src/pages/NotesPage.tsx"], "verify": "client 14 passed + typecheck pass", "score": 78 },
-    { "cycle": 86, "app": "lofi", "task_id": "sort_stations", "new_requirement": "sortStations 纯函数(名称/分类/点赞/添加时间)+测试；电台列表新增排序下拉", "files": ["client/src/utils/station.ts", "client/src/utils/station.test.ts", "client/src/pages/RadioPage.tsx"], "verify": "client 13 passed + typecheck pass", "score": 80 }
+    { "cycle": 86, "app": "lofi", "task_id": "sort_stations", "new_requirement": "sortStations 纯函数(名称/分类/点赞/添加时间)+测试；电台列表新增排序下拉", "files": ["client/src/utils/station.ts", "client/src/utils/station.test.ts", "client/src/pages/RadioPage.tsx"], "verify": "client 13 passed + typecheck pass", "score": 80 },
+    { "cycle": 87, "app": "nonio", "task_id": "excerpt", "new_requirement": "excerpt 纯函数(剥离 md 标记/截断)+测试；PostCard 改用摘要预览", "files": ["client/src/utils/forum.ts", "client/src/utils/forum.test.ts", "client/src/components/PostCard.tsx"], "verify": "client 19 passed + typecheck pass", "score": 76 },
+    { "cycle": 88, "app": "markdown", "task_id": "extract_links", "new_requirement": "extractLinks 纯函数(去重/跳过图片与代码块)+测试；NotesPage 新增文档内链接菜单", "files": ["client/src/utils/markdown.ts", "client/src/utils/markdown.test.ts", "client/src/pages/NotesPage.tsx"], "verify": "client 21 passed + typecheck pass", "score": 80 },
+    { "cycle": 89, "app": "apiclient", "task_id": "sort_requests", "new_requirement": "sortRequests 纯函数(名称/方法/创建/更新)+测试；侧栏集合/历史新增排序下拉", "files": ["client/src/utils/http.ts", "client/src/utils/http.test.ts", "client/src/pages/ApiClientPage.tsx"], "verify": "client 25 passed + typecheck pass", "score": 78 },
+    { "cycle": 90, "app": "tvtime", "task_id": "episodes_left", "new_requirement": "episodesLeft 纯函数(剩余集数,越界夹0)+测试；详情页展示「剩 N 集」", "files": ["client/src/utils/show.ts", "client/src/utils/show.test.ts", "client/src/pages/ShowDetailPage.tsx"], "verify": "client 18 passed + typecheck pass", "score": 76 }
   ],
-  "last_task_id": "sort_stations",
+  "last_task_id": "episodes_left",
   "repeat_count": 0,
-  "last_score": 80,
+  "last_score": 76,
   "coverage": {
     "B1": { "it-tools": "optimized", "kanban": "optimized", "glance": "optimized" },
     "B2": { "kener": "optimized", "memos": "optimized", "lofi": "optimized" },

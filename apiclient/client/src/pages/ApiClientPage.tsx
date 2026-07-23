@@ -13,6 +13,10 @@ import {
   Button,
   Chip,
   Divider,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
   Tooltip,
   Alert,
   CircularProgress,
@@ -31,7 +35,7 @@ import { historyApi } from '../api/history';
 import type { HttpMethod, ProxyResponse, SavedRequest, HistoryItem } from '../types';
 import RequestBuilder from '../components/RequestBuilder';
 import ResponseViewer from '../components/ResponseViewer';
-import { parseHeadersText, parseKeyValueText, headersToText as h2t, matchRequest, matchHistory, buildCurlCommand } from '../utils/http';
+import { parseHeadersText, parseKeyValueText, headersToText as h2t, matchRequest, matchHistory, buildCurlCommand, sortRequests, type RequestSort } from '../utils/http';
 
 interface Draft {
   method: HttpMethod;
@@ -69,6 +73,7 @@ export default function ApiClientPage(): JSX.Element {
   const [requests, setRequests] = useState<SavedRequest[]>([]);
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [sideQuery, setSideQuery] = useState('');
+  const [sideSort, setSideSort] = useState<RequestSort>('name');
   const [name, setName] = useState('');
   const [curlCopied, setCurlCopied] = useState(false);
 
@@ -98,6 +103,8 @@ export default function ApiClientPage(): JSX.Element {
   const sideNeedle = sideQuery.trim().toLowerCase();
   const filteredRequests = requests.filter((r) => matchRequest(sideNeedle, r));
   const filteredHistory = history.filter((h) => matchHistory(sideNeedle, h));
+  const sortedRequests = sortRequests(filteredRequests, sideSort);
+  const sortedHistory = sortRequests(filteredHistory, sideSort);
 
   const send = async () => {
     if (!draft.url.trim()) return;
@@ -222,6 +229,22 @@ export default function ApiClientPage(): JSX.Element {
             }}
           />
         </Box>
+        <Box sx={{ px: 1, pb: 1 }}>
+          <FormControl fullWidth size="small">
+            <InputLabel id="side-sort-label">排序</InputLabel>
+            <Select
+              labelId="side-sort-label"
+              label="排序"
+              value={sideSort}
+              onChange={(e) => setSideSort(e.target.value as RequestSort)}
+            >
+              <MenuItem value="name">按名称</MenuItem>
+              <MenuItem value="method">按方法</MenuItem>
+              <MenuItem value="createdAt">按创建时间</MenuItem>
+              <MenuItem value="updatedAt">按更新时间</MenuItem>
+            </Select>
+          </FormControl>
+        </Box>
         <Box sx={{ flexGrow: 1, overflowY: 'auto' }}>
           {sideTab === 0 ? (
             <List dense>
@@ -230,7 +253,7 @@ export default function ApiClientPage(): JSX.Element {
                   暂无保存的请求。
                 </Typography>
               )}
-              {filteredRequests.map((r) => (
+              {sortedRequests.map((r) => (
                 <ListItemButton key={r.id} onClick={() => loadSaved(r)}>
                   <ListItemText
                     primary={
@@ -257,7 +280,7 @@ export default function ApiClientPage(): JSX.Element {
                   暂无历史。
                 </Typography>
               )}
-              {filteredHistory.map((h) => (
+              {sortedHistory.map((h) => (
                 <ListItemButton key={h.id} onClick={() => loadHistory(h)}>
                   <ListItemText
                     primary={

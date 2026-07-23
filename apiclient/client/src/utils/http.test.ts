@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseHeadersText, headersToText, parseKeyValueText, statusKind, tryPrettyJson, matchRequest, matchHistory, buildCurlCommand } from './http';
+import { parseHeadersText, headersToText, parseKeyValueText, statusKind, tryPrettyJson, matchRequest, matchHistory, buildCurlCommand, sortRequests } from './http';
 
 describe('parseHeadersText', () => {
   it('解析多行 header', () => {
@@ -104,5 +104,32 @@ describe('buildCurlCommand', () => {
   });
   it('body 中的单引号被转义', () => {
     expect(buildCurlCommand({ method: 'POST', url: 'u', body: "it's" })).toContain("-d 'it'\\''s'");
+  });
+});
+
+describe('sortRequests', () => {
+  const reqs = [
+    { method: 'GET', name: 'Beta', url: 'https://x/b', createdAt: '2026-01-01', updatedAt: '2026-02-01' },
+    { method: 'POST', name: 'Alpha', url: 'https://x/a', createdAt: '2026-03-01', updatedAt: '2026-01-01' },
+    { method: 'GET', name: '', url: 'https://x/c', createdAt: '2026-02-01', updatedAt: '2026-03-01' },
+  ];
+  it('默认按名称升序（无名称置后）', () => {
+    expect(sortRequests(reqs).map((r) => r.name)).toEqual(['Alpha', 'Beta', '']);
+  });
+  it('按方法升序', () => {
+    expect(sortRequests(reqs, 'method').map((r) => r.method)).toEqual(['GET', 'GET', 'POST']);
+  });
+  it('按创建时间倒序', () => {
+    const out = sortRequests(reqs, 'createdAt');
+    expect(out[0].createdAt).toBe('2026-03-01');
+    expect(out[2].createdAt).toBe('2026-01-01');
+  });
+  it('按更新时间倒序', () => {
+    expect(sortRequests(reqs, 'updatedAt')[0].updatedAt).toBe('2026-03-01');
+  });
+  it('不修改入参', () => {
+    const copy = JSON.parse(JSON.stringify(reqs));
+    sortRequests(reqs, 'name');
+    expect(reqs).toEqual(copy);
   });
 });

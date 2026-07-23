@@ -21,6 +21,12 @@ export function isComplete(watched: number, total: number): boolean {
   return total > 0 && watched >= total;
 }
 
+/** 剩余集数（已看超过总数时返回 0，不会为负）。 */
+export function episodesLeft(show: Show): number {
+  const left = show.totalEpisodes - show.watchedCount;
+  return left > 0 ? left : 0;
+}
+
 /** 按名称过滤剧集（空白匹配全部，忽略大小写）。 */
 export function filterShows(query: string, shows: Show[]): Show[] {
   const needle = query.trim().toLowerCase();

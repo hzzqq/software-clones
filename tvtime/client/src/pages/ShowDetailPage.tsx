@@ -10,7 +10,7 @@ import { showApi } from '../api/shows';
 import { episodeApi } from '../api/episodes';
 import type { Show, Episode } from '../types';
 import EpisodeGrid from '../components/EpisodeGrid';
-import { progressPercent, nextUnwatched, isComplete } from '../utils/show';
+import { progressPercent, nextUnwatched, isComplete, episodesLeft } from '../utils/show';
 
 export default function ShowDetailPage(): JSX.Element {
   const { id } = useParams<{ id: string }>();
@@ -87,6 +87,7 @@ export default function ShowDetailPage(): JSX.Element {
       <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
         <Chip size="small" label={`${show.watchedCount}/${show.totalEpisodes}`} />
         <Chip size="small" label={`${pct}%`} color={isComplete(show.watchedCount, show.totalEpisodes) ? 'success' : 'default'} />
+        <Chip size="small" label={`剩 ${episodesLeft(show)} 集`} variant="outlined" />
       </Stack>
 
       {!isComplete(show.watchedCount, show.totalEpisodes) && nextUnwatched(episodes) != null && (

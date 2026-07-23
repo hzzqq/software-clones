@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { progressPercent, nextUnwatched, isComplete, filterShows, sortShows } from './show';
+import { progressPercent, nextUnwatched, isComplete, filterShows, sortShows, episodesLeft } from './show';
 import type { Episode, Show } from '../types';
 
 function mkShow(id: number, title: string, watchedCount: number, totalEpisodes: number, updatedAt: string): Show {
@@ -56,6 +56,18 @@ describe('isComplete', () => {
   });
   it('未完结', () => {
     expect(isComplete(9, 10)).toBe(false);
+  });
+});
+
+describe('episodesLeft', () => {
+  it('正常剩余', () => {
+    expect(episodesLeft(mkShow(1, 'x', 7, 12, ''))).toBe(5);
+  });
+  it('全部看完返回 0', () => {
+    expect(episodesLeft(mkShow(1, 'x', 12, 12, ''))).toBe(0);
+  });
+  it('已看超过总数返回 0', () => {
+    expect(episodesLeft(mkShow(1, 'x', 15, 12, ''))).toBe(0);
   });
 });
 
