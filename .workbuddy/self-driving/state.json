@@ -1,6 +1,6 @@
 {
-  "cycle": 120,
-  "max_cycles": 120,
+  "cycle": 124,
+  "max_cycles": 140,
   "phase": "done",
   "paused": false,
   "phase": "optimize",
@@ -124,11 +124,15 @@
     { "cycle": 117, "app": "memos", "task_id": "summarize_notes", "new_requirement": "summarizeNotes 纯函数(总数/总字数/标签数) + 测试；NotesPage 内联统计逻辑改用共享函数", "files": ["client/src/utils/notes.ts", "client/src/utils/notes.test.ts", "client/src/pages/NotesPage.tsx"], "verify": "client 25 passed + typecheck pass", "score": 78 },
     { "cycle": 118, "app": "lofi", "task_id": "summarize_stations", "new_requirement": "summarizeStations 纯函数(总数/分类数/总点赞) + 测试；电台页新增「共 N 个电台 · M 类 · ❤ P」统计", "files": ["client/src/utils/station.ts", "client/src/utils/station.test.ts", "client/src/pages/RadioPage.tsx"], "verify": "client 24 passed + typecheck pass", "score": 78 },
     { "cycle": 119, "app": "nonio", "task_id": "summarize_posts", "new_requirement": "summarizePosts 纯函数(总数/总点赞/总评论/频道数) + 测试；首页新增「共 N 篇 · M 频道 · ♥ P · 💬 C」统计", "files": ["client/src/utils/forum.ts", "client/src/utils/forum.test.ts", "client/src/pages/HomePage.tsx"], "verify": "client 28 passed + typecheck pass", "score": 78 },
-    { "cycle": 120, "app": "markdown", "task_id": "summarize_notes", "new_requirement": "summarizeNotes 纯函数(总篇数/总字数/标签总数) + 测试；侧栏新增「共 N 篇 · M 词 · K 标签」统计", "files": ["client/src/utils/markdown.ts", "client/src/utils/markdown.test.ts", "client/src/pages/NotesPage.tsx"], "verify": "client 31 passed + typecheck pass", "score": 78 }
+    { "cycle": 120, "app": "markdown", "task_id": "summarize_notes", "new_requirement": "summarizeNotes 纯函数(总篇数/总字数/标签总数) + 测试；侧栏新增「共 N 篇 · M 词 · K 标签」统计", "files": ["client/src/utils/markdown.ts", "client/src/utils/markdown.test.ts", "client/src/pages/NotesPage.tsx"], "verify": "client 31 passed + typecheck pass", "score": 78 },
+    { "cycle": 121, "app": "apiclient", "task_id": "status_text", "new_requirement": "statusText 纯函数(状态码→可读文案) + 测试；历史列表展示 状态码+文案", "files": ["client/src/utils/http.ts", "client/src/utils/http.test.ts", "client/src/pages/ApiClientPage.tsx"], "verify": "client 40 passed + typecheck pass", "score": 80 },
+    { "cycle": 122, "app": "tvtime", "task_id": "episodes_by_status", "new_requirement": "episodesByStatus 纯函数(已看/未看/总数) + 测试；详情页新增「已看 X · 未看 Y」chip", "files": ["client/src/utils/show.ts", "client/src/utils/show.test.ts", "client/src/pages/ShowDetailPage.tsx"], "verify": "client 35 passed + typecheck pass", "score": 80 },
+    { "cycle": 123, "app": "excalidraw", "task_id": "translate_element", "new_requirement": "translateElement 纯函数(平移元素/钢笔点集) + 测试；选中元素支持方向键微调(Shift=10px)", "files": ["client/src/utils/geometry.ts", "client/src/utils/geometry.test.ts", "client/src/components/Whiteboard.tsx"], "verify": "client 20 passed + typecheck pass", "score": 80 },
+    { "cycle": 124, "app": "photopea", "task_id": "format_percent", "new_requirement": "formatPercent 纯函数(0-1→百分比) + 测试；图层面板新增不透明度百分比显示", "files": ["client/src/utils/image.ts", "client/src/utils/image.test.ts", "client/src/components/CanvasEditor.tsx"], "verify": "client 22 passed + typecheck pass", "score": 80 }
   ],
-  "last_task_id": "summarize_notes",
+  "last_task_id": "format_percent",
   "repeat_count": 0,
-  "last_score": 78,
+  "last_score": 80,
   "coverage": {
     "B1": { "it-tools": "optimized", "kanban": "optimized", "glance": "optimized" },
     "B2": { "kener": "optimized", "memos": "optimized", "lofi": "optimized" },

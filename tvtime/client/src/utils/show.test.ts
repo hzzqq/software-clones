@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { progressPercent, nextUnwatched, isComplete, filterShows, sortShows, episodesLeft, remainingWatchTime, formatWatchTime, filterEpisodesByWatched } from './show';
+import { progressPercent, nextUnwatched, isComplete, filterShows, sortShows, episodesLeft, remainingWatchTime, formatWatchTime, filterEpisodesByWatched, episodesByStatus } from './show';
 import type { Episode, Show } from '../types';
 
 function mkShow(id: number, title: string, watchedCount: number, totalEpisodes: number, updatedAt: string): Show {
@@ -145,6 +145,26 @@ describe('filterEpisodesByWatched', () => {
   });
   it('不修改入参', () => {
     filterEpisodesByWatched(eps, 'watched');
+    expect(eps).toHaveLength(4);
+  });
+});
+
+describe('episodesByStatus', () => {
+  const eps = [ep(1, true), ep(2, false), ep(3, true), ep(4, false)];
+  it('统计已看/未看/总数', () => {
+    expect(episodesByStatus(eps)).toEqual({ watched: 2, unwatched: 2, total: 4 });
+  });
+  it('全未看', () => {
+    expect(episodesByStatus([ep(1, false), ep(2, false)])).toEqual({ watched: 0, unwatched: 2, total: 2 });
+  });
+  it('全已看', () => {
+    expect(episodesByStatus([ep(1, true), ep(2, true)])).toEqual({ watched: 2, unwatched: 0, total: 2 });
+  });
+  it('空列表', () => {
+    expect(episodesByStatus([])).toEqual({ watched: 0, unwatched: 0, total: 0 });
+  });
+  it('不修改入参', () => {
+    episodesByStatus(eps);
     expect(eps).toHaveLength(4);
   });
 });

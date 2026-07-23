@@ -38,7 +38,7 @@ import { historyApi } from '../api/history';
 import type { HttpMethod, ProxyResponse, SavedRequest, HistoryItem } from '../types';
 import RequestBuilder from '../components/RequestBuilder';
 import ResponseViewer from '../components/ResponseViewer';
-import { parseHeadersText, parseKeyValueText, headersToText as h2t, matchRequest, matchHistory, buildCurlCommand, sortRequests, groupByMethod, buildUrlWithQuery, type RequestSort } from '../utils/http';
+import { parseHeadersText, parseKeyValueText, headersToText as h2t, matchRequest, matchHistory, buildCurlCommand, sortRequests, groupByMethod, buildUrlWithQuery, statusText, type RequestSort } from '../utils/http';
 
 interface Draft {
   method: HttpMethod;
@@ -322,7 +322,7 @@ export default function ApiClientPage(): JSX.Element {
                         <Typography noWrap>{h.url}</Typography>
                       </Stack>
                     }
-                    secondary={`${h.status} · ${h.timeMs}ms`}
+                    secondary={`${h.status} ${statusText(h.status)} · ${h.timeMs}ms`}
                   />
                 </ListItemButton>
               ))}

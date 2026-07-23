@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { normalizeRect, distance, hitTest, elementBounds, uid, serializeScene, snapPoint, boundingBox, getCenter } from './geometry';
+import { normalizeRect, distance, hitTest, elementBounds, uid, serializeScene, snapPoint, boundingBox, getCenter, translateElement } from './geometry';
 import type { CanvasElement } from '../types';
 
 describe('normalizeRect', () => {
@@ -89,5 +89,26 @@ describe('getCenter', () => {
   it('负坐标矩形中心', () => {
     const r = { id: '2', type: 'rect', stroke: '#000', strokeWidth: 2, x: -10, y: -20, w: 20, h: 40 } as CanvasElement;
     expect(getCenter(r)).toEqual({ x: 0, y: 0 });
+  });
+});
+
+describe('translateElement', () => {
+  const rect = { id: '1', type: 'rect', stroke: '#000', strokeWidth: 2, x: 10, y: 20, w: 50, h: 30 } as CanvasElement;
+  it('偏移 x/y', () => {
+    const t = translateElement(rect, 5, -5);
+    expect(t.x).toBe(15);
+    expect(t.y).toBe(15);
+    expect(t.w).toBe(50);
+    expect(t.h).toBe(30);
+  });
+  it('钢笔点集同步平移', () => {
+    const pen = { id: '2', type: 'pen', stroke: '#000', strokeWidth: 2, x: 0, y: 0, w: 0, h: 0, points: [{ x: 1, y: 2 }, { x: 3, y: 4 }] } as CanvasElement;
+    const t = translateElement(pen, 10, 20);
+    expect(t.points).toEqual([{ x: 11, y: 22 }, { x: 13, y: 24 }]);
+  });
+  it('不修改入参', () => {
+    translateElement(rect, 1, 1);
+    expect(rect.x).toBe(10);
+    expect(rect.y).toBe(20);
   });
 });

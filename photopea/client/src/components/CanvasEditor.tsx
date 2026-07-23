@@ -41,7 +41,7 @@ import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import { uid, applyFilter, getFilterLabel } from '../utils/image';
+import { uid, applyFilter, getFilterLabel, formatPercent } from '../utils/image';
 import { duplicateLayerName } from '../utils/layers';
 import { designApi } from '../api/designs';
 import type { Layer, Tool, FilterKind, Design } from '../types';
@@ -927,6 +927,10 @@ export default function CanvasEditor(): JSX.Element {
                 </IconButton>
               </Stack>
               <Box sx={{ mt: 0.5 }} onClick={(e) => e.stopPropagation()}>
+                <Stack direction="row" justifyContent="space-between">
+                  <Typography variant="caption" color="text.secondary">不透明度</Typography>
+                  <Typography variant="caption" color="text.secondary">{formatPercent(layer.opacity)}</Typography>
+                </Stack>
                 <Slider
                   size="small"
                   min={0}

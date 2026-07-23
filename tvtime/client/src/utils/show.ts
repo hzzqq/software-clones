@@ -73,3 +73,18 @@ export function filterEpisodesByWatched(episodes: Episode[], filter: EpisodeFilt
   if (filter === 'all') return episodes;
   return episodes.filter((e) => (filter === 'watched' ? e.watched : !e.watched));
 }
+
+/** 剧集观看状态计数（已看 / 未看 / 总数），不修改入参。 */
+export interface EpisodeStatusCount {
+  watched: number;
+  unwatched: number;
+  total: number;
+}
+
+export function episodesByStatus(episodes: Episode[]): EpisodeStatusCount {
+  let watched = 0;
+  for (const e of episodes) {
+    if (e.watched) watched += 1;
+  }
+  return { watched, unwatched: episodes.length - watched, total: episodes.length };
+}

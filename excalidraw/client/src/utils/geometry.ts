@@ -98,3 +98,12 @@ export function getCenter(el: CanvasElement): Point {
   const b = elementBounds(el);
   return { x: (b.minX + b.maxX) / 2, y: (b.minY + b.maxY) / 2 };
 }
+
+/** 返回平移后的新元素（不修改入参；钢笔点集同步平移）。 */
+export function translateElement(el: CanvasElement, dx: number, dy: number): CanvasElement {
+  const moved: CanvasElement = { ...el, x: el.x + dx, y: el.y + dy };
+  if (moved.type === 'pen' && moved.points) {
+    moved.points = moved.points.map((p) => ({ x: p.x + dx, y: p.y + dy }));
+  }
+  return moved;
+}

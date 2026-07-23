@@ -94,3 +94,8 @@ export const FILTER_LABELS: Record<FilterKind, string> = {
 export function getFilterLabel(kind: FilterKind): string {
   return FILTER_LABELS[kind] ?? kind;
 }
+
+/** 将 0-1 比例格式化为百分比文本（如 0.5 → "50%"），自动夹到 [0,1]。 */
+export function formatPercent(value: number): string {
+  return `${Math.round(clamp(value, 0, 1) * 100)}%`;
+}

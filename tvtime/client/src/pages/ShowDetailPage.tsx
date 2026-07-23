@@ -10,7 +10,7 @@ import { showApi } from '../api/shows';
 import { episodeApi } from '../api/episodes';
 import type { Show, Episode } from '../types';
 import EpisodeGrid from '../components/EpisodeGrid';
-import { progressPercent, nextUnwatched, isComplete, episodesLeft, remainingWatchTime, formatWatchTime, filterEpisodesByWatched, type EpisodeFilter } from '../utils/show';
+import { progressPercent, nextUnwatched, isComplete, episodesLeft, remainingWatchTime, formatWatchTime, filterEpisodesByWatched, episodesByStatus, type EpisodeFilter } from '../utils/show';
 
 export default function ShowDetailPage(): JSX.Element {
   const { id } = useParams<{ id: string }>();
@@ -73,6 +73,7 @@ export default function ShowDetailPage(): JSX.Element {
 
   const pct = progressPercent(show.watchedCount, show.totalEpisodes);
   const visibleEps = filterEpisodesByWatched(episodes, epFilter);
+  const epStatus = episodesByStatus(episodes);
 
   return (
     <Box>
@@ -90,6 +91,7 @@ export default function ShowDetailPage(): JSX.Element {
         <Chip size="small" label={`${show.watchedCount}/${show.totalEpisodes}`} />
         <Chip size="small" label={`${pct}%`} color={isComplete(show.watchedCount, show.totalEpisodes) ? 'success' : 'default'} />
         <Chip size="small" label={`剩 ${episodesLeft(show)} 集`} variant="outlined" />
+        <Chip size="small" label={`已看 ${epStatus.watched} · 未看 ${epStatus.unwatched}`} variant="outlined" color="success" />
         {episodesLeft(show) > 0 && (
           <Chip size="small" variant="outlined" color="info" label={`还需约 ${formatWatchTime(remainingWatchTime(show))}`} />
         )}

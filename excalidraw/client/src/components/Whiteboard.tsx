@@ -16,7 +16,7 @@ import TitleIcon from '@mui/icons-material/Title';
 import rough from 'roughjs';
 import type { RoughCanvas } from 'roughjs/bin/canvas';
 import type { CanvasElement, Point, Scene, Tool } from '../types';
-import { normalizeRect, hitTest, uid, serializeScene, snapPoint, boundingBox, getCenter } from '../utils/geometry';
+import { normalizeRect, hitTest, uid, serializeScene, snapPoint, boundingBox, getCenter, translateElement } from '../utils/geometry';
 import { sceneApi } from '../api/scenes';
 
 interface Props {
@@ -200,6 +200,15 @@ export default function Whiteboard({ elements, setElements }: Props): JSX.Elemen
     setSelectedId(null);
   };
 
+  const nudge = useCallback(
+    (dx: number, dy: number) => {
+      const id = shortcutRef.current.selectedId;
+      if (!id) return;
+      setElements((prev) => prev.map((el) => (el.id === id ? translateElement(el, dx, dy) : el)));
+    },
+    [setElements]
+  );
+
   const saveScene = async () => {
     try {
       const payload = JSON.stringify(elements);
@@ -262,8 +271,8 @@ export default function Whiteboard({ elements, setElements }: Props): JSX.Elemen
   };
 
   // 键盘快捷键：撤销/重做/删除选中/取消选择
-  const shortcutRef = useRef({ undo, redo, deleteSelected, selectedId });
-  shortcutRef.current = { undo, redo, deleteSelected, selectedId };
+  const shortcutRef = useRef({ undo, redo, deleteSelected, selectedId, nudge });
+  shortcutRef.current = { undo, redo, deleteSelected, selectedId, nudge };
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement | null;
@@ -283,6 +292,14 @@ export default function Whiteboard({ elements, setElements }: Props): JSX.Elemen
         }
       } else if (e.key === 'Escape') {
         setSelectedId(null);
+      } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        if (shortcutRef.current.selectedId) {
+          e.preventDefault();
+          const d = e.shiftKey ? 10 : 1;
+          const dx = e.key === 'ArrowLeft' ? -d : e.key === 'ArrowRight' ? d : 0;
+          const dy = e.key === 'ArrowUp' ? -d : e.key === 'ArrowDown' ? d : 0;
+          shortcutRef.current.nudge(dx, dy);
+        }
       }
     };
     window.addEventListener('keydown', onKey);

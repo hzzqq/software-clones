@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseHeadersText, headersToText, parseKeyValueText, statusKind, tryPrettyJson, matchRequest, matchHistory, buildCurlCommand, sortRequests, groupByMethod, buildUrlWithQuery } from './http';
+import { parseHeadersText, headersToText, parseKeyValueText, statusKind, tryPrettyJson, matchRequest, matchHistory, buildCurlCommand, sortRequests, groupByMethod, buildUrlWithQuery, statusText } from './http';
 
 describe('parseHeadersText', () => {
   it('解析多行 header', () => {
@@ -184,5 +184,27 @@ describe('groupByMethod', () => {
     const copy = JSON.parse(JSON.stringify(reqs));
     groupByMethod(reqs);
     expect(reqs).toEqual(copy);
+  });
+});
+
+describe('statusText', () => {
+  it('常见 2xx', () => {
+    expect(statusText(200)).toBe('OK');
+    expect(statusText(201)).toBe('Created');
+  });
+  it('3xx 重定向', () => {
+    expect(statusText(301)).toBe('Moved Permanently');
+    expect(statusText(304)).toBe('Not Modified');
+  });
+  it('4xx / 5xx', () => {
+    expect(statusText(400)).toBe('Bad Request');
+    expect(statusText(404)).toBe('Not Found');
+    expect(statusText(500)).toBe('Internal Server Error');
+  });
+  it('0 表示网络错误', () => {
+    expect(statusText(0)).toBe('网络错误');
+  });
+  it('未知码回退', () => {
+    expect(statusText(418)).toBe('状态码 418');
   });
 });

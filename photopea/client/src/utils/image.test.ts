@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { clamp, grayscale, invert, brightness, sepia, uid, applyFilter, contrast, saturate, getFilterLabel, FILTER_LABELS } from './image';
+import { clamp, grayscale, invert, brightness, sepia, uid, applyFilter, contrast, saturate, getFilterLabel, FILTER_LABELS, formatPercent } from './image';
 import type { FilterKind } from '../types';
 
 function makeData(): Uint8ClampedArray {
@@ -120,5 +120,21 @@ describe('getFilterLabel', () => {
   });
   it('标签覆盖完整（6 种）', () => {
     expect(Object.keys(FILTER_LABELS)).toHaveLength(6);
+  });
+});
+
+describe('formatPercent', () => {
+  it('0-1 比例转百分比', () => {
+    expect(formatPercent(0)).toBe('0%');
+    expect(formatPercent(0.5)).toBe('50%');
+    expect(formatPercent(1)).toBe('100%');
+  });
+  it('四舍五入', () => {
+    expect(formatPercent(0.333)).toBe('33%');
+    expect(formatPercent(0.666)).toBe('67%');
+  });
+  it('越界自动夹取', () => {
+    expect(formatPercent(-0.5)).toBe('0%');
+    expect(formatPercent(2)).toBe('100%');
   });
 });
