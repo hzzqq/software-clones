@@ -1,5 +1,5 @@
 {
-  "cycle": 56,
+  "cycle": 59,
   "max_cycles": 80,
   "paused": false,
   "phase": "optimize",
@@ -59,11 +59,14 @@
     { "cycle": 53, "app": "it-tools", "task_id": "history_page", "new_requirement": "新增「最近使用」历史页（historyApi 已有列表接口，此前无页面）+ 抽屉入口", "files": ["client/src/pages/HistoryPage.tsx", "client/src/router.tsx", "client/src/layouts/MainLayout.tsx"], "verify": "client 53 passed + typecheck pass", "score": 82 },
     { "cycle": 54, "app": "kanban", "task_id": "card_search", "new_requirement": "看板全局卡片搜索（抽 filterCardsByQuery 纯函数+测试，标题/描述匹配）", "files": ["client/src/utils/filterCards.ts", "client/test/filterCards.test.ts", "client/src/components/Board.tsx", "client/src/pages/BoardPage.tsx", "client/src/components/Toolbar.tsx"], "verify": "client 10 passed + typecheck pass", "score": 80 },
     { "cycle": 55, "app": "kanban", "task_id": "clear_completed", "new_requirement": "清除已完成卡片（批量删除 completed=1，useBoard.clearCompleted）", "files": ["client/src/hooks/useBoard.ts", "client/src/components/Toolbar.tsx", "client/src/pages/BoardPage.tsx"], "verify": "client 10 passed + typecheck pass", "score": 76 },
-    { "cycle": 56, "app": "kanban", "task_id": "board_stats", "new_requirement": "看板统计（总数/已完成）展示于工具栏", "files": ["client/src/components/Toolbar.tsx", "client/src/pages/BoardPage.tsx"], "verify": "client 10 passed + typecheck pass", "score": 72 }
+    { "cycle": 56, "app": "kanban", "task_id": "board_stats", "new_requirement": "看板统计（总数/已完成）展示于工具栏", "files": ["client/src/components/Toolbar.tsx", "client/src/pages/BoardPage.tsx"], "verify": "client 10 passed + typecheck pass", "score": 72 },
+    { "cycle": 57, "app": "glance", "task_id": "widget_search", "new_requirement": "仪表盘组件搜索过滤（抽 filterWidgets 纯函数+测试，标题/类型匹配）", "files": ["client/src/utils/filterWidgets.ts", "client/src/utils/filterWidgets.test.ts", "client/src/pages/DashboardPage.tsx"], "verify": "client 13 passed + typecheck pass", "score": 80 },
+    { "cycle": 58, "app": "glance", "task_id": "clear_all_widgets", "new_requirement": "清空所有组件（批量删除 + 确认弹窗）", "files": ["client/src/pages/DashboardPage.tsx"], "verify": "client 13 passed + typecheck pass", "score": 76 },
+    { "cycle": 59, "app": "glance", "task_id": "delete_confirm", "new_requirement": "删除单个组件前确认弹窗（避免误删）", "files": ["client/src/pages/DashboardPage.tsx"], "verify": "client 13 passed + typecheck pass", "score": 74 }
   ],
-  "last_task_id": "board_stats",
+  "last_task_id": "delete_confirm",
   "repeat_count": 0,
-  "last_score": 72,
+  "last_score": 74,
   "coverage": {
     "B1": { "it-tools": "optimized", "kanban": "optimized", "glance": "optimized" },
     "B2": { "kener": "optimized", "memos": "optimized", "lofi": "optimized" },

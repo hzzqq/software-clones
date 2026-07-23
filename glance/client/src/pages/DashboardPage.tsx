@@ -1,5 +1,16 @@
 import { ChangeEvent, useCallback, useRef, useState } from 'react';
-import { Alert, Box, Button, CircularProgress, Stack } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Button,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Stack,
+  TextField,
+} from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import UploadIcon from '@mui/icons-material/Upload';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -15,6 +26,7 @@ import { useWidgets } from '../hooks/useWidgets';
 import { CreateWidgetInput, UpdateWidgetInput } from '../api/widgets';
 import { configApi } from '../api/config';
 import { Widget, WidgetLayout } from '../types';
+import { filterWidgets } from '../utils/filterWidgets';
 
 interface WidgetHandlers {
   onConfigure: (widget: Widget) => void;
@@ -23,10 +35,7 @@ interface WidgetHandlers {
 }
 
 /** Dispatches a widget to the matching component based on its type. */
-function renderWidget(
-  widget: Widget,
-  handlers: WidgetHandlers
-): JSX.Element {
+function renderWidget(widget: Widget, handlers: WidgetHandlers): JSX.Element {
   const common = {
     widget,
     onConfigure: () => handlers.onConfigure(widget),
@@ -46,9 +55,7 @@ function renderWidget(
     case 'notes':
       return <NotesWidget {...common} onCommit={(t) => handlers.onCommit(widget, t)} />;
     default:
-      return (
-        <Box sx={{ p: 2, color: 'text.secondary' }}>未知组件类型：{widget.type}</Box>
-      );
+      return <Box sx={{ p: 2, color: 'text.secondary' }}>未知组件类型：{widget.type}</Box>;
   }
 }
 
@@ -68,7 +75,12 @@ export default function DashboardPage(): JSX.Element {
   const [modalOpen, setModalOpen] = useState<boolean>(false);
   const [editing, setEditing] = useState<Widget | null>(null);
   const [importError, setImportError] = useState<string>('');
+  const [search, setSearch] = useState<string>('');
+  const [deleteTarget, setDeleteTarget] = useState<Widget | null>(null);
+  const [clearAllOpen, setClearAllOpen] = useState<boolean>(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const visibleWidgets = filterWidgets(search, widgets);
 
   const openCreate = useCallback((): void => {
     setEditing(null);
@@ -100,6 +112,11 @@ export default function DashboardPage(): JSX.Element {
     },
     [removeWidget]
   );
+
+  const handleClearAll = useCallback(async (): Promise<void> => {
+    await Promise.all(widgets.map((w) => removeWidget(w.id)));
+    setClearAllOpen(false);
+  }, [widgets, removeWidget]);
 
   const handleCommit = useCallback(
     async (widget: Widget, text: string): Promise<void> => {
@@ -155,12 +172,24 @@ export default function DashboardPage(): JSX.Element {
         <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
           新增组件
         </Button>
+        <TextField
+          size="small"
+          placeholder="搜索组件…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          sx={{ minWidth: 200 }}
+        />
         <Button startIcon={<UploadIcon />} onClick={() => fileRef.current?.click()}>
           导入 YAML
         </Button>
         <Button startIcon={<DownloadIcon />} onClick={() => void handleExport()}>
           导出 YAML
         </Button>
+        {widgets.length > 0 && (
+          <Button color="warning" variant="outlined" onClick={() => setClearAllOpen(true)}>
+            清空所有
+          </Button>
+        )}
         <input
           ref={fileRef}
           type="file"
@@ -199,19 +228,53 @@ export default function DashboardPage(): JSX.Element {
         </Box>
       )}
 
-      {!loading && widgets.length > 0 && (
+      {!loading && widgets.length > 0 && visibleWidgets.length === 0 && (
+        <Box sx={{ textAlign: 'center', color: 'text.secondary', py: 6 }}>
+          没有匹配「{search}」的组件。
+        </Box>
+      )}
+
+      {!loading && visibleWidgets.length > 0 && (
         <WidgetGrid
-          widgets={widgets}
+          widgets={visibleWidgets}
           onLayoutChange={onLayoutChange}
           renderItem={(widget) =>
             renderWidget(widget, {
               onConfigure: openEdit,
-              onRemove: (w) => handleDelete(w.id),
+              onRemove: (w) => setDeleteTarget(w),
               onCommit: handleCommit,
             })
           }
         />
       )}
+
+      <Dialog open={deleteTarget !== null} onClose={() => setDeleteTarget(null)}>
+        <DialogTitle>删除组件？</DialogTitle>
+        <DialogContent>将删除「{deleteTarget?.title}」，此操作不可撤销。</DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteTarget(null)}>取消</Button>
+          <Button
+            color="error"
+            onClick={() => {
+              if (deleteTarget) void handleDelete(deleteTarget.id);
+              setDeleteTarget(null);
+            }}
+          >
+            删除
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={clearAllOpen} onClose={() => setClearAllOpen(false)}>
+        <DialogTitle>清空所有组件？</DialogTitle>
+        <DialogContent>将删除全部 {widgets.length} 个组件，此操作不可撤销。</DialogContent>
+        <DialogActions>
+          <Button onClick={() => setClearAllOpen(false)}>取消</Button>
+          <Button color="error" onClick={() => void handleClearAll()}>
+            清空
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <WidgetConfigModal
         open={modalOpen}
