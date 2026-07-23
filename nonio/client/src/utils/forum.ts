@@ -94,3 +94,25 @@ export function searchPosts(query: string, channelId: number | null, posts: Post
     return true;
   });
 }
+
+/**
+ * 生成帖子正文预览：去除 Markdown 标记（代码块/行内代码/图片/链接/标题/加粗/斜体/
+ * 引用/列表符号），折叠多余空白，并截断到 max 个字符（末尾加省略号）。
+ */
+export function excerpt(text: string, max = 180): string {
+  const stripped = text
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/(\*\*|__)(.*?)\1/g, '$2')
+    .replace(/(\*|_)(.*?)\1/g, '$2')
+    .replace(/^>\s?/gm, '')
+    .replace(/^[-*+]\s+/gm, '')
+    .replace(/\n+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (stripped.length <= max) return stripped;
+  return stripped.slice(0, max).trimEnd() + '…';
+}

@@ -106,3 +106,37 @@ export function sortNotes(notes: Note[]): Note[] {
     return +new Date(b.updatedAt) - +new Date(a.updatedAt);
   });
 }
+
+/** 单个 Markdown 链接（文本 + 地址）。 */
+export interface MdLink {
+  text: string;
+  url: string;
+}
+
+/**
+ * 从 markdown 内容提取链接（跳过图片链接 ![...] 与代码块内的链接），按 url 去重。
+ * 仅匹配 http/https 协议，避免匹配相对路径或锚点。
+ */
+export function extractLinks(content: string): MdLink[] {
+  const lines = content.split('\n');
+  const out: MdLink[] = [];
+  const seen = new Set<string>();
+  let inFence = false;
+  for (const line of lines) {
+    if (/^\s*```/.test(line)) {
+      inFence = !inFence;
+      continue;
+    }
+    if (inFence) continue;
+    const re = /(!?)\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(line)) !== null) {
+      if (m[1] === '!') continue; // 跳过图片
+      const url = m[3];
+      if (seen.has(url)) continue;
+      seen.add(url);
+      out.push({ text: m[2].trim(), url });
+    }
+  }
+  return out;
+}

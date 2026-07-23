@@ -19,11 +19,12 @@ import AddIcon from '@mui/icons-material/Add';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import PushPinIcon from '@mui/icons-material/PushPin';
 import ListAltIcon from '@mui/icons-material/ListAlt';
+import LinkIcon from '@mui/icons-material/Link';
 import { noteApi } from '../api/notes';
 import type { Note } from '../types';
 import NoteList from '../components/NoteList';
 import MarkdownPreview from '../components/MarkdownPreview';
-import { parseTags, countWords, countCodeBlocks, estimateReadingTime, extractHeadings, sortNotes } from '../utils/markdown';
+import { parseTags, countWords, countCodeBlocks, estimateReadingTime, extractHeadings, extractLinks, sortNotes } from '../utils/markdown';
 
 type ViewMode = 'edit' | 'split' | 'preview';
 
@@ -36,9 +37,11 @@ export default function NotesPage(): JSX.Element {
   const [mode, setMode] = useState<ViewMode>('split');
   const [saving, setSaving] = useState(false);
   const [outlineAnchor, setOutlineAnchor] = useState<null | HTMLElement>(null);
+  const [linkAnchor, setLinkAnchor] = useState<null | HTMLElement>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const headings = useMemo(() => (active ? extractHeadings(active.content) : []), [active]);
+  const links = useMemo(() => (active ? extractLinks(active.content) : []), [active]);
   const sortedNotes = useMemo(() => sortNotes(notes), [notes]);
 
   const jumpToHeading = (id: string) => {
@@ -225,6 +228,29 @@ export default function NotesPage(): JSX.Element {
                     sx={{ pl: 2 + (h.level - 1) * 2 }}
                   >
                     {h.text}
+                  </MenuItem>
+                ))}
+              </Menu>
+              <Tooltip title="链接">
+                <span>
+                  <IconButton
+                    onClick={(e) => setLinkAnchor(e.currentTarget)}
+                    disabled={!active || links.length === 0}
+                  >
+                    <LinkIcon />
+                  </IconButton>
+                </span>
+              </Tooltip>
+              <Menu anchorEl={linkAnchor} open={!!linkAnchor} onClose={() => setLinkAnchor(null)}>
+                {links.map((l) => (
+                  <MenuItem
+                    key={l.url}
+                    component="a"
+                    href={l.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {l.text || l.url}
                   </MenuItem>
                 ))}
               </Menu>

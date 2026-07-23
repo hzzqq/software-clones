@@ -3,6 +3,7 @@ import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import CommentOutlinedIcon from '@mui/icons-material/CommentOutlined';
 import { Link as RouterLink } from 'react-router-dom';
 import type { Post } from '../types';
+import { excerpt } from '../utils/forum';
 
 interface Props {
   post: Post;
@@ -28,7 +29,7 @@ export default function PostCard({ post, onLike }: Props): JSX.Element {
           {post.title}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 1, whiteSpace: 'pre-wrap' }}>
-          {post.body.length > 180 ? `${post.body.slice(0, 180)}…` : post.body}
+          {excerpt(post.body)}
         </Typography>
         {post.tags.length > 0 && (
           <Stack direction="row" spacing={0.5} sx={{ mt: 1, flexWrap: 'wrap', gap: 0.5 }}>

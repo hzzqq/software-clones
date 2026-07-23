@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseTags, countWords, deriveTitle, countCodeBlocks, estimateReadingTime, extractHeadings, sortNotes } from './markdown';
+import { parseTags, countWords, deriveTitle, countCodeBlocks, estimateReadingTime, extractHeadings, extractLinks, sortNotes } from './markdown';
 import type { Note } from '../types';
 
 describe('parseTags', () => {
@@ -81,5 +81,30 @@ describe('sortNotes', () => {
   });
   it('不修改原数组', () => {
     expect(notes).toHaveLength(3);
+  });
+});
+
+describe('extractLinks', () => {
+  it('提取普通链接（文本+地址）', () => {
+    const md = '看 [官网](https://example.com) 和 [文档](https://docs.example.com/a)';
+    expect(extractLinks(md)).toEqual([
+      { text: '官网', url: 'https://example.com' },
+      { text: '文档', url: 'https://docs.example.com/a' },
+    ]);
+  });
+  it('跳过图片链接', () => {
+    const md = '![图](https://img.example.com/x.png) 与 [链](https://example.com)';
+    expect(extractLinks(md)).toEqual([{ text: '链', url: 'https://example.com' }]);
+  });
+  it('跳过代码块内的链接', () => {
+    const md = '```\n[隐藏](https://hidden.example.com)\n```\n[可见](https://visible.example.com)';
+    expect(extractLinks(md)).toEqual([{ text: '可见', url: 'https://visible.example.com' }]);
+  });
+  it('按 url 去重', () => {
+    const md = '[a](https://dup.example.com) 和 [b](https://dup.example.com)';
+    expect(extractLinks(md)).toHaveLength(1);
+  });
+  it('无链接返回空数组', () => {
+    expect(extractLinks('没有链接的纯文本')).toEqual([]);
   });
 });

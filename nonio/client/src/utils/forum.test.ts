@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseTags, slugify, buildCommentTree, countComments, searchPosts } from './forum';
+import { parseTags, slugify, buildCommentTree, countComments, searchPosts, excerpt } from './forum';
 import type { Comment, Post } from '../types';
 
 function mkComment(id: number, parentId: number | null): Comment {
@@ -99,5 +99,24 @@ describe('searchPosts', () => {
   });
   it('频道 + 关键字叠加生效', () => {
     expect(searchPosts('lofi', 1, posts).map((p) => p.id)).toEqual([1, 3]);
+  });
+});
+
+describe('excerpt', () => {
+  it('去除 Markdown 标记并折叠空白', () => {
+    const md = '# 标题\n\n这是 **加粗** 和 `代码` 与 [链接](http://x.com)。\n\n- 列表项';
+    expect(excerpt(md, 200)).toBe('标题 这是 加粗 和 代码 与 链接。 列表项');
+  });
+  it('短文本原样返回（仅去标记）', () => {
+    expect(excerpt('# 你好 world')).toBe('你好 world');
+  });
+  it('超长文本截断并加省略号', () => {
+    const long = '一'.repeat(300);
+    const out = excerpt(long, 180);
+    expect(out.endsWith('…')).toBe(true);
+    expect(out.length).toBe(181);
+  });
+  it('空串返回空串', () => {
+    expect(excerpt('')).toBe('');
   });
 });
