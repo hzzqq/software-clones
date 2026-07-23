@@ -30,8 +30,8 @@ import NotesWidget from '../components/widgets/NotesWidget';
 import { useWidgets } from '../hooks/useWidgets';
 import { CreateWidgetInput, UpdateWidgetInput } from '../api/widgets';
 import { configApi } from '../api/config';
-import { Widget, WidgetLayout } from '../types';
-import { filterWidgets, sortWidgets, countWidgetsByType, filterWidgetsByType, summarizeWidgets, type WidgetSort } from '../utils/filterWidgets';
+import { Widget, WidgetLayout, WidgetType } from '../types';
+import { filterWidgets, sortWidgets, countWidgetsByType, filterWidgetsByType, summarizeWidgets, groupWidgetsByType, widgetTypeLabel, type WidgetSort } from '../utils/filterWidgets';
 
 interface WidgetHandlers {
   onConfigure: (widget: Widget) => void;
@@ -60,7 +60,7 @@ function renderWidget(widget: Widget, handlers: WidgetHandlers): JSX.Element {
     case 'notes':
       return <NotesWidget {...common} onCommit={(t) => handlers.onCommit(widget, t)} />;
     default:
-      return <Box sx={{ p: 2, color: 'text.secondary' }}>未知组件类型：{widget.type}</Box>;
+      return <Box sx={{ p: 2, color: 'text.secondary' }}>未知组件类型：{widgetTypeLabel(widget.type)}</Box>;
   }
 }
 
@@ -83,6 +83,7 @@ export default function DashboardPage(): JSX.Element {
   const [search, setSearch] = useState<string>('');
   const [sortBy, setSortBy] = useState<WidgetSort>('title');
   const [typeFilter, setTypeFilter] = useState<string>('');
+  const [groupByType, setGroupByType] = useState<boolean>(false);
   const [deleteTarget, setDeleteTarget] = useState<Widget | null>(null);
   const [clearAllOpen, setClearAllOpen] = useState<boolean>(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -91,6 +92,15 @@ export default function DashboardPage(): JSX.Element {
   const visibleWidgets = sortWidgets(filterWidgets(search, scoped), sortBy);
   const typeCounts = countWidgetsByType(widgets);
   const summary = summarizeWidgets(visibleWidgets);
+  const groupedWidgets = groupWidgetsByType(visibleWidgets);
+
+  /** 渲染单个组件（供平铺视图与分组视图复用）。 */
+  const renderItem = (widget: Widget): JSX.Element =>
+    renderWidget(widget, {
+      onConfigure: openEdit,
+      onRemove: (w) => setDeleteTarget(w),
+      onCommit: handleCommit,
+    });
 
   const openCreate = useCallback((): void => {
     setEditing(null);
@@ -214,12 +224,19 @@ export default function DashboardPage(): JSX.Element {
               <MenuItem value="">全部</MenuItem>
               {Object.keys(typeCounts).map((t) => (
                 <MenuItem key={t} value={t}>
-                  {t}
+                  {widgetTypeLabel(t as WidgetType)}
                 </MenuItem>
               ))}
             </Select>
           </FormControl>
         )}
+        <Button
+          color={groupByType ? 'primary' : 'inherit'}
+          variant={groupByType ? 'contained' : 'outlined'}
+          onClick={() => setGroupByType((v) => !v)}
+        >
+          按类型分组：{groupByType ? '开' : '关'}
+        </Button>
         <Button startIcon={<UploadIcon />} onClick={() => fileRef.current?.click()}>
           导入 YAML
         </Button>
@@ -243,7 +260,7 @@ export default function DashboardPage(): JSX.Element {
       {widgets.length > 0 && Object.keys(typeCounts).length > 0 && (
         <Stack direction="row" spacing={0.5} sx={{ mb: 2, flexWrap: 'wrap', rowGap: 0.5 }}>
           {Object.entries(typeCounts).map(([t, n]) => (
-            <Chip key={t} size="small" variant="outlined" label={`${t}: ${n}`} />
+            <Chip key={t} size="small" variant="outlined" label={`${widgetTypeLabel(t as WidgetType)}: ${n}`} />
           ))}
           <Chip size="small" color="primary" variant="outlined" label={`共 ${summary.total} 个组件 · ${summary.typeCount} 类`} />
         </Stack>
@@ -284,18 +301,22 @@ export default function DashboardPage(): JSX.Element {
         </Box>
       )}
 
-      {!loading && visibleWidgets.length > 0 && (
-        <WidgetGrid
-          widgets={visibleWidgets}
-          onLayoutChange={onLayoutChange}
-          renderItem={(widget) =>
-            renderWidget(widget, {
-              onConfigure: openEdit,
-              onRemove: (w) => setDeleteTarget(w),
-              onCommit: handleCommit,
-            })
-          }
-        />
+      {!loading && visibleWidgets.length > 0 && !groupByType && (
+        <WidgetGrid widgets={visibleWidgets} onLayoutChange={onLayoutChange} renderItem={renderItem} />
+      )}
+
+      {!loading && visibleWidgets.length > 0 && groupByType && (
+        <Box>
+          {Object.entries(groupedWidgets).map(([type, list]) => (
+            <Box key={type} sx={{ mb: 3 }}>
+              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+                <Chip size="small" color="primary" label={widgetTypeLabel(type as WidgetType)} />
+                <Chip size="small" variant="outlined" label={`${list.length} 个`} />
+              </Stack>
+              <WidgetGrid widgets={list} onLayoutChange={onLayoutChange} renderItem={renderItem} />
+            </Box>
+          ))}
+        </Box>
       )}
 
       <Dialog open={deleteTarget !== null} onClose={() => setDeleteTarget(null)}>

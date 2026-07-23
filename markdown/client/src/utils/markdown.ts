@@ -63,15 +63,24 @@ export interface Heading {
   id: string;
 }
 
-/** 将标题文本转为稳定锚点 id（去 HTML 标签 + 中文保留）。 */
+/**
+ * 将任意标题文本转为 URL 安全的锚点 id（纯函数，不修改入参）。
+ * 规则：小写 → NFD 去重音符号 → 非 [a-z0-9\u4e00-\u9fa5-] 的字符替换为 '-'
+ * → 合并连续 '-' → 去除首尾 '-'。
+ */
+export function sluggify(heading: string): string {
+  return heading
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '') // 去除变音符号（如 é→e）
+    .toLowerCase()
+    .replace(/[^a-z0-9\u4e00-\u9fa5-]+/gu, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+/** 将标题文本转为稳定锚点 id（去 HTML 标签 + 中文保留）。复用 sluggify 集中逻辑。 */
 export function slugifyHeading(text: string, index: number): string {
-  const base =
-    text
-      .replace(/<[^>]+>/g, '')
-      .trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9一-鿿]+/g, '-')
-      .replace(/^-+|-+$/g, '') || `h${index}`;
+  const base = sluggify(text.replace(/<[^>]+>/g, '')) || `h${index}`;
   return `${base}-${index}`;
 }
 

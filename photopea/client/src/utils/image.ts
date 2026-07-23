@@ -9,6 +9,12 @@ export function clamp(v: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, v));
 }
 
+/** 将透明度值夹到 [0,1] 区间，NaN 视为 0；不修改入参。 */
+export function clampOpacity(v: number): number {
+  if (Number.isNaN(v)) return 0;
+  return Math.max(0, Math.min(1, v));
+}
+
 /** 原地灰度化：按 Rec.601 luma 权重取均值。 */
 export function grayscale(data: Uint8ClampedArray): void {
   for (let i = 0; i < data.length; i += 4) {

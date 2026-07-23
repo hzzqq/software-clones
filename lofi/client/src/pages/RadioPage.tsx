@@ -25,7 +25,7 @@ import StationCard from '../components/StationCard';
 import CategoryFilter from '../components/CategoryFilter';
 import { Station } from '../types';
 import { stationApi } from '../api/stations';
-import { filterStations, sortStations, groupStationsByCategory, categoryLabel, filterStationsByLikes, summarizeStations, type StationSort } from '../utils/station';
+import { filterStations, sortStations, groupStationsByCategory, categoryLabel, filterStationsByLikes, filterStationsByCategory, summarizeStations, type StationSort } from '../utils/station';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
 export default function RadioPage(): JSX.Element {
@@ -35,6 +35,7 @@ export default function RadioPage(): JSX.Element {
   const [playing, setPlaying] = useState(false);
   const [volume, setVolume] = useState(0.7);
   const [category, setCategory] = useState<string | undefined>(undefined);
+  const [categoryFilter, setCategoryFilter] = useState('');
   const [q, setQ] = useState('');
   const [sortBy, setSortBy] = useState<StationSort>('name');
   const [minLikes, setMinLikes] = useState<number>(0);
@@ -60,8 +61,12 @@ export default function RadioPage(): JSX.Element {
   const categories = useMemo(() => Array.from(new Set(stations.map((s) => s.category))), [stations]);
 
   const filtered = useMemo(
-    () => sortStations(filterStationsByLikes(filterStations(q, stations), minLikes), sortBy),
-    [stations, q, sortBy, minLikes]
+    () =>
+      sortStations(
+        filterStationsByLikes(filterStationsByCategory(filterStations(q, stations), categoryFilter), minLikes),
+        sortBy,
+      ),
+    [stations, q, categoryFilter, sortBy, minLikes]
   );
 
   const recentStations = useMemo(
@@ -160,6 +165,22 @@ export default function RadioPage(): JSX.Element {
             <MenuItem value={5}>≥ 5</MenuItem>
             <MenuItem value={10}>≥ 10</MenuItem>
             <MenuItem value={20}>≥ 20</MenuItem>
+          </Select>
+        </FormControl>
+        <FormControl size="small" sx={{ minWidth: 160 }}>
+          <InputLabel id="station-category-label">按分类筛选</InputLabel>
+          <Select
+            labelId="station-category-label"
+            label="按分类筛选"
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value as string)}
+          >
+            <MenuItem value="">全部</MenuItem>
+            {categories.map((c) => (
+              <MenuItem key={c} value={c}>
+                {categoryLabel(c)}
+              </MenuItem>
+            ))}
           </Select>
         </FormControl>
         <FormControlLabel control={<Switch size="small" checked={groupView} onChange={(e) => setGroupView(e.target.checked)} />} label="按分类分组" />

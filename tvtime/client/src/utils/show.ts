@@ -42,6 +42,13 @@ export function formatWatchTime(totalSeconds: number): string {
   return `${minutes} 分钟`;
 }
 
+/** 将季/集编号格式化为「S01E02」编码；位数不足补零，0 也会照常补零（如 (0,0)→'S00E00'）。 */
+export function formatEpisodeCode(season: number, episode: number): string {
+  const s = String(season).padStart(2, '0');
+  const e = String(episode).padStart(2, '0');
+  return `S${s}E${e}`;
+}
+
 /** 按名称过滤剧集（空白匹配全部，忽略大小写）。 */
 export function filterShows(query: string, shows: Show[]): Show[] {
   const needle = query.trim().toLowerCase();

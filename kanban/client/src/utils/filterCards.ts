@@ -85,3 +85,13 @@ export function filterCardsByPriority(cards: Card[], priority: number | null): C
   if (priority === null) return cards;
   return cards.filter((c) => c.priority === priority);
 }
+
+/**
+ * 按完成状态筛选（不修改入参）。
+ * onlyIncomplete 为 true 时只保留未完成（completed !== 1）的卡片；
+ * 为 false 时返回全部。
+ */
+export function filterCardsByCompleted(cards: Card[], onlyIncomplete: boolean): Card[] {
+  if (!onlyIncomplete) return cards;
+  return cards.filter((c) => c.completed !== 1);
+}

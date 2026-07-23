@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatDuration, incidentDurationSeconds, uptimePercentage, countByStatus } from './format';
+import { formatDuration, incidentDurationSeconds, uptimePercentage, countByStatus, incidentSeverityLabel } from './format';
 import type { Incident } from '../types';
 
 describe('formatDuration', () => {
@@ -34,6 +34,7 @@ describe('incidentDurationSeconds', () => {
     title: 'x',
     description: null,
     status: 'open',
+    severity: 'medium',
     createdAt: '2026-01-01T00:00:00Z',
     updatedAt: '2026-01-01T00:00:00Z',
     resolvedAt: null,
@@ -91,5 +92,21 @@ describe('countByStatus', () => {
     const before = JSON.stringify(items);
     countByStatus(items);
     expect(JSON.stringify(items)).toBe(before);
+  });
+});
+
+describe('incidentSeverityLabel', () => {
+  it('high → 高', () => {
+    expect(incidentSeverityLabel('high')).toBe('高');
+  });
+  it('medium → 中', () => {
+    expect(incidentSeverityLabel('medium')).toBe('中');
+  });
+  it('low → 低', () => {
+    expect(incidentSeverityLabel('low')).toBe('低');
+  });
+  it('未知值原样透传', () => {
+    expect(incidentSeverityLabel('critical')).toBe('critical');
+    expect(incidentSeverityLabel('')).toBe('');
   });
 });

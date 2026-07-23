@@ -25,7 +25,7 @@ import { Note, Visibility } from '../types';
 import { noteApi } from '../api/notes';
 import { tagApi } from '../api/tags';
 import { useNotes } from '../hooks/useNotes';
-import { pinnedNotes, sortNotesByPinned, summarizeNotes } from '../utils/notes';
+import { pinnedNotes, sortNotesByPinned, summarizeNotes, filterNotesByTag } from '../utils/notes';
 
 export default function NotesPage(): JSX.Element {
   const navigate = useNavigate();
@@ -34,6 +34,7 @@ export default function NotesPage(): JSX.Element {
   const [q, setQ] = useState('');
   const [sort, setSort] = useState<'newest' | 'oldest' | 'updated'>('newest');
   const [onlyPinned, setOnlyPinned] = useState(false);
+  const [dropdownTag, setDropdownTag] = useState('');
   const [tags, setTags] = useState<{ id: number; name: string; count: number }[]>([]);
   const { notes, loading, error, reload } = useNotes({ archived, tag: activeTag, q });
 
@@ -50,6 +51,11 @@ export default function NotesPage(): JSX.Element {
   const visible = useMemo(
     () => sortNotesByPinned(onlyPinned ? pinnedNotes(sorted) : sorted),
     [onlyPinned, sorted]
+  );
+
+  const filtered = useMemo(
+    () => filterNotesByTag(visible, dropdownTag),
+    [visible, dropdownTag]
   );
 
   const refreshTags = () => tagApi.list().then(setTags).catch(() => undefined);
@@ -136,8 +142,21 @@ export default function NotesPage(): JSX.Element {
         <TagFilter tags={tags} active={activeTag} onSelect={setActiveTag} />
       </Box>
 
-      <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 2 }}>
+      <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
         <FormControlLabel control={<Switch size="small" checked={onlyPinned} onChange={(e) => setOnlyPinned(e.target.checked)} />} label="仅看置顶" />
+        <FormControl size="small" sx={{ minWidth: 160 }}>
+          <InputLabel>按标签筛选</InputLabel>
+          <Select
+            label="按标签筛选"
+            value={dropdownTag}
+            onChange={(e) => setDropdownTag(e.target.value as string)}
+          >
+            <MenuItem value="">全部标签</MenuItem>
+            {tags.map((t) => (
+              <MenuItem key={t.id} value={t.name}>{`#${t.name} (${t.count})`}</MenuItem>
+            ))}
+          </Select>
+        </FormControl>
         <FormControl size="small" sx={{ minWidth: 160 }}>
           <InputLabel>排序</InputLabel>
           <Select
@@ -167,7 +186,7 @@ export default function NotesPage(): JSX.Element {
         </Typography>
       ) : (
         <Stack spacing={2} sx={{ mt: 2 }}>
-          {visible.map((n) => (
+          {filtered.map((n) => (
             <NoteCard
               key={n.id}
               note={n}
@@ -180,6 +199,9 @@ export default function NotesPage(): JSX.Element {
               onTagClick={setActiveTag}
             />
           ))}
+          {visible.length > 0 && filtered.length === 0 && (
+            <Typography color="text.secondary">该标签下没有笔记。</Typography>
+          )}
         </Stack>
       )}
     </Box>

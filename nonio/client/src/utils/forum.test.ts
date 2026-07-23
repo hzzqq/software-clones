@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseTags, slugify, buildCommentTree, countComments, searchPosts, excerpt, topPosts, summarizePosts } from './forum';
+import { parseTags, slugify, buildCommentTree, countComments, searchPosts, excerpt, topPosts, summarizePosts, filterPostsByChannel } from './forum';
 import type { Comment, Post } from '../types';
 
 function mkComment(id: number, parentId: number | null): Comment {
@@ -144,6 +144,35 @@ describe('topPosts', () => {
     const before = posts.map((p) => p.id);
     topPosts(posts, 3);
     expect(posts.map((p) => p.id)).toEqual(before);
+  });
+});
+
+describe('filterPostsByChannel', () => {
+  const posts: Post[] = [
+    { id: 1, channelId: 1, channelName: 'a', title: 'Lofi 入门', body: '', authorName: '', tags: [], likes: 0, commentCount: 0, createdAt: '', updatedAt: '' },
+    { id: 2, channelId: 2, channelName: 'b', title: 'React 技巧', body: '', authorName: '', tags: [], likes: 0, commentCount: 0, createdAt: '', updatedAt: '' },
+    { id: 3, channelId: 1, channelName: 'a', title: 'Lofi 进阶', body: '', authorName: '', tags: [], likes: 0, commentCount: 0, createdAt: '', updatedAt: '' },
+  ];
+  it('匹配指定频道', () => {
+    expect(filterPostsByChannel(posts, 1).map((p) => p.id)).toEqual([1, 3]);
+    expect(filterPostsByChannel(posts, 2).map((p) => p.id)).toEqual([2]);
+  });
+  it('字符串形式的频道 id 与数字等价', () => {
+    expect(filterPostsByChannel(posts, '1').map((p) => p.id)).toEqual([1, 3]);
+  });
+  it('无匹配时返回空数组', () => {
+    expect(filterPostsByChannel(posts, 99)).toEqual([]);
+  });
+  it('null / 空串 / 0 返回全部', () => {
+    expect(filterPostsByChannel(posts, null)).toHaveLength(3);
+    expect(filterPostsByChannel(posts, '')).toHaveLength(3);
+    expect(filterPostsByChannel(posts, 0)).toHaveLength(3);
+  });
+  it('不修改入参', () => {
+    const before = posts.map((p) => p.id);
+    const out = filterPostsByChannel(posts, 1);
+    expect(posts.map((p) => p.id)).toEqual(before);
+    expect(out).not.toBe(posts); // 返回的是新数组
   });
 });
 

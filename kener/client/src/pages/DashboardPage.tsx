@@ -21,7 +21,7 @@ import { useServices } from '../hooks/useServices';
 import ServiceCard from '../components/ServiceCard';
 import { servicesApi } from '../api/services';
 import { incidentsApi } from '../api/incidents';
-import { formatDuration, incidentDurationSeconds, uptimePercentage, countByStatus } from '../utils/format';
+import { formatDuration, incidentDurationSeconds, uptimePercentage, serviceHealthLabel, countByStatus, incidentSeverityLabel } from '../utils/format';
 import { overallStatus, statusLabel, ServiceStatus } from '../utils/status';
 import type { Incident } from '../types';
 
@@ -126,6 +126,12 @@ export default function DashboardPage() {
             color={uptimePercentage(services) >= 99 ? 'success' : uptimePercentage(services) >= 90 ? 'warning' : 'error'}
             label={`综合可用率 ${uptimePercentage(services)}%`}
           />
+          <Chip
+            size="small"
+            sx={{ mt: 1, ml: 1 }}
+            color={uptimePercentage(services) >= 99 ? 'success' : uptimePercentage(services) >= 90 ? 'warning' : 'error'}
+            label={`健康度 ${serviceHealthLabel(uptimePercentage(services))}`}
+          />
           <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
             <Chip size="small" variant="outlined" color="success" label={`正常 ${statusCounts.up}`} />
             <Chip size="small" variant="outlined" color="warning" label={`降级 ${statusCounts.degraded}`} />
@@ -150,7 +156,16 @@ export default function DashboardPage() {
           <Stack spacing={1}>
             {openIncidents.map((inc) => (
               <Box key={inc.id}>
-                <Typography variant="body2">{inc.title}</Typography>
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <Typography variant="body2">{inc.title}</Typography>
+                  <Chip
+                    size="small"
+                    color={
+                      inc.severity === 'high' ? 'error' : inc.severity === 'medium' ? 'warning' : 'default'
+                    }
+                    label={`严重度：${incidentSeverityLabel(inc.severity)}`}
+                  />
+                </Stack>
                 <Typography variant="caption" color="text.secondary">
                   {inc.status} · 已持续{' '}
                   {formatDuration(incidentDurationSeconds(inc, Date.now()))}

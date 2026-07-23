@@ -76,12 +76,38 @@ export function matchHistory(
   return `${h.method} ${h.url} ${h.status}`.toLowerCase().includes(n);
 }
 
-/** 将 query params 拼接到 baseUrl，返回完整请求 URL（无 params 时原样返回）。 */
+/** 解析 URL 查询串为对象。"a=1&b=2&c=%20" → {a:'1', b:'2', c:' '}。
+ *  - 每个值均经 decodeURIComponent 解码（如 %20 → 空格）。
+ *  - 忽略 key 为空或整体为空的片段；'' 或 '?' 均返回 {}。
+ *  - 不以任何方式修改入参 qs。 */
+export function parseQueryString(qs: string): Record<string, string> {
+  const out: Record<string, string> = {};
+  const raw = qs.startsWith('?') ? qs.slice(1) : qs;
+  if (!raw) return out;
+  for (const pair of raw.split('&')) {
+    if (!pair) continue; // 空片段（&& 之间）忽略
+    const idx = pair.indexOf('=');
+    if (idx <= 0) continue; // 无 = 或 key 为空，忽略
+    const k = decodeURIComponent(pair.slice(0, idx));
+    const v = decodeURIComponent(pair.slice(idx + 1));
+    if (!k) continue;
+    out[k] = v;
+  }
+  return out;
+}
+
+/** 将 query params 拼接到 baseUrl，返回完整请求 URL（无 params 时原样返回）。
+ *  若 baseUrl 自身已含查询串，先用 parseQueryString 解析后与新参数合并（新参数覆盖同名旧参数）。 */
 export function buildUrlWithQuery(baseUrl: string, params: Record<string, string> = {}): string {
   const hasParams = params && Object.keys(params).length > 0;
   if (!hasParams) return baseUrl;
-  const qs = new URLSearchParams(params).toString();
-  return baseUrl.includes('?') ? `${baseUrl}&${qs}` : `${baseUrl}?${qs}`;
+
+  const qIndex = baseUrl.indexOf('?');
+  const base = qIndex >= 0 ? baseUrl.slice(0, qIndex) : baseUrl;
+  const existing = qIndex >= 0 ? parseQueryString(baseUrl.slice(qIndex + 1)) : {};
+  const merged = { ...existing, ...params };
+  const qs = new URLSearchParams(merged).toString();
+  return `${base}?${qs}`;
 }
 
 /** 由请求草稿生成可复制的 curl 命令（含 query/headers/body，多行拼接）。 */

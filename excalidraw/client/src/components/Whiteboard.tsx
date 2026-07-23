@@ -3,6 +3,7 @@ import { Box, Stack, ToggleButton, ToggleButtonGroup, IconButton, TextField, Men
 import UndoIcon from '@mui/icons-material/Undo';
 import RedoIcon from '@mui/icons-material/Redo';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
+import RotateRightIcon from '@mui/icons-material/RotateRight';
 import SaveIcon from '@mui/icons-material/Save';
 import DownloadIcon from '@mui/icons-material/Download';
 import DescriptionIcon from '@mui/icons-material/Description';
@@ -16,7 +17,7 @@ import TitleIcon from '@mui/icons-material/Title';
 import rough from 'roughjs';
 import type { RoughCanvas } from 'roughjs/bin/canvas';
 import type { CanvasElement, Point, Scene, Tool } from '../types';
-import { normalizeRect, hitTest, uid, serializeScene, snapPoint, boundingBox, getCenter, translateElement } from '../utils/geometry';
+import { normalizeRect, hitTest, uid, serializeScene, snapPoint, boundingBox, getCenter, translateElement, rotateElement } from '../utils/geometry';
 import { sceneApi } from '../api/scenes';
 
 interface Props {
@@ -200,6 +201,15 @@ export default function Whiteboard({ elements, setElements }: Props): JSX.Elemen
     setSelectedId(null);
   };
 
+  // 选中元素绕自身中心顺时针旋转 90°
+  const rotate90 = () => {
+    if (!selectedId) return;
+    pushUndo();
+    setElements((prev) =>
+      prev.map((el) => (el.id === selectedId ? rotateElement(el, 90, getCenter(el)) : el))
+    );
+  };
+
   const nudge = useCallback(
     (dx: number, dy: number) => {
       const id = shortcutRef.current.selectedId;
@@ -334,6 +344,7 @@ export default function Whiteboard({ elements, setElements }: Props): JSX.Elemen
         <IconButton onClick={undo} aria-label="撤销"><UndoIcon /></IconButton>
         <IconButton onClick={redo} aria-label="重做"><RedoIcon /></IconButton>
         <IconButton onClick={deleteSelected} aria-label="删除选中" disabled={!selectedId}><DeleteSweepIcon /></IconButton>
+        <IconButton onClick={rotate90} aria-label="旋转 90°" disabled={!selectedId} title="旋转 90°"><RotateRightIcon /></IconButton>
         <IconButton onClick={clearAll} aria-label="清空" color="error"><DeleteSweepIcon /></IconButton>
         <Divider orientation="vertical" flexItem />
         <IconButton onClick={() => setSnap((v) => !v)} aria-label="网格吸附" color={snap ? 'primary' : 'default'} title="网格吸附">

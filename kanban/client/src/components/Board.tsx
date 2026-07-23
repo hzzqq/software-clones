@@ -12,7 +12,7 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import Column from './Column';
-import { filterCardsByQuery, sortCards, filterCardsByPriority, type CardSort } from '../utils/filterCards';
+import { filterCardsByQuery, sortCards, filterCardsByPriority, filterCardsByCompleted, type CardSort } from '../utils/filterCards';
 import { Card, List, Tag } from '../types';
 
 interface BoardProps {
@@ -21,6 +21,7 @@ interface BoardProps {
   tags: Tag[];
   filterTagId: number | null;
   filterPriority: number | null;
+  onlyIncomplete: boolean;
   searchQuery: string;
   onAddList: (title: string) => void;
   onDeleteList: (id: number) => void;
@@ -36,6 +37,7 @@ export default function Board({
   tags,
   filterTagId,
   filterPriority,
+  onlyIncomplete,
   searchQuery,
   onAddList,
   onDeleteList,
@@ -57,7 +59,8 @@ export default function Board({
     const byTag =
       filterTagId === null ? cards : cards.filter((c) => c.tagIds.includes(filterTagId));
     const byPriority = filterCardsByPriority(byTag, filterPriority);
-    return sortCards(filterCardsByQuery(searchQuery, byPriority), sortBy);
+    const byCompleted = filterCardsByCompleted(byPriority, onlyIncomplete);
+    return sortCards(filterCardsByQuery(searchQuery, byCompleted), sortBy);
   };
 
   return (

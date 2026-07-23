@@ -41,7 +41,7 @@ import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import { uid, applyFilter, getFilterLabel, formatPercent } from '../utils/image';
+import { uid, applyFilter, getFilterLabel, formatPercent, clampOpacity } from '../utils/image';
 import { duplicateLayerName } from '../utils/layers';
 import { designApi } from '../api/designs';
 import type { Layer, Tool, FilterKind, Design } from '../types';
@@ -937,7 +937,7 @@ export default function CanvasEditor(): JSX.Element {
                   max={1}
                   step={0.05}
                   value={layer.opacity}
-                  onChange={(_e, v) => setOpacity(layer.id, v as number)}
+                  onChange={(_e, v) => setOpacity(layer.id, clampOpacity(v as number))}
                 />
               </Box>
             </Box>

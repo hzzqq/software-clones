@@ -94,6 +94,24 @@ export function levenshtein(a: string, b: string): number {
 }
 
 /**
+ * 分类显示标签映射表：将注册表中的分类标识映射为更紧凑的中文标题。
+ * 仅登记需要重写展示形态的分类（如 '加密与哈希' → '加密·哈希'），
+ * 其余分类保持原样，便于将来新增分类时无需改动此表。
+ */
+const CATEGORY_LABELS: Record<string, string> = {
+  '加密与哈希': '加密·哈希',
+  '日期时间': '日期·时间',
+};
+
+/**
+ * 将分类标识映射为抽屉中展示的中文标签；未登记的分类原样返回（passthrough）。
+ * 纯函数、无副作用、不修改入参。
+ */
+export function toolCategoryLabel(category: string): string {
+  return CATEGORY_LABELS[category] ?? category;
+}
+
+/**
  * 容错搜索：在 title / category / description 中
  * 1) 命中子串（忽略大小写）立即返回；
  * 2) 否则按词级编辑距离 ≤ maxDistance 模糊匹配（纠正拼写/拼音近似）。

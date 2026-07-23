@@ -99,6 +99,35 @@ export function getCenter(el: CanvasElement): Point {
   return { x: (b.minX + b.maxX) / 2, y: (b.minY + b.maxY) / 2 };
 }
 
+/** 将单点顺时针旋转 degrees（屏幕坐标系，y 轴向下；正角度即视觉顺时针）绕 center。 */
+function rotatePoint(p: Point, degrees: number, center: Point): Point {
+  const rad = (degrees * Math.PI) / 180;
+  const cos = Math.cos(rad);
+  const sin = Math.sin(rad);
+  const dx = p.x - center.x;
+  const dy = p.y - center.y;
+  return {
+    x: center.x + dx * cos - dy * sin,
+    y: center.y + dx * sin + dy * cos,
+  };
+}
+
+/** 返回绕 center 顺时针旋转 degrees 后的「新」元素（不修改入参）。
+ *  钢笔：旋转全部 points（x/y 同步更新为首个点）；
+ *  矩形/椭圆/箭头：旋转两个对角锚点并重新计算左上角与正尺寸（w/h 互换等保持几何正确）。 */
+export function rotateElement(el: CanvasElement, degrees: number, center: Point): CanvasElement {
+  if (el.type === 'pen' && el.points) {
+    const pts = el.points.map((p) => rotatePoint(p, degrees, center));
+    const first = pts[0];
+    return { ...el, x: first.x, y: first.y, points: pts };
+  }
+  const a = rotatePoint({ x: el.x, y: el.y }, degrees, center);
+  const b = rotatePoint({ x: el.x + el.w, y: el.y + el.h }, degrees, center);
+  const minX = Math.min(a.x, b.x);
+  const minY = Math.min(a.y, b.y);
+  return { ...el, x: minX, y: minY, w: Math.abs(b.x - a.x), h: Math.abs(b.y - a.y) };
+}
+
 /** 返回平移后的新元素（不修改入参；钢笔点集同步平移）。 */
 export function translateElement(el: CanvasElement, dx: number, dy: number): CanvasElement {
   const moved: CanvasElement = { ...el, x: el.x + dx, y: el.y + dy };

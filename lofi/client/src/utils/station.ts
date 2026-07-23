@@ -61,6 +61,13 @@ export function groupStationsByCategory(stations: Station[]): Record<string, Sta
   return map;
 }
 
+/** 按分类筛选（大小写不敏感）；分类为空或空白时返回全部。不修改入参。 */
+export function filterStationsByCategory(stations: Station[], category: string): Station[] {
+  const cat = (category ?? '').trim().toLowerCase();
+  if (!cat) return stations;
+  return stations.filter((s) => s.category.toLowerCase() === cat);
+}
+
 /** 仅保留点赞数 ≥ minLikes 的电台；minLikes ≤ 0 时返回原列表。不修改入参。 */
 export function filterStationsByLikes(stations: Station[], minLikes = 0): Station[] {
   if (minLikes <= 0) return stations;

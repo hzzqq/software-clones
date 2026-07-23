@@ -33,11 +33,34 @@ export function incidentDurationSeconds(incident: Incident, nowMs: number): numb
  * up=100，degraded=50，down/未知=0；取所有服务的均值并夹回 [0,100]。
  * 空列表返回 0。
  */
+/**
+ * 将可用率百分比映射为中文健康度标签：
+ * ≥99.9→'优'，≥99→'良'，≥95→'中'，其余→'差'。
+ * 纯函数，不修改入参。入参来自 uptimePercentage 的输出（0-100）。
+ */
+export function serviceHealthLabel(uptime: number): string {
+  if (uptime >= 99.9) return '优';
+  if (uptime >= 99) return '良';
+  if (uptime >= 95) return '中';
+  return '差';
+}
+
 export function uptimePercentage(items: { lastStatus?: ServiceStatus }[]): number {
   if (!items.length) return 0;
   const score = (s?: ServiceStatus): number => (s === 'up' ? 100 : s === 'degraded' ? 50 : 0);
   const sum = items.reduce((acc, it) => acc + score(it.lastStatus), 0);
   return Math.max(0, Math.min(100, Math.round(sum / items.length)));
+}
+
+/**
+ * 事件严重度 → 中文标签：high→高，medium→中，low→低；
+ * 未知值原样返回（透传），便于兼容后端新增取值。
+ */
+export function incidentSeverityLabel(severity: string): string {
+  if (severity === 'high') return '高';
+  if (severity === 'medium') return '中';
+  if (severity === 'low') return '低';
+  return severity;
 }
 
 export interface StatusCounts {

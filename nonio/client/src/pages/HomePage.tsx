@@ -24,9 +24,8 @@ import ClearIcon from '@mui/icons-material/Clear';
 import { channelApi } from '../api/channels';
 import { postApi } from '../api/posts';
 import type { Channel, Post } from '../types';
-import ChannelFilter from '../components/ChannelFilter';
 import PostCard from '../components/PostCard';
-import { parseTags, searchPosts, topPosts, summarizePosts } from '../utils/forum';
+import { parseTags, searchPosts, topPosts, summarizePosts, filterPostsByChannel } from '../utils/forum';
 
 export default function HomePage(): JSX.Element {
   const [channels, setChannels] = useState<Channel[]>([]);
@@ -59,7 +58,9 @@ export default function HomePage(): JSX.Element {
     void load();
   }, []);
 
-  const filtered = useMemo(() => searchPosts(query, activeChannel, posts), [posts, activeChannel, query]);
+  const channelFiltered = useMemo(() => filterPostsByChannel(posts, activeChannel), [posts, activeChannel]);
+
+  const filtered = useMemo(() => searchPosts(query, null, channelFiltered), [channelFiltered, query]);
 
   const summary = useMemo(() => summarizePosts(filtered), [filtered]);
 
@@ -112,7 +113,21 @@ export default function HomePage(): JSX.Element {
         </Button>
       </Stack>
 
-      <ChannelFilter channels={channels} activeId={activeChannel} onSelect={setActiveChannel} />
+      <FormControl size="small" sx={{ minWidth: 160, mt: 1, mb: 0.5 }}>
+        <InputLabel>按频道筛选</InputLabel>
+        <Select
+          label="按频道筛选"
+          value={activeChannel ?? ''}
+          onChange={(e) => setActiveChannel(e.target.value === '' ? null : Number(e.target.value))}
+        >
+          <MenuItem value="">全部频道</MenuItem>
+          {channels.map((c) => (
+            <MenuItem key={c.id} value={c.id}>
+              {c.name}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
 
       <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
         <Chip size="small" color="primary" variant="outlined" label={`共 ${summary.total} 篇 · ${summary.channels} 个频道 · ♥ ${summary.totalLikes} · 💬 ${summary.totalComments}`} />

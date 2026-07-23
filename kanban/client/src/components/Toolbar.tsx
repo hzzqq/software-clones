@@ -3,10 +3,12 @@ import {
   Button,
   Chip,
   FormControl,
+  FormControlLabel,
   InputLabel,
   MenuItem,
   Select,
   Stack,
+  Switch,
   TextField,
   Typography,
 } from '@mui/material';
@@ -23,6 +25,8 @@ interface ToolbarProps {
   onFilterChange: (tagId: number | null) => void;
   filterPriority: number | null;
   onFilterPriorityChange: (p: number | null) => void;
+  onlyIncomplete: boolean;
+  onOnlyIncompleteChange: (v: boolean) => void;
   onDeleteBoard: () => void;
   onTagsChanged: () => void;
   searchQuery: string;
@@ -43,6 +47,8 @@ export default function Toolbar({
   onFilterChange,
   filterPriority,
   onFilterPriorityChange,
+  onlyIncomplete,
+  onOnlyIncompleteChange,
   onDeleteBoard,
   onTagsChanged,
   searchQuery,
@@ -134,6 +140,15 @@ export default function Toolbar({
             ))}
           </Select>
         </FormControl>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={onlyIncomplete}
+              onChange={(e) => onOnlyIncompleteChange(e.target.checked)}
+            />
+          }
+          label="仅未完成"
+        />
         <Button
           color="warning"
           variant="outlined"

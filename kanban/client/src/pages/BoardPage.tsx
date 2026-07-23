@@ -36,6 +36,7 @@ export default function BoardPage(): JSX.Element {
   const [activeCard, setActiveCard] = useState<Card | null>(null);
   const [filterTagId, setFilterTagId] = useState<number | null>(null);
   const [filterPriority, setFilterPriority] = useState<number | null>(null);
+  const [onlyIncomplete, setOnlyIncomplete] = useState<boolean>(false);
   const [search, setSearch] = useState<string>('');
   const [error, setError] = useState<string>('');
 
@@ -134,6 +135,8 @@ export default function BoardPage(): JSX.Element {
         onFilterChange={setFilterTagId}
         filterPriority={filterPriority}
         onFilterPriorityChange={setFilterPriority}
+        onlyIncomplete={onlyIncomplete}
+        onOnlyIncompleteChange={setOnlyIncomplete}
         onDeleteBoard={() => void deleteBoard()}
         onTagsChanged={() => board.reload()}
         searchQuery={search}
@@ -152,6 +155,7 @@ export default function BoardPage(): JSX.Element {
           tags={board.tags}
           filterTagId={filterTagId}
           filterPriority={filterPriority}
+          onlyIncomplete={onlyIncomplete}
           searchQuery={search}
           onAddList={(t) => void board.addList(t)}
           onDeleteList={(lid) => void board.removeList(lid)}

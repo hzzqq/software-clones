@@ -26,7 +26,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import HistoryIcon from '@mui/icons-material/History';
 import ExtensionIcon from '@mui/icons-material/Extension';
 import ClearIcon from '@mui/icons-material/Clear';
-import { sortTools, fuzzyMatchTools, summarizeTools } from '../utils/search';
+import { sortTools, fuzzyMatchTools, summarizeTools, toolCategoryLabel } from '../utils/search';
 
 import { tools } from '../tools/registry';
 
@@ -135,7 +135,7 @@ export default function MainLayout(): JSX.Element {
               variant="overline"
               sx={{ pl: 2, color: 'text.secondary', lineHeight: 2.2 }}
             >
-              {group.category}
+              {toolCategoryLabel(group.category)}
             </Typography>
             {group.items.map((tool) => (
               <ListItemButton

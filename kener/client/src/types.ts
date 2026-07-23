@@ -12,12 +12,15 @@ export interface Service {
   latencyMs?: number | null;
 }
 
+export type IncidentSeverity = 'high' | 'medium' | 'low';
+
 export interface Incident {
   id: number;
   serviceId: number | null;
   title: string;
   description: string | null;
   status: string;
+  severity: IncidentSeverity;
   createdAt: string;
   updatedAt: string;
   resolvedAt: string | null;

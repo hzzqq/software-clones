@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseTags, formatRelativeTime, visibilityLabel, groupNotesByTag, pinnedNotes, sortNotesByPinned, summarizeNotes } from './notes';
+import { parseTags, formatRelativeTime, visibilityLabel, groupNotesByTag, filterNotesByTag, pinnedNotes, sortNotesByPinned, summarizeNotes } from './notes';
 import { Visibility, Note } from '../types';
 
 describe('parseTags', () => {
@@ -103,6 +103,34 @@ describe('sortNotesByPinned', () => {
   it('不修改入参', () => {
     const before = notes.map((n) => n.id);
     sortNotesByPinned(notes);
+    expect(notes.map((n) => n.id)).toEqual(before);
+  });
+});
+
+describe('filterNotesByTag', () => {
+  const notes: Note[] = [
+    { id: 1, content: '', visibility: 'private', pinned: false, archived: false, createdAt: '', updatedAt: '', tags: ['Work', 'Idea'] },
+    { id: 2, content: '', visibility: 'private', pinned: false, archived: false, createdAt: '', updatedAt: '', tags: ['work', 'Plan'] },
+    { id: 3, content: '', visibility: 'private', pinned: false, archived: false, createdAt: '', updatedAt: '', tags: ['Reading'] },
+    { id: 4, content: '', visibility: 'private', pinned: false, archived: false, createdAt: '', updatedAt: '', tags: [] },
+  ];
+  it('匹配包含该标签的笔记（大小写不敏感）', () => {
+    expect(filterNotesByTag(notes, 'work').map((n) => n.id)).toEqual([1, 2]);
+    expect(filterNotesByTag(notes, 'WORK').map((n) => n.id)).toEqual([1, 2]);
+  });
+  it('子串匹配也能命中', () => {
+    expect(filterNotesByTag(notes, 'ea').map((n) => n.id)).toEqual([1, 3]);
+  });
+  it('无匹配时返回空数组', () => {
+    expect(filterNotesByTag(notes, 'nope')).toEqual([]);
+  });
+  it('空/空白标签返回全部', () => {
+    expect(filterNotesByTag(notes, '').map((n) => n.id)).toEqual([1, 2, 3, 4]);
+    expect(filterNotesByTag(notes, '   ').map((n) => n.id)).toEqual([1, 2, 3, 4]);
+  });
+  it('不修改入参', () => {
+    const before = notes.map((n) => n.id);
+    filterNotesByTag(notes, 'work');
     expect(notes.map((n) => n.id)).toEqual(before);
   });
 });

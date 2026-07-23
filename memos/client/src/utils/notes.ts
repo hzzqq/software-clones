@@ -67,6 +67,18 @@ export function groupNotesByTag(notes: Note[]): Record<string, number> {
   return result;
 }
 
+/**
+ * 按标签筛选笔记：返回 tags 中包含 `tag` 的笔记（大小写不敏感的子串匹配）。
+ * tag 为空或仅空白时返回全部；不修改入参。
+ */
+export function filterNotesByTag(notes: Note[], tag: string): Note[] {
+  const needle = tag.trim().toLowerCase();
+  if (!needle) return notes;
+  return notes.filter((n) =>
+    (n.tags ?? []).some((t) => t.toLowerCase().includes(needle))
+  );
+}
+
 /** 返回已置顶的笔记（pinned === true），不修改入参。 */
 export function pinnedNotes(notes: Note[]): Note[] {
   return notes.filter((n) => n.pinned);

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { filterTools, sortTools, groupToolsByCategory, levenshtein, fuzzyMatchTools, summarizeTools, normalizeQuery } from '../src/utils/search';
+import { filterTools, sortTools, groupToolsByCategory, levenshtein, fuzzyMatchTools, summarizeTools, normalizeQuery, toolCategoryLabel } from '../src/utils/search';
 import type { ToolModule } from '../src/tools/types';
 
 const noop = (() => null) as unknown as ToolModule['Component'];
@@ -125,6 +125,19 @@ describe('levenshtein', () => {
   it('插入/删除距离正确', () => {
     expect(levenshtein('cat', 'cart')).toBe(1);
     expect(levenshtein('cart', 'cat')).toBe(1);
+  });
+});
+
+describe('toolCategoryLabel', () => {
+  it('将「加密与哈希」映射为「加密·哈希」', () => {
+    expect(toolCategoryLabel('加密与哈希')).toBe('加密·哈希');
+  });
+  it('将「日期时间」映射为「日期·时间」', () => {
+    expect(toolCategoryLabel('日期时间')).toBe('日期·时间');
+  });
+  it('未登记的分类原样返回（passthrough）', () => {
+    expect(toolCategoryLabel('开发')).toBe('开发');
+    expect(toolCategoryLabel('未知分类')).toBe('未知分类');
   });
 });
 

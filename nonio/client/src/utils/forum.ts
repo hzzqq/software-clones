@@ -126,6 +126,23 @@ export function topPosts(posts: Post[], n = 3, by: 'likes' | 'comments' = 'likes
   return [...posts].sort((a, b) => key(b) - key(a)).slice(0, n);
 }
 
+/**
+ * 按频道筛选帖子：返回 channelId 与给定值匹配的帖子。
+ * - channelId 为 null / 空串('') / 0 时视为「不过滤」，返回全部；
+ * - 入参既可能是 number 也可能是字符串形式的频道 id（如 Select 控件的 value），
+ *   统一按字符串比较，保证 '1' 与 1 等价；
+ * - 不修改入参（返回新数组）。
+ */
+export function filterPostsByChannel(
+  posts: Post[],
+  channelId: number | string | null,
+): Post[] {
+  // null / '' / 0 视为「全部」
+  const norm = channelId == null || channelId === '' || channelId === 0 ? '' : String(channelId);
+  if (norm === '') return [...posts];
+  return posts.filter((p) => String(p.channelId) === norm);
+}
+
 /** 帖子统计概览。 */
 export interface PostsSummary {
   total: number;
