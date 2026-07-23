@@ -1,5 +1,5 @@
 {
-  "cycle": 78,
+  "cycle": 80,
   "max_cycles": 80,
   "paused": false,
   "phase": "optimize",
@@ -81,11 +81,13 @@
     { "cycle": 75, "app": "tvtime", "task_id": "sort_status_filter", "new_requirement": "sortShows 纯函数+测试；按名称/进度/更新排序 + 全部/进行中/已完结筛选", "files": ["client/src/utils/show.ts", "client/src/utils/show.test.ts", "client/src/pages/ShowsPage.tsx"], "verify": "client 15 passed + typecheck pass", "score": 82 },
     { "cycle": 76, "app": "excalidraw", "task_id": "export_json", "new_requirement": "serializeScene 纯函数+测试；工具栏「导出 JSON」按钮", "files": ["client/src/utils/geometry.ts", "client/src/utils/geometry.test.ts", "client/src/components/Whiteboard.tsx"], "verify": "client 12 passed + typecheck pass", "score": 78 },
     { "cycle": 77, "app": "excalidraw", "task_id": "grid_snap", "new_requirement": "snapPoint 纯函数+测试；网格吸附开关（绘制/拖拽坐标对齐）", "files": ["client/src/utils/geometry.ts", "client/src/utils/geometry.test.ts", "client/src/components/Whiteboard.tsx"], "verify": "client 12 passed + typecheck pass", "score": 76 },
-    { "cycle": 78, "app": "excalidraw", "task_id": "clear_confirm", "new_requirement": "清空画布前确认弹窗（避免误删，仍可撤销）", "files": ["client/src/components/Whiteboard.tsx"], "verify": "client 12 passed + typecheck pass", "score": 72 }
+    { "cycle": 78, "app": "excalidraw", "task_id": "clear_confirm", "new_requirement": "清空画布前确认弹窗（避免误删，仍可撤销）", "files": ["client/src/components/Whiteboard.tsx"], "verify": "client 12 passed + typecheck pass", "score": 72 },
+    { "cycle": 79, "app": "photopea", "task_id": "contrast_filter", "new_requirement": "新增 contrast 对比度滤镜（纯函数+类型扩展+菜单连续滑块+单测）", "files": ["client/src/utils/image.ts", "client/src/types.ts", "client/src/utils/image.test.ts", "client/src/components/CanvasEditor.tsx"], "verify": "client 13 passed + typecheck pass", "score": 80 },
+    { "cycle": 80, "app": "photopea", "task_id": "duplicate_layer", "new_requirement": "duplicateLayerName 纯函数+测试；图层面板「复制图层」按钮(生成不重名副本并插入选中层下方)", "files": ["client/src/utils/layers.ts", "client/src/utils/layers.test.ts", "client/src/components/CanvasEditor.tsx"], "verify": "client 13 passed + typecheck pass", "score": 78 }
   ],
-  "last_task_id": "clear_confirm",
+  "last_task_id": "duplicate_layer",
   "repeat_count": 0,
-  "last_score": 74,
+  "last_score": 78,
   "coverage": {
     "B1": { "it-tools": "optimized", "kanban": "optimized", "glance": "optimized" },
     "B2": { "kener": "optimized", "memos": "optimized", "lofi": "optimized" },

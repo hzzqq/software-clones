@@ -40,7 +40,9 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { uid, applyFilter } from '../utils/image';
+import { duplicateLayerName } from '../utils/layers';
 import { designApi } from '../api/designs';
 import type { Layer, Tool, FilterKind, Design } from '../types';
 
@@ -125,6 +127,7 @@ export default function CanvasEditor(): JSX.Element {
   const [loadBusy, setLoadBusy] = useState(false);
   const [exportScale, setExportScale] = useState(1);
   const [brightnessVal, setBrightnessVal] = useState(1.2);
+  const [contrastVal, setContrastVal] = useState(1.2);
 
   const selectLayer = useCallback((id: string): void => {
     selectedIdRef.current = id;
@@ -228,6 +231,37 @@ export default function CanvasEditor(): JSX.Element {
       setVersion((v) => v + 1);
     },
     [pushUndo, composite]
+  );
+
+  const duplicateLayer = useCallback(
+    (targetId?: string): void => {
+      const id = targetId ?? selectedIdRef.current;
+      const sel = layersRef.current.find((l) => l.id === id);
+      if (!sel) return;
+      pushUndo();
+      const canvas = document.createElement('canvas');
+      canvas.width = sel.canvas.width;
+      canvas.height = sel.canvas.height;
+      const ctx = canvas.getContext('2d');
+      if (ctx) ctx.drawImage(sel.canvas, 0, 0);
+      const name = duplicateLayerName(
+        sel.name,
+        layersRef.current.map((l) => l.name)
+      );
+      const layer: Layer = {
+        id: uid(),
+        name,
+        visible: sel.visible,
+        opacity: sel.opacity,
+        canvas,
+      };
+      const i = layersRef.current.findIndex((l) => l.id === sel.id);
+      layersRef.current.splice(i + 1, 0, layer);
+      selectLayer(layer.id);
+      composite();
+      setVersion((v) => v + 1);
+    },
+    [pushUndo, selectLayer, composite]
   );
 
   const toggleVisible = useCallback(
@@ -748,6 +782,27 @@ export default function CanvasEditor(): JSX.Element {
               应用亮度
             </Button>
           </Box>
+          <Box sx={{ px: 2, py: 1, minWidth: 200 }} onClick={(e) => e.stopPropagation()}>
+            <Typography variant="caption">对比度（{contrastVal.toFixed(1)}×）</Typography>
+            <Slider
+              min={0.3}
+              max={2}
+              step={0.1}
+              value={contrastVal}
+              onChange={(_e, v) => setContrastVal(v as number)}
+            />
+            <Button
+              size="small"
+              fullWidth
+              variant="outlined"
+              onClick={() => {
+                applyImageFilter('contrast', contrastVal);
+                setFilterAnchor(null);
+              }}
+            >
+              应用对比度
+            </Button>
+          </Box>
           <Divider />
           <MenuItem onClick={() => { clearLayer(); setFilterAnchor(null); }}>清空当前图层</MenuItem>
         </Menu>
@@ -834,6 +889,12 @@ export default function CanvasEditor(): JSX.Element {
                 </IconButton>
                 <IconButton size="small" onClick={(e) => { e.stopPropagation(); moveLayer(layer.id, -1); }}>
                   <ArrowDownwardIcon />
+                </IconButton>
+                <IconButton
+                  size="small"
+                  onClick={(e) => { e.stopPropagation(); duplicateLayer(layer.id); }}
+                >
+                  <ContentCopyIcon />
                 </IconButton>
                 <IconButton
                   size="small"

@@ -46,14 +46,24 @@ export function sepia(data: Uint8ClampedArray): void {
   }
 }
 
+/** 原地对比度调节，factor=1 不变，>1 增强，<1 减弱。 */
+export function contrast(data: Uint8ClampedArray, factor: number): void {
+  for (let i = 0; i < data.length; i += 4) {
+    data[i] = clamp((data[i] - 128) * factor + 128, 0, 255);
+    data[i + 1] = clamp((data[i + 1] - 128) * factor + 128, 0, 255);
+    data[i + 2] = clamp((data[i + 2] - 128) * factor + 128, 0, 255);
+  }
+}
+
 /** 统一入口：按类型应用滤镜。 */
 export function applyFilter(
   data: Uint8ClampedArray,
-  kind: 'grayscale' | 'invert' | 'brightness' | 'sepia',
+  kind: 'grayscale' | 'invert' | 'brightness' | 'sepia' | 'contrast',
   factor = 1
 ): void {
   if (kind === 'grayscale') grayscale(data);
   else if (kind === 'invert') invert(data);
   else if (kind === 'sepia') sepia(data);
+  else if (kind === 'contrast') contrast(data, factor);
   else brightness(data, factor);
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { clamp, grayscale, invert, brightness, sepia, uid, applyFilter } from './image';
+import { clamp, grayscale, invert, brightness, sepia, uid, applyFilter, contrast } from './image';
 
 function makeData(): Uint8ClampedArray {
   // 2 个像素：红 (255,0,0) 与 绿 (0,255,0)
@@ -56,5 +56,28 @@ describe('image utils', () => {
   it('uid 返回非空字符串', () => {
     expect(typeof uid()).toBe('string');
     expect(uid().length).toBeGreaterThan(0);
+  });
+
+  it('contrast 按系数调整中灰对比', () => {
+    const d = makeData();
+    contrast(d, 2);
+    // 像素1 (255,0,0): R=(255-128)*2+128=382->255; G=(0-128)*2+128=-128->0
+    expect(d[0]).toBe(255);
+    expect(d[1]).toBe(0);
+    expect(d[2]).toBe(0);
+    d.fill(0);
+    contrast(d, 2);
+    // (0,0,0): (0-128)*2+128=-128->0
+    expect(d[0]).toBe(0);
+    d.fill(128);
+    contrast(d, 2);
+    // (128,128,128): 128 保持不变
+    expect(d[0]).toBe(128);
+  });
+
+  it('applyFilter 分发到对比度滤镜', () => {
+    const d = makeData();
+    applyFilter(d, 'contrast', 2);
+    expect(d[0]).toBe(255);
   });
 });
