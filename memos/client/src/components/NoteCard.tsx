@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   Card,
   CardContent,
@@ -12,8 +13,9 @@ import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
 import ArchiveOutlinedIcon from '@mui/icons-material/ArchiveOutlined';
 import UnarchiveOutlinedIcon from '@mui/icons-material/UnarchiveOutlined';
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { Note } from '../types';
-import { visibilityLabel, formatRelativeTime } from '../utils/notes';
+import { visibilityLabel, formatRelativeTime, countChars } from '../utils/notes';
 
 interface Props {
   note: Note;
@@ -34,6 +36,18 @@ const visColor: Record<Note['visibility'], 'success' | 'warning' | 'default'> = 
 
 export default function NoteCard(props: Props): JSX.Element {
   const { note } = props;
+  const [copied, setCopied] = useState(false);
+
+  const copy = async (): Promise<void> => {
+    try {
+      await navigator.clipboard.writeText(note.content);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      /* clipboard unavailable */
+    }
+  };
+
   return (
     <Card variant="outlined">
       <CardContent>
@@ -41,7 +55,7 @@ export default function NoteCard(props: Props): JSX.Element {
           <Chip size="small" label={visibilityLabel(note.visibility)} color={visColor[note.visibility]} />
           <Typography variant="caption" color="text.secondary">
             {formatRelativeTime(note.createdAt)}
-            {note.pinned ? ' · 📌' : ''}
+            {note.pinned ? ' · 📌' : ''} · {countChars(note.content)} 字
           </Typography>
         </Stack>
         <Typography sx={{ whiteSpace: 'pre-wrap', mt: 1 }}>{note.content}</Typography>
@@ -60,6 +74,11 @@ export default function NoteCard(props: Props): JSX.Element {
           </Stack>
         )}
         <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+          <Tooltip title={copied ? '已复制' : '复制内容'}>
+            <IconButton size="small" onClick={() => void copy()} color={copied ? 'success' : 'default'}>
+              <ContentCopyIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
           <Tooltip title="编辑">
             <IconButton size="small" onClick={() => props.onEdit(note)}>
               <EditOutlinedIcon fontSize="small" />

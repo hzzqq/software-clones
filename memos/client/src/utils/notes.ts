@@ -39,3 +39,14 @@ export function formatRelativeTime(iso: string): string {
   const year = Math.floor(day / 365);
   return `${year} 年前`;
 }
+
+/** Count of non-whitespace characters (works for both CJK and Latin text). */
+export function countChars(content: string): number {
+  return content.replace(/\s/g, '').length;
+}
+
+/** Rough reading time in minutes (~200 chars/min, min 1 for non-empty content). */
+export function estimateReading(content: string): number {
+  if (!content) return 0;
+  return Math.max(1, Math.round(countChars(content) / 200));
+}

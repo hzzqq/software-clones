@@ -1,5 +1,5 @@
 {
-  "cycle": 62,
+  "cycle": 65,
   "max_cycles": 80,
   "paused": false,
   "phase": "optimize",
@@ -65,9 +65,12 @@
     { "cycle": 59, "app": "glance", "task_id": "delete_confirm", "new_requirement": "删除单个组件前确认弹窗（避免误删）", "files": ["client/src/pages/DashboardPage.tsx"], "verify": "client 13 passed + typecheck pass", "score": 74 },
     { "cycle": 60, "app": "kener", "task_id": "auto_refresh", "new_requirement": "自动刷新开关（每 30s 重新探测全部服务）", "files": ["client/src/pages/DashboardPage.tsx"], "verify": "client 6 passed + typecheck pass", "score": 76 },
     { "cycle": 61, "app": "kener", "task_id": "incidents_panel", "new_requirement": "进行中事件面板（incidentsApi 已有接口此前无 UI）", "files": ["client/src/pages/DashboardPage.tsx", "client/src/api/incidents.ts"], "verify": "client 6 passed + typecheck pass", "score": 80 },
-    { "cycle": 62, "app": "kener", "task_id": "service_sort", "new_requirement": "服务列表排序（严重程度/名称/延迟）", "files": ["client/src/pages/DashboardPage.tsx"], "verify": "client 6 passed + typecheck pass", "score": 74 }
+    { "cycle": 62, "app": "kener", "task_id": "service_sort", "new_requirement": "服务列表排序（严重程度/名称/延迟）", "files": ["client/src/pages/DashboardPage.tsx"], "verify": "client 6 passed + typecheck pass", "score": 74 },
+    { "cycle": 63, "app": "memos", "task_id": "notes_sort", "new_requirement": "笔记列表排序（最新/最早创建/最近更新）", "files": ["client/src/pages/NotesPage.tsx"], "verify": "client 12 passed + typecheck pass", "score": 74 },
+    { "cycle": 64, "app": "memos", "task_id": "char_count", "new_requirement": "字数统计(非空白字符)+ 阅读时长估算工具 + 卡片展示", "files": ["client/src/utils/notes.ts", "client/src/utils/textcount.test.ts", "client/src/components/NoteCard.tsx"], "verify": "client 12 passed + typecheck pass", "score": 76 },
+    { "cycle": 65, "app": "memos", "task_id": "copy_button", "new_requirement": "卡片一键复制内容（clipboard + 1.5s 提示）", "files": ["client/src/components/NoteCard.tsx"], "verify": "client 12 passed + typecheck pass", "score": 74 }
   ],
-  "last_task_id": "service_sort",
+  "last_task_id": "copy_button",
   "repeat_count": 0,
   "last_score": 74,
   "coverage": {

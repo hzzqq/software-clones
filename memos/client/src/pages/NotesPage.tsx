@@ -1,9 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
+  FormControl,
   IconButton,
   InputAdornment,
+  InputLabel,
+  MenuItem,
+  Select,
   Stack,
   TextField,
   ToggleButton,
@@ -25,8 +29,17 @@ export default function NotesPage(): JSX.Element {
   const [archived, setArchived] = useState(false);
   const [activeTag, setActiveTag] = useState<string | undefined>(undefined);
   const [q, setQ] = useState('');
+  const [sort, setSort] = useState<'newest' | 'oldest' | 'updated'>('newest');
   const [tags, setTags] = useState<{ id: number; name: string; count: number }[]>([]);
   const { notes, loading, error, reload } = useNotes({ archived, tag: activeTag, q });
+
+  const sorted = useMemo(() => {
+    const arr = [...notes];
+    if (sort === 'newest') arr.sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
+    else if (sort === 'oldest') arr.sort((a, b) => +new Date(a.createdAt) - +new Date(b.createdAt));
+    else arr.sort((a, b) => +new Date(b.updatedAt) - +new Date(a.updatedAt));
+    return arr;
+  }, [notes, sort]);
 
   const refreshTags = () => tagApi.list().then(setTags).catch(() => undefined);
   useEffect(() => {
@@ -108,6 +121,21 @@ export default function NotesPage(): JSX.Element {
         <TagFilter tags={tags} active={activeTag} onSelect={setActiveTag} />
       </Box>
 
+      <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+        <FormControl size="small" sx={{ minWidth: 160 }}>
+          <InputLabel>排序</InputLabel>
+          <Select
+            label="排序"
+            value={sort}
+            onChange={(e) => setSort(e.target.value as 'newest' | 'oldest' | 'updated')}
+          >
+            <MenuItem value="newest">最新创建</MenuItem>
+            <MenuItem value="oldest">最早创建</MenuItem>
+            <MenuItem value="updated">最近更新</MenuItem>
+          </Select>
+        </FormControl>
+      </Box>
+
       {error && (
         <Typography color="error" sx={{ mt: 2 }}>
           {error}
@@ -123,7 +151,7 @@ export default function NotesPage(): JSX.Element {
         </Typography>
       ) : (
         <Stack spacing={2} sx={{ mt: 2 }}>
-          {notes.map((n) => (
+          {sorted.map((n) => (
             <NoteCard
               key={n.id}
               note={n}
