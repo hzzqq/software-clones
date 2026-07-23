@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseTags, formatRelativeTime, visibilityLabel, groupNotesByTag } from './notes';
+import { parseTags, formatRelativeTime, visibilityLabel, groupNotesByTag, pinnedNotes } from './notes';
 import { Visibility, Note } from '../types';
 
 describe('parseTags', () => {
@@ -59,5 +59,24 @@ describe('groupNotesByTag', () => {
   });
   it('空标签不计，空数组返回空对象', () => {
     expect(groupNotesByTag([])).toEqual({});
+  });
+});
+
+describe('pinnedNotes', () => {
+  const notes: Note[] = [
+    { id: 1, content: '', visibility: 'private', pinned: true, archived: false, createdAt: '', updatedAt: '', tags: [] },
+    { id: 2, content: '', visibility: 'private', pinned: false, archived: false, createdAt: '', updatedAt: '', tags: [] },
+    { id: 3, content: '', visibility: 'private', pinned: true, archived: false, createdAt: '', updatedAt: '', tags: [] },
+  ];
+  it('仅返回已置顶的笔记', () => {
+    expect(pinnedNotes(notes).map((n) => n.id)).toEqual([1, 3]);
+  });
+  it('无置顶时返回空数组', () => {
+    expect(pinnedNotes([notes[1]])).toEqual([]);
+  });
+  it('不修改入参', () => {
+    const before = notes.map((n) => n.id);
+    pinnedNotes(notes);
+    expect(notes.map((n) => n.id)).toEqual(before);
   });
 });

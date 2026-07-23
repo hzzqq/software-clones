@@ -51,3 +51,12 @@ export function truncate(text: string, max = 80): string {
   if (text.length <= max) return text;
   return text.slice(0, max - 1) + '…';
 }
+
+/** 按分类分组（不修改入参），组内保持原始顺序。 */
+export function groupStationsByCategory(stations: Station[]): Record<string, Station[]> {
+  const map: Record<string, Station[]> = {};
+  for (const s of stations) {
+    (map[s.category] ||= []).push(s);
+  }
+  return map;
+}

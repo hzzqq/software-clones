@@ -3,6 +3,7 @@ import {
   Alert,
   Box,
   Button,
+  Chip,
   CircularProgress,
   Dialog,
   DialogActions,
@@ -30,7 +31,7 @@ import { useWidgets } from '../hooks/useWidgets';
 import { CreateWidgetInput, UpdateWidgetInput } from '../api/widgets';
 import { configApi } from '../api/config';
 import { Widget, WidgetLayout } from '../types';
-import { filterWidgets, sortWidgets, type WidgetSort } from '../utils/filterWidgets';
+import { filterWidgets, sortWidgets, countWidgetsByType, type WidgetSort } from '../utils/filterWidgets';
 
 interface WidgetHandlers {
   onConfigure: (widget: Widget) => void;
@@ -86,6 +87,7 @@ export default function DashboardPage(): JSX.Element {
   const fileRef = useRef<HTMLInputElement>(null);
 
   const visibleWidgets = sortWidgets(filterWidgets(search, widgets), sortBy);
+  const typeCounts = countWidgetsByType(widgets);
 
   const openCreate = useCallback((): void => {
     setEditing(null);
@@ -216,6 +218,14 @@ export default function DashboardPage(): JSX.Element {
           onChange={(e) => void handleImportFile(e)}
         />
       </Stack>
+
+      {widgets.length > 0 && Object.keys(typeCounts).length > 0 && (
+        <Stack direction="row" spacing={0.5} sx={{ mb: 2, flexWrap: 'wrap', rowGap: 0.5 }}>
+          {Object.entries(typeCounts).map(([t, n]) => (
+            <Chip key={t} size="small" variant="outlined" label={`${t}: ${n}`} />
+          ))}
+        </Stack>
+      )}
 
       {importError && (
         <Alert severity="error" sx={{ mb: 2 }}>

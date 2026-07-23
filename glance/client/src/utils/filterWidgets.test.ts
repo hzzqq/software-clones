@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { filterWidgets, sortWidgets } from './filterWidgets';
+import { filterWidgets, sortWidgets, countWidgetsByType } from './filterWidgets';
 import type { Widget } from '../types';
 
 function mk(id: number, title: string, type: Widget['type']): Widget {
@@ -49,6 +49,21 @@ describe('sortWidgets', () => {
   it('不修改原数组', () => {
     const before = ws.map((w) => w.id);
     sortWidgets(ws, 'title');
+    expect(ws.map((w) => w.id)).toEqual(before);
+  });
+});
+
+describe('countWidgetsByType', () => {
+  const ws: Widget[] = [mk(1, 'a', 'clock'), mk(2, 'b', 'weather'), mk(3, 'c', 'clock')];
+  it('按类型计数', () => {
+    expect(countWidgetsByType(ws)).toEqual({ clock: 2, weather: 1 });
+  });
+  it('空列表返回空对象', () => {
+    expect(countWidgetsByType([])).toEqual({});
+  });
+  it('不修改入参', () => {
+    const before = ws.map((w) => w.id);
+    countWidgetsByType(ws);
     expect(ws.map((w) => w.id)).toEqual(before);
   });
 });

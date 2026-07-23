@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { categoryLabel, truncate, filterStations, sortStations } from './station';
+import { categoryLabel, truncate, filterStations, sortStations, groupStationsByCategory } from './station';
 import { Station } from '../types';
 
 const sample: Station[] = [
@@ -65,6 +65,28 @@ describe('sortStations', () => {
   it('不修改原数组', () => {
     const before = stations.map((s) => s.id);
     sortStations(stations, 'name');
+    expect(stations.map((s) => s.id)).toEqual(before);
+  });
+});
+
+describe('groupStationsByCategory', () => {
+  const stations: Station[] = [
+    { id: 1, name: 'a', category: 'lofi', likes: 0, createdAt: '', streamUrl: '', description: '' },
+    { id: 2, name: 'b', category: 'chill', likes: 0, createdAt: '', streamUrl: '', description: '' },
+    { id: 3, name: 'c', category: 'lofi', likes: 0, createdAt: '', streamUrl: '', description: '' },
+  ];
+  it('按分类分组并保留组内顺序', () => {
+    const g = groupStationsByCategory(stations);
+    expect(Object.keys(g)).toEqual(['lofi', 'chill']);
+    expect(g['lofi'].map((s) => s.id)).toEqual([1, 3]);
+    expect(g['chill'].map((s) => s.id)).toEqual([2]);
+  });
+  it('空列表返回空对象', () => {
+    expect(groupStationsByCategory([])).toEqual({});
+  });
+  it('不修改入参', () => {
+    const before = stations.map((s) => s.id);
+    groupStationsByCategory(stations);
     expect(stations.map((s) => s.id)).toEqual(before);
   });
 });

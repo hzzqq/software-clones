@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, Fragment } from 'react';
 import {
   Box,
   Button,
   Chip,
   FormControl,
+  FormControlLabel,
   Grid,
   IconButton,
   InputAdornment,
@@ -11,6 +12,7 @@ import {
   MenuItem,
   Select,
   Stack,
+  Switch,
   TextField,
   Typography,
 } from '@mui/material';
@@ -23,7 +25,7 @@ import StationCard from '../components/StationCard';
 import CategoryFilter from '../components/CategoryFilter';
 import { Station } from '../types';
 import { stationApi } from '../api/stations';
-import { filterStations, sortStations, type StationSort } from '../utils/station';
+import { filterStations, sortStations, groupStationsByCategory, categoryLabel, type StationSort } from '../utils/station';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
 export default function RadioPage(): JSX.Element {
@@ -35,6 +37,7 @@ export default function RadioPage(): JSX.Element {
   const [category, setCategory] = useState<string | undefined>(undefined);
   const [q, setQ] = useState('');
   const [sortBy, setSortBy] = useState<StationSort>('name');
+  const [groupView, setGroupView] = useState(false);
   const [recentIds, setRecentIds] = useLocalStorage<number[]>('lofi:recent', []);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
@@ -139,6 +142,7 @@ export default function RadioPage(): JSX.Element {
             <MenuItem value="createdAt">按添加时间</MenuItem>
           </Select>
         </FormControl>
+        <FormControlLabel control={<Switch size="small" checked={groupView} onChange={(e) => setGroupView(e.target.checked)} />} label="按分类分组" />
       </Stack>
 
       {featured && (
@@ -236,6 +240,21 @@ export default function RadioPage(): JSX.Element {
         <Typography color="text.secondary" sx={{ mt: 2 }}>
           {q ? `没有匹配“${q}”的电台` : '该分类下还没有电台，点击右上角新增一个吧。'}
         </Typography>
+      ) : groupView ? (
+        Object.entries(groupStationsByCategory(filtered)).map(([cat, items]) => (
+          <Fragment key={cat}>
+            <Typography variant="subtitle2" sx={{ mt: 2, mb: 0.5, color: 'text.secondary' }}>
+              {categoryLabel(cat)}（{items.length}）
+            </Typography>
+            <Grid container spacing={2} sx={{ mb: 1 }}>
+              {items.map((s) => (
+                <Grid item xs={12} sm={6} md={4} key={s.id}>
+                  <StationCard station={s} active={selected?.id === s.id} onPlay={handlePlay} />
+                </Grid>
+              ))}
+            </Grid>
+          </Fragment>
+        ))
       ) : (
         <Grid container spacing={2} sx={{ mt: 1 }}>
           {filtered.map((s) => (

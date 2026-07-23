@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatDuration, incidentDurationSeconds } from './format';
+import { formatDuration, incidentDurationSeconds, uptimePercentage } from './format';
 import type { Incident } from '../types';
 
 describe('formatDuration', () => {
@@ -49,5 +49,23 @@ describe('incidentDurationSeconds', () => {
   it('终点早于起点时夹为 0', () => {
     const now = new Date('2025-12-31T23:00:00Z').getTime();
     expect(incidentDurationSeconds(base, now)).toBe(0);
+  });
+});
+
+describe('uptimePercentage', () => {
+  it('全 up 为 100', () => {
+    expect(uptimePercentage([{ lastStatus: 'up' }, { lastStatus: 'up' }])).toBe(100);
+  });
+  it('degraded 计 50、down/未知计 0', () => {
+    // up=100, degraded=50, down=0 -> 平均 50
+    expect(uptimePercentage([{ lastStatus: 'up' }, { lastStatus: 'degraded' }, { lastStatus: 'down' }])).toBe(50);
+    expect(uptimePercentage([{ lastStatus: 'degraded' }])).toBe(50);
+    expect(uptimePercentage([{ lastStatus: 'down' }])).toBe(0);
+  });
+  it('未知状态计 0', () => {
+    expect(uptimePercentage([{ lastStatus: undefined }, { lastStatus: 'up' }])).toBe(50);
+  });
+  it('空列表返回 0', () => {
+    expect(uptimePercentage([])).toBe(0);
   });
 });

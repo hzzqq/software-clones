@@ -1,4 +1,4 @@
-import type { Incident } from '../types';
+import type { Incident, ServiceStatus } from '../types';
 
 /**
  * 将秒数格式化为人类可读时长。
@@ -26,4 +26,16 @@ export function incidentDurationSeconds(incident: Incident, nowMs: number): numb
   const start = new Date(incident.createdAt).getTime();
   const end = incident.resolvedAt ? new Date(incident.resolvedAt).getTime() : nowMs;
   return Math.max(0, Math.floor((end - start) / 1000));
+}
+
+/**
+ * 综合可用率（百分比，0-100）：
+ * up=100，degraded=50，down/未知=0；取所有服务的均值并夹回 [0,100]。
+ * 空列表返回 0。
+ */
+export function uptimePercentage(items: { lastStatus?: ServiceStatus }[]): number {
+  if (!items.length) return 0;
+  const score = (s?: ServiceStatus): number => (s === 'up' ? 100 : s === 'degraded' ? 50 : 0);
+  const sum = items.reduce((acc, it) => acc + score(it.lastStatus), 0);
+  return Math.max(0, Math.min(100, Math.round(sum / items.length)));
 }

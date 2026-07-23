@@ -3,12 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import {
   Box,
   FormControl,
+  FormControlLabel,
   IconButton,
   InputAdornment,
   InputLabel,
   MenuItem,
   Select,
   Stack,
+  Switch,
   TextField,
   ToggleButton,
   ToggleButtonGroup,
@@ -23,7 +25,7 @@ import { Note, Visibility } from '../types';
 import { noteApi } from '../api/notes';
 import { tagApi } from '../api/tags';
 import { useNotes } from '../hooks/useNotes';
-import { countChars, groupNotesByTag } from '../utils/notes';
+import { countChars, groupNotesByTag, pinnedNotes } from '../utils/notes';
 
 export default function NotesPage(): JSX.Element {
   const navigate = useNavigate();
@@ -31,6 +33,7 @@ export default function NotesPage(): JSX.Element {
   const [activeTag, setActiveTag] = useState<string | undefined>(undefined);
   const [q, setQ] = useState('');
   const [sort, setSort] = useState<'newest' | 'oldest' | 'updated'>('newest');
+  const [onlyPinned, setOnlyPinned] = useState(false);
   const [tags, setTags] = useState<{ id: number; name: string; count: number }[]>([]);
   const { notes, loading, error, reload } = useNotes({ archived, tag: activeTag, q });
 
@@ -47,6 +50,8 @@ export default function NotesPage(): JSX.Element {
     const tagCounts = groupNotesByTag(notes);
     return { total: notes.length, totalChars, tagTotal: Object.keys(tagCounts).length };
   }, [notes]);
+
+  const visible = useMemo(() => (onlyPinned ? pinnedNotes(sorted) : sorted), [onlyPinned, sorted]);
 
   const refreshTags = () => tagApi.list().then(setTags).catch(() => undefined);
   useEffect(() => {
@@ -132,7 +137,8 @@ export default function NotesPage(): JSX.Element {
         <TagFilter tags={tags} active={activeTag} onSelect={setActiveTag} />
       </Box>
 
-      <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+      <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 2 }}>
+        <FormControlLabel control={<Switch size="small" checked={onlyPinned} onChange={(e) => setOnlyPinned(e.target.checked)} />} label="仅看置顶" />
         <FormControl size="small" sx={{ minWidth: 160 }}>
           <InputLabel>排序</InputLabel>
           <Select
@@ -162,7 +168,7 @@ export default function NotesPage(): JSX.Element {
         </Typography>
       ) : (
         <Stack spacing={2} sx={{ mt: 2 }}>
-          {sorted.map((n) => (
+          {visible.map((n) => (
             <NoteCard
               key={n.id}
               note={n}

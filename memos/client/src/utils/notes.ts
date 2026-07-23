@@ -66,3 +66,8 @@ export function groupNotesByTag(notes: Note[]): Record<string, number> {
   }
   return result;
 }
+
+/** 返回已置顶的笔记（pinned === true），不修改入参。 */
+export function pinnedNotes(notes: Note[]): Note[] {
+  return notes.filter((n) => n.pinned);
+}

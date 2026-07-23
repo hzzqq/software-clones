@@ -30,3 +30,12 @@ export function sortWidgets(widgets: Widget[], by: WidgetSort = 'title'): Widget
     }
   });
 }
+
+/** 统计各类型下的组件数量，不修改入参。 */
+export function countWidgetsByType(widgets: Widget[]): Record<string, number> {
+  const map: Record<string, number> = {};
+  for (const w of widgets) {
+    map[w.type] = (map[w.type] ?? 0) + 1;
+  }
+  return map;
+}

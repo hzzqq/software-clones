@@ -12,6 +12,7 @@ import {
   Paper,
   Switch,
   FormControlLabel,
+  Chip,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { useNavigate } from 'react-router-dom';
@@ -20,7 +21,7 @@ import { useServices } from '../hooks/useServices';
 import ServiceCard from '../components/ServiceCard';
 import { servicesApi } from '../api/services';
 import { incidentsApi } from '../api/incidents';
-import { formatDuration, incidentDurationSeconds } from '../utils/format';
+import { formatDuration, incidentDurationSeconds, uptimePercentage } from '../utils/format';
 import { overallStatus, ServiceStatus } from '../utils/status';
 import type { Incident } from '../types';
 
@@ -122,6 +123,12 @@ export default function DashboardPage() {
           <Typography fontWeight={700}>
             整体状态：{STATUS_LABELS[overall]}（共 {services.length} 个服务）
           </Typography>
+          <Chip
+            size="small"
+            sx={{ mt: 1 }}
+            color={uptimePercentage(services) >= 99 ? 'success' : uptimePercentage(services) >= 90 ? 'warning' : 'error'}
+            label={`综合可用率 ${uptimePercentage(services)}%`}
+          />
         </Paper>
       )}
 
