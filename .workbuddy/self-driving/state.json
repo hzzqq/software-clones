@@ -1,5 +1,5 @@
 {
-  "cycle": 65,
+  "cycle": 67,
   "max_cycles": 80,
   "paused": false,
   "phase": "optimize",
@@ -68,9 +68,11 @@
     { "cycle": 62, "app": "kener", "task_id": "service_sort", "new_requirement": "服务列表排序（严重程度/名称/延迟）", "files": ["client/src/pages/DashboardPage.tsx"], "verify": "client 6 passed + typecheck pass", "score": 74 },
     { "cycle": 63, "app": "memos", "task_id": "notes_sort", "new_requirement": "笔记列表排序（最新/最早创建/最近更新）", "files": ["client/src/pages/NotesPage.tsx"], "verify": "client 12 passed + typecheck pass", "score": 74 },
     { "cycle": 64, "app": "memos", "task_id": "char_count", "new_requirement": "字数统计(非空白字符)+ 阅读时长估算工具 + 卡片展示", "files": ["client/src/utils/notes.ts", "client/src/utils/textcount.test.ts", "client/src/components/NoteCard.tsx"], "verify": "client 12 passed + typecheck pass", "score": 76 },
-    { "cycle": 65, "app": "memos", "task_id": "copy_button", "new_requirement": "卡片一键复制内容（clipboard + 1.5s 提示）", "files": ["client/src/components/NoteCard.tsx"], "verify": "client 12 passed + typecheck pass", "score": 74 }
+    { "cycle": 65, "app": "memos", "task_id": "copy_button", "new_requirement": "卡片一键复制内容（clipboard + 1.5s 提示）", "files": ["client/src/components/NoteCard.tsx"], "verify": "client 12 passed + typecheck pass", "score": 74 },
+    { "cycle": 66, "app": "lofi", "task_id": "filter_stations", "new_requirement": "抽出 filterStations 纯函数(名称/描述搜索)+ 测试，接入 RadioPage", "files": ["client/src/utils/station.ts", "client/src/utils/station.test.ts", "client/src/pages/RadioPage.tsx"], "verify": "client 8 passed + typecheck pass", "score": 80 },
+    { "cycle": 67, "app": "lofi", "task_id": "recently_played", "new_requirement": "最近播放(localStorage 记录最近 5 个，Chip 可点击重播)", "files": ["client/src/pages/RadioPage.tsx", "client/src/hooks/useLocalStorage.ts"], "verify": "client 8 passed + typecheck pass", "score": 76 }
   ],
-  "last_task_id": "copy_button",
+  "last_task_id": "recently_played",
   "repeat_count": 0,
   "last_score": 74,
   "coverage": {

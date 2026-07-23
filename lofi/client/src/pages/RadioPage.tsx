@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Box, Button, Grid, IconButton, InputAdornment, Stack, TextField, Typography } from '@mui/material';
+import { Box, Button, Chip, Grid, IconButton, InputAdornment, Stack, TextField, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
@@ -9,6 +9,8 @@ import StationCard from '../components/StationCard';
 import CategoryFilter from '../components/CategoryFilter';
 import { Station } from '../types';
 import { stationApi } from '../api/stations';
+import { filterStations } from '../utils/station';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 
 export default function RadioPage(): JSX.Element {
   const [stations, setStations] = useState<Station[]>([]);
@@ -18,6 +20,7 @@ export default function RadioPage(): JSX.Element {
   const [volume, setVolume] = useState(0.7);
   const [category, setCategory] = useState<string | undefined>(undefined);
   const [q, setQ] = useState('');
+  const [recentIds, setRecentIds] = useLocalStorage<number[]>('lofi:recent', []);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState({ name: '', streamUrl: '', description: '', category: 'lofi' });
@@ -37,17 +40,15 @@ export default function RadioPage(): JSX.Element {
 
   const categories = useMemo(() => Array.from(new Set(stations.map((s) => s.category))), [stations]);
 
-  const filtered = useMemo(() => {
-    const needle = q.trim().toLowerCase();
-    if (!needle) return stations;
-    return stations.filter(
-      (s) =>
-        s.name.toLowerCase().includes(needle) ||
-        (s.description ?? '').toLowerCase().includes(needle),
-    );
-  }, [stations, q]);
+  const filtered = useMemo(() => filterStations(q, stations), [stations, q]);
+
+  const recentStations = useMemo(
+    () => recentIds.map((id) => stations.find((s) => s.id === id)).filter((s): s is Station => !!s),
+    [recentIds, stations],
+  );
 
   const handlePlay = (s: Station) => {
+    setRecentIds((prev) => [s.id, ...prev.filter((id) => id !== s.id)].slice(0, 5));
     if (selected?.id === s.id) setPlaying((p) => !p);
     else {
       setSelected(s);
@@ -172,6 +173,25 @@ export default function RadioPage(): JSX.Element {
             <Button onClick={() => setShowAdd(false)}>取消</Button>
           </Stack>
         </Stack>
+      )}
+
+      {recentStations.length > 0 && (
+        <Box sx={{ mt: 2 }}>
+          <Typography variant="caption" color="text.secondary">
+            最近播放
+          </Typography>
+          <Stack direction="row" spacing={1} sx={{ mt: 0.5, flexWrap: 'wrap', gap: 1 }}>
+            {recentStations.map((s) => (
+              <Chip
+                key={s.id}
+                label={s.name}
+                size="small"
+                color={selected?.id === s.id ? 'primary' : 'default'}
+                onClick={() => handlePlay(s)}
+              />
+            ))}
+          </Stack>
+        </Box>
       )}
 
       <CategoryFilter categories={categories} active={category} onSelect={setCategory} />
