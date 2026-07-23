@@ -8,3 +8,25 @@ export function filterWidgets(query: string, widgets: Widget[]): Widget[] {
     (w) => w.title.toLowerCase().includes(q) || w.type.toLowerCase().includes(q)
   );
 }
+
+export type WidgetSort = 'title' | 'type' | 'updatedAt';
+
+/**
+ * 返回按指定字段排序的新数组（不修改入参）。
+ * - title：按标题字典序
+ * - type：按类型字典序
+ * - updatedAt：最近更新在前
+ */
+export function sortWidgets(widgets: Widget[], by: WidgetSort = 'title'): Widget[] {
+  return [...widgets].sort((a, b) => {
+    switch (by) {
+      case 'type':
+        return a.type.localeCompare(b.type, 'zh');
+      case 'updatedAt':
+        return b.updatedAt.localeCompare(a.updatedAt);
+      case 'title':
+      default:
+        return a.title.localeCompare(b.title, 'zh');
+    }
+  });
+}

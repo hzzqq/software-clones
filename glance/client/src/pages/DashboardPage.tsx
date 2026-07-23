@@ -8,6 +8,10 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
   Stack,
   TextField,
 } from '@mui/material';
@@ -26,7 +30,7 @@ import { useWidgets } from '../hooks/useWidgets';
 import { CreateWidgetInput, UpdateWidgetInput } from '../api/widgets';
 import { configApi } from '../api/config';
 import { Widget, WidgetLayout } from '../types';
-import { filterWidgets } from '../utils/filterWidgets';
+import { filterWidgets, sortWidgets, type WidgetSort } from '../utils/filterWidgets';
 
 interface WidgetHandlers {
   onConfigure: (widget: Widget) => void;
@@ -76,11 +80,12 @@ export default function DashboardPage(): JSX.Element {
   const [editing, setEditing] = useState<Widget | null>(null);
   const [importError, setImportError] = useState<string>('');
   const [search, setSearch] = useState<string>('');
+  const [sortBy, setSortBy] = useState<WidgetSort>('title');
   const [deleteTarget, setDeleteTarget] = useState<Widget | null>(null);
   const [clearAllOpen, setClearAllOpen] = useState<boolean>(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const visibleWidgets = filterWidgets(search, widgets);
+  const visibleWidgets = sortWidgets(filterWidgets(search, widgets), sortBy);
 
   const openCreate = useCallback((): void => {
     setEditing(null);
@@ -179,6 +184,19 @@ export default function DashboardPage(): JSX.Element {
           onChange={(e) => setSearch(e.target.value)}
           sx={{ minWidth: 200 }}
         />
+        <FormControl size="small" sx={{ minWidth: 140 }}>
+          <InputLabel id="widget-sort-label">排序</InputLabel>
+          <Select
+            labelId="widget-sort-label"
+            label="排序"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as WidgetSort)}
+          >
+            <MenuItem value="title">按标题</MenuItem>
+            <MenuItem value="type">按类型</MenuItem>
+            <MenuItem value="updatedAt">按更新时间</MenuItem>
+          </Select>
+        </FormControl>
         <Button startIcon={<UploadIcon />} onClick={() => fileRef.current?.click()}>
           导入 YAML
         </Button>

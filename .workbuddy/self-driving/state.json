@@ -1,6 +1,6 @@
 {
-  "cycle": 80,
-  "max_cycles": 80,
+  "cycle": 83,
+  "max_cycles": 90,
   "paused": false,
   "phase": "optimize",
   "log": [
@@ -83,9 +83,12 @@
     { "cycle": 77, "app": "excalidraw", "task_id": "grid_snap", "new_requirement": "snapPoint 纯函数+测试；网格吸附开关（绘制/拖拽坐标对齐）", "files": ["client/src/utils/geometry.ts", "client/src/utils/geometry.test.ts", "client/src/components/Whiteboard.tsx"], "verify": "client 12 passed + typecheck pass", "score": 76 },
     { "cycle": 78, "app": "excalidraw", "task_id": "clear_confirm", "new_requirement": "清空画布前确认弹窗（避免误删，仍可撤销）", "files": ["client/src/components/Whiteboard.tsx"], "verify": "client 12 passed + typecheck pass", "score": 72 },
     { "cycle": 79, "app": "photopea", "task_id": "contrast_filter", "new_requirement": "新增 contrast 对比度滤镜（纯函数+类型扩展+菜单连续滑块+单测）", "files": ["client/src/utils/image.ts", "client/src/types.ts", "client/src/utils/image.test.ts", "client/src/components/CanvasEditor.tsx"], "verify": "client 13 passed + typecheck pass", "score": 80 },
-    { "cycle": 80, "app": "photopea", "task_id": "duplicate_layer", "new_requirement": "duplicateLayerName 纯函数+测试；图层面板「复制图层」按钮(生成不重名副本并插入选中层下方)", "files": ["client/src/utils/layers.ts", "client/src/utils/layers.test.ts", "client/src/components/CanvasEditor.tsx"], "verify": "client 13 passed + typecheck pass", "score": 78 }
+    { "cycle": 80, "app": "photopea", "task_id": "duplicate_layer", "new_requirement": "duplicateLayerName 纯函数+测试；图层面板「复制图层」按钮(生成不重名副本并插入选中层下方)", "files": ["client/src/utils/layers.ts", "client/src/utils/layers.test.ts", "client/src/components/CanvasEditor.tsx"], "verify": "client 13 passed + typecheck pass", "score": 78 },
+    { "cycle": 81, "app": "it-tools", "task_id": "sort_tools", "new_requirement": "sortTools 纯函数(按标题/key 排序)+测试；抽屉新增排序下拉", "files": ["client/src/utils/search.ts", "client/test/search.test.ts", "client/src/layouts/MainLayout.tsx"], "verify": "client 56 passed + typecheck pass", "score": 78 },
+    { "cycle": 82, "app": "kanban", "task_id": "sort_cards", "new_requirement": "sortCards 纯函数(原序/标题/优先级/截止日/更新时间)+测试；看板新增卡片排序下拉", "files": ["client/src/utils/filterCards.ts", "client/test/filterCards.test.ts", "client/src/components/Board.tsx"], "verify": "client 16 passed + typecheck pass", "score": 80 },
+    { "cycle": 83, "app": "glance", "task_id": "sort_widgets", "new_requirement": "sortWidgets 纯函数(标题/类型/更新时间)+测试；仪表盘新增排序下拉", "files": ["client/src/utils/filterWidgets.ts", "client/src/utils/filterWidgets.test.ts", "client/src/pages/DashboardPage.tsx"], "verify": "client 17 passed + typecheck pass", "score": 78 }
   ],
-  "last_task_id": "duplicate_layer",
+  "last_task_id": "sort_widgets",
   "repeat_count": 0,
   "last_score": 78,
   "coverage": {

@@ -1,8 +1,18 @@
 import { useState } from 'react';
-import { Box, IconButton, Paper, Stack, TextField } from '@mui/material';
+import {
+  Box,
+  FormControl,
+  IconButton,
+  InputLabel,
+  MenuItem,
+  Paper,
+  Select,
+  Stack,
+  TextField,
+} from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import Column from './Column';
-import { filterCardsByQuery } from '../utils/filterCards';
+import { filterCardsByQuery, sortCards, type CardSort } from '../utils/filterCards';
 import { Card, List, Tag } from '../types';
 
 interface BoardProps {
@@ -32,6 +42,7 @@ export default function Board({
   onToggleComplete,
 }: BoardProps): JSX.Element {
   const [title, setTitle] = useState<string>('');
+  const [sortBy, setSortBy] = useState<CardSort>('position');
 
   const submit = (): void => {
     const value = title.trim();
@@ -43,11 +54,29 @@ export default function Board({
   const visibleCards = (cards: Card[]): Card[] => {
     const byTag =
       filterTagId === null ? cards : cards.filter((c) => c.tagIds.includes(filterTagId));
-    return filterCardsByQuery(searchQuery, byTag);
+    return sortCards(filterCardsByQuery(searchQuery, byTag), sortBy);
   };
 
   return (
-    <Box sx={{ display: 'flex', gap: 2, overflowX: 'auto', pb: 2, alignItems: 'flex-start' }}>
+    <Box>
+      <Stack direction="row" spacing={1} sx={{ mb: 1, alignItems: 'center' }}>
+        <FormControl size="small" sx={{ minWidth: 160 }}>
+          <InputLabel id="card-sort-label">卡片排序</InputLabel>
+          <Select
+            labelId="card-sort-label"
+            label="卡片排序"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as CardSort)}
+          >
+            <MenuItem value="position">原顺序</MenuItem>
+            <MenuItem value="title">按标题</MenuItem>
+            <MenuItem value="priority">按优先级</MenuItem>
+            <MenuItem value="dueDate">按截止日</MenuItem>
+            <MenuItem value="updatedAt">按更新时间</MenuItem>
+          </Select>
+        </FormControl>
+      </Stack>
+      <Box sx={{ display: 'flex', gap: 2, overflowX: 'auto', pb: 2, alignItems: 'flex-start' }}>
       {lists.map((list) => (
         <Column
           key={list.id}
@@ -78,6 +107,7 @@ export default function Board({
           </IconButton>
         </Stack>
       </Paper>
+      </Box>
     </Box>
   );
 }

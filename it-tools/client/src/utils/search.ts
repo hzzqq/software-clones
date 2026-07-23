@@ -14,3 +14,18 @@ export function filterTools(query: string, tools: ToolModule[]): ToolModule[] {
       t.category.toLowerCase().includes(q)
   );
 }
+
+export type ToolSort = 'title' | 'key';
+
+/**
+ * 返回按指定字段排序的新数组（不修改入参）。
+ * - 'title'：按标题（忽略大小写）字典序
+ * - 'key'：按稳定 key（忽略大小写）字典序
+ */
+export function sortTools(tools: ToolModule[], by: ToolSort = 'title'): ToolModule[] {
+  return [...tools].sort((a, b) => {
+    const av = (by === 'key' ? a.key : a.title).toLowerCase();
+    const bv = (by === 'key' ? b.key : b.title).toLowerCase();
+    return av.localeCompare(bv);
+  });
+}

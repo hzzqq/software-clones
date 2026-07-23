@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { filterTools } from '../src/utils/search';
+import { filterTools, sortTools } from '../src/utils/search';
 import type { ToolModule } from '../src/tools/types';
 
 const noop = (() => null) as unknown as ToolModule['Component'];
@@ -25,5 +25,20 @@ describe('filterTools', () => {
   });
   it('无命中返回空数组', () => {
     expect(filterTools('zzz', mock)).toHaveLength(0);
+  });
+});
+
+describe('sortTools', () => {
+  it('默认按标题排序且不修改原数组', () => {
+    const before = mock.map((t) => t.key);
+    const sorted = sortTools(mock);
+    expect(sorted).toHaveLength(3);
+    expect(mock.map((t) => t.key)).toEqual(before);
+  });
+  it('按 key 字典序排序', () => {
+    expect(sortTools(mock, 'key').map((t) => t.key)).toEqual(['cron', 'hash', 'json']);
+  });
+  it('空数组返回空数组', () => {
+    expect(sortTools([])).toHaveLength(0);
   });
 });

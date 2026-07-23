@@ -5,11 +5,15 @@ import {
   Box,
   Divider,
   Drawer,
+  FormControl,
   IconButton,
+  InputLabel,
   List,
   ListItemButton,
   ListItemIcon,
   ListItemText,
+  MenuItem,
+  Select,
   TextField,
   Toolbar,
   Typography,
@@ -19,7 +23,7 @@ import StarIcon from '@mui/icons-material/Star';
 import SettingsIcon from '@mui/icons-material/Settings';
 import HistoryIcon from '@mui/icons-material/History';
 import ExtensionIcon from '@mui/icons-material/Extension';
-import { filterTools } from '../utils/search';
+import { filterTools, sortTools } from '../utils/search';
 
 import { tools } from '../tools/registry';
 
@@ -47,14 +51,17 @@ const groups = groupByCategory();
 export default function MainLayout(): JSX.Element {
   const [mobileOpen, setMobileOpen] = useState<boolean>(false);
   const [query, setQuery] = useState<string>('');
+  const [sortBy, setSortBy] = useState<'title' | 'key'>('title');
   const navigate = useNavigate();
 
   const filteredGroups = useMemo(() => {
-    if (!query.trim()) return groups;
-    return groups
-      .map((g) => ({ ...g, items: filterTools(query, g.items) }))
-      .filter((g) => g.items.length > 0);
-  }, [query]);
+    const base = query.trim()
+      ? groups
+          .map((g) => ({ ...g, items: filterTools(query, g.items) }))
+          .filter((g) => g.items.length > 0)
+      : groups;
+    return base.map((g) => ({ ...g, items: sortTools(g.items, sortBy) }));
+  }, [query, sortBy]);
 
   const drawerContent = (
     <Box sx={{ overflow: 'auto' }}>
@@ -72,6 +79,18 @@ export default function MainLayout(): JSX.Element {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
+        <FormControl size="small" fullWidth sx={{ mt: 1 }}>
+          <InputLabel id="tool-sort-label">排序</InputLabel>
+          <Select
+            labelId="tool-sort-label"
+            label="排序"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as 'title' | 'key')}
+          >
+            <MenuItem value="title">按名称</MenuItem>
+            <MenuItem value="key">按标识</MenuItem>
+          </Select>
+        </FormControl>
       </Box>
       <Divider />
       <List dense>
