@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
-  Box, Typography, Stack, Button, LinearProgress, Chip, CircularProgress, Alert, Divider,
+  Box, Typography, Stack, Button, LinearProgress, Chip, CircularProgress, Alert, Divider, ToggleButton, ToggleButtonGroup,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SkipNextIcon from '@mui/icons-material/SkipNext';
@@ -10,13 +10,14 @@ import { showApi } from '../api/shows';
 import { episodeApi } from '../api/episodes';
 import type { Show, Episode } from '../types';
 import EpisodeGrid from '../components/EpisodeGrid';
-import { progressPercent, nextUnwatched, isComplete, episodesLeft, remainingWatchTime, formatWatchTime } from '../utils/show';
+import { progressPercent, nextUnwatched, isComplete, episodesLeft, remainingWatchTime, formatWatchTime, filterEpisodesByWatched, type EpisodeFilter } from '../utils/show';
 
 export default function ShowDetailPage(): JSX.Element {
   const { id } = useParams<{ id: string }>();
   const showId = Number(id);
   const [show, setShow] = useState<Show | null>(null);
   const [episodes, setEpisodes] = useState<Episode[]>([]);
+  const [epFilter, setEpFilter] = useState<EpisodeFilter>('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -71,6 +72,7 @@ export default function ShowDetailPage(): JSX.Element {
   if (!show) return <Alert severity="warning">剧集不存在</Alert>;
 
   const pct = progressPercent(show.watchedCount, show.totalEpisodes);
+  const visibleEps = filterEpisodesByWatched(episodes, epFilter);
 
   return (
     <Box>
@@ -109,7 +111,20 @@ export default function ShowDetailPage(): JSX.Element {
       </Stack>
 
       <Divider sx={{ mb: 2 }} />
-      <EpisodeGrid episodes={episodes} onToggle={toggle} />
+      <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+        <Typography variant="caption" color="text.secondary">剧集筛选：</Typography>
+        <ToggleButtonGroup
+          size="small"
+          value={epFilter}
+          exclusive
+          onChange={(_e, v: EpisodeFilter | null) => v && setEpFilter(v)}
+        >
+          <ToggleButton value="all">全部</ToggleButton>
+          <ToggleButton value="watched">已看</ToggleButton>
+          <ToggleButton value="unwatched">仅未看</ToggleButton>
+        </ToggleButtonGroup>
+      </Stack>
+      <EpisodeGrid episodes={visibleEps} onToggle={toggle} />
     </Box>
   );
 }

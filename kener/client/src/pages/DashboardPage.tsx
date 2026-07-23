@@ -21,15 +21,10 @@ import { useServices } from '../hooks/useServices';
 import ServiceCard from '../components/ServiceCard';
 import { servicesApi } from '../api/services';
 import { incidentsApi } from '../api/incidents';
-import { formatDuration, incidentDurationSeconds, uptimePercentage } from '../utils/format';
-import { overallStatus, ServiceStatus } from '../utils/status';
+import { formatDuration, incidentDurationSeconds, uptimePercentage, countByStatus } from '../utils/format';
+import { overallStatus, statusLabel, ServiceStatus } from '../utils/status';
 import type { Incident } from '../types';
 
-const STATUS_LABELS: Record<ServiceStatus, string> = {
-  up: '正常',
-  degraded: '降级',
-  down: '故障',
-};
 const STATUS_RANK: Record<ServiceStatus, number> = { down: 0, degraded: 1, up: 2 };
 
 const BANNER_COLOR: Record<ServiceStatus, string> = {
@@ -71,6 +66,8 @@ export default function DashboardPage() {
     () => overallStatus(services.map((s) => s.lastStatus ?? 'down')),
     [services]
   );
+
+  const statusCounts = countByStatus(services);
 
   const visible = useMemo(() => {
     const filtered =
@@ -121,7 +118,7 @@ export default function DashboardPage() {
           }}
         >
           <Typography fontWeight={700}>
-            整体状态：{STATUS_LABELS[overall]}（共 {services.length} 个服务）
+            整体状态：{statusLabel(overall)}（共 {services.length} 个服务）
           </Typography>
           <Chip
             size="small"
@@ -129,6 +126,11 @@ export default function DashboardPage() {
             color={uptimePercentage(services) >= 99 ? 'success' : uptimePercentage(services) >= 90 ? 'warning' : 'error'}
             label={`综合可用率 ${uptimePercentage(services)}%`}
           />
+          <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+            <Chip size="small" variant="outlined" color="success" label={`正常 ${statusCounts.up}`} />
+            <Chip size="small" variant="outlined" color="warning" label={`降级 ${statusCounts.degraded}`} />
+            <Chip size="small" variant="outlined" color="error" label={`故障 ${statusCounts.down}`} />
+          </Stack>
         </Paper>
       )}
 

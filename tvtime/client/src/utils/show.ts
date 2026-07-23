@@ -64,3 +64,12 @@ export function sortShows(shows: Show[], by: ShowSort): Show[] {
   else arr.sort((a, b) => +new Date(b.updatedAt) - +new Date(a.updatedAt));
   return arr;
 }
+
+/** 剧集观看状态筛选维度。 */
+export type EpisodeFilter = 'all' | 'watched' | 'unwatched';
+
+/** 按观看状态筛选剧集：'all' 返回全部；'watched' 仅已看；'unwatched' 仅未看。 */
+export function filterEpisodesByWatched(episodes: Episode[], filter: EpisodeFilter = 'all'): Episode[] {
+  if (filter === 'all') return episodes;
+  return episodes.filter((e) => (filter === 'watched' ? e.watched : !e.watched));
+}

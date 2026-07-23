@@ -29,6 +29,8 @@ interface ToolbarProps {
   totalCards?: number;
   completedCards?: number;
   priorityCounts?: Record<number, number>;
+  dueSoonCount?: number;
+  overdueCount?: number;
 }
 
 /** Board header: name, tag filter, edit tags, and delete. */
@@ -45,6 +47,8 @@ export default function Toolbar({
   totalCards,
   completedCards,
   priorityCounts,
+  dueSoonCount,
+  overdueCount,
 }: ToolbarProps): JSX.Element {
   const [editOpen, setEditOpen] = useState<boolean>(false);
   return (
@@ -73,6 +77,12 @@ export default function Toolbar({
                 <Chip key={p} size="small" variant="outlined" label={`P${p}: ${n}`} />
               ))}
           </Stack>
+        )}
+        {typeof dueSoonCount === 'number' && dueSoonCount > 0 && (
+          <Chip size="small" color="warning" sx={{ mt: 0.5 }} label={`${dueSoonCount} 项临期`} />
+        )}
+        {typeof overdueCount === 'number' && overdueCount > 0 && (
+          <Chip size="small" color="error" sx={{ mt: 0.5 }} label={`${overdueCount} 项逾期`} />
         )}
       </Box>
       <Stack direction="row" spacing={1} alignItems="center">

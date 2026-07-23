@@ -3,6 +3,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
   AppBar,
   Box,
+  Chip,
   Divider,
   Drawer,
   FormControl,
@@ -23,7 +24,7 @@ import StarIcon from '@mui/icons-material/Star';
 import SettingsIcon from '@mui/icons-material/Settings';
 import HistoryIcon from '@mui/icons-material/History';
 import ExtensionIcon from '@mui/icons-material/Extension';
-import { filterTools, sortTools } from '../utils/search';
+import { sortTools, fuzzyMatchTools, summarizeTools } from '../utils/search';
 
 import { tools } from '../tools/registry';
 
@@ -59,11 +60,13 @@ export default function MainLayout(): JSX.Element {
     const scoped = catFilter ? groups.filter((g) => g.category === catFilter) : groups;
     const base = query.trim()
       ? scoped
-          .map((g) => ({ ...g, items: filterTools(query, g.items) }))
+          .map((g) => ({ ...g, items: fuzzyMatchTools(g.items, query) }))
           .filter((g) => g.items.length > 0)
       : scoped;
     return base.map((g) => ({ ...g, items: sortTools(g.items, sortBy) }));
   }, [query, sortBy, catFilter]);
+
+  const summary = summarizeTools(filteredGroups.flatMap((g) => g.items));
 
   const drawerContent = (
     <Box sx={{ overflow: 'auto' }}>
@@ -109,6 +112,9 @@ export default function MainLayout(): JSX.Element {
             ))}
           </Select>
         </FormControl>
+      </Box>
+      <Box sx={{ px: 2, pb: 1 }}>
+        <Chip size="small" variant="outlined" label={`匹配 ${summary.total} 个工具 · ${summary.categories} 类`} />
       </Box>
       <Divider />
       <List dense>

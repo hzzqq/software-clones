@@ -26,3 +26,15 @@ export function overallStatus(items: ServiceStatus[]): ServiceStatus {
   if (items.some((s) => s === 'degraded')) return 'degraded';
   return 'up';
 }
+
+/** 状态中文标签映射（集中维护，避免各页面重复定义）。 */
+export const STATUS_LABELS: Record<ServiceStatus, string> = {
+  up: '正常',
+  degraded: '降级',
+  down: '故障',
+};
+
+/** 返回状态的中文标签（未知状态退化为原名）。 */
+export function statusLabel(status: ServiceStatus): string {
+  return STATUS_LABELS[status] ?? status;
+}

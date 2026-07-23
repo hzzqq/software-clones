@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseTags, countWords, deriveTitle, countCodeBlocks, estimateReadingTime, extractHeadings, extractLinks, sortNotes } from './markdown';
+import { parseTags, countWords, deriveTitle, countCodeBlocks, estimateReadingTime, extractHeadings, extractLinks, sortNotes, filterNotesByFolder, summarizeNotes } from './markdown';
 import type { Note } from '../types';
 
 describe('parseTags', () => {
@@ -84,6 +84,33 @@ describe('sortNotes', () => {
   });
 });
 
+describe('filterNotesByFolder', () => {
+  const mk = (id: number, folder: string): Note => ({
+    id, title: `n${id}`, content: '', folder, tags: [], pinned: false, createdAt: '', updatedAt: '',
+  });
+  const notes = [mk(1, '工作'), mk(2, '工作'), mk(3, '生活'), mk(4, '')];
+  it('空文件夹返回全部', () => {
+    expect(filterNotesByFolder(notes, '')).toHaveLength(4);
+    expect(filterNotesByFolder(notes, 'all')).toHaveLength(4);
+  });
+  it('精确匹配文件夹', () => {
+    expect(filterNotesByFolder(notes, '工作').map((n) => n.id)).toEqual([1, 2]);
+  });
+  it('空格被裁剪', () => {
+    expect(filterNotesByFolder(notes, '  工作  ').map((n) => n.id)).toEqual([1, 2]);
+  });
+  it('未分类归入空字符串', () => {
+    expect(filterNotesByFolder(notes, '').filter((n) => n.folder === '')).toHaveLength(1);
+  });
+  it('不存在的文件夹返回空', () => {
+    expect(filterNotesByFolder(notes, '不存在')).toHaveLength(0);
+  });
+  it('不修改原数组', () => {
+    filterNotesByFolder(notes, '工作');
+    expect(notes).toHaveLength(4);
+  });
+});
+
 describe('extractLinks', () => {
   it('提取普通链接（文本+地址）', () => {
     const md = '看 [官网](https://example.com) 和 [文档](https://docs.example.com/a)';
@@ -106,5 +133,30 @@ describe('extractLinks', () => {
   });
   it('无链接返回空数组', () => {
     expect(extractLinks('没有链接的纯文本')).toEqual([]);
+  });
+});
+
+describe('summarizeNotes', () => {
+  const notes: Note[] = [
+    { id: 1, title: 'a', content: '你好 world foo', folder: '', tags: ['Todo', 'todo'], pinned: false, createdAt: '', updatedAt: '' },
+    { id: 2, title: 'b', content: '', folder: 'work', tags: ['阅读'], pinned: false, createdAt: '', updatedAt: '' },
+    { id: 3, title: 'c', content: '中文测试 123', folder: '', tags: [], pinned: false, createdAt: '', updatedAt: '' },
+  ];
+  it('统计总数、总字数、标签总数（去重归一）', () => {
+    // note1 你好 world foo = 2(中文)+2(英文词) = 4；note3 中文测试 123 = 4(中文)+1(数字词) = 5 → 合计 9
+    // note1 ['Todo','todo'] 归一去重为 1，note2 ['阅读'] 为 1 → 标签总数 2
+    expect(summarizeNotes(notes)).toEqual({ total: 3, totalWords: 9, tagTotal: 2 });
+  });
+  it('空列表返回全零', () => {
+    expect(summarizeNotes([])).toEqual({ total: 0, totalWords: 0, tagTotal: 0 });
+  });
+  it('缺省 tags 时标签数为 0', () => {
+    const n: Note[] = [{ id: 1, title: 'x', content: 'hello', folder: '', tags: [], pinned: false, createdAt: '', updatedAt: '' }];
+    expect(summarizeNotes(n)).toEqual({ total: 1, totalWords: 1, tagTotal: 0 });
+  });
+  it('不修改入参', () => {
+    const before = notes.map((n) => n.id);
+    summarizeNotes(notes);
+    expect(notes.map((n) => n.id)).toEqual(before);
   });
 });

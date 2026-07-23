@@ -71,3 +71,25 @@ export function groupNotesByTag(notes: Note[]): Record<string, number> {
 export function pinnedNotes(notes: Note[]): Note[] {
   return notes.filter((n) => n.pinned);
 }
+
+/**
+ * 置顶笔记排在前面（稳定排序，组内保持原相对顺序），不修改入参。
+ * 配合「仅看置顶」开关使用，确保置顶项始终优先可见。
+ */
+export function sortNotesByPinned(notes: Note[]): Note[] {
+  return [...notes].sort((a, b) => Number(b.pinned) - Number(a.pinned));
+}
+
+/** 笔记统计概览。 */
+export interface NotesSummary {
+  total: number;
+  totalChars: number;
+  tagTotal: number;
+}
+
+/** 汇总笔记：总数、总字数、标签数（不修改入参）。 */
+export function summarizeNotes(notes: Note[]): NotesSummary {
+  const totalChars = notes.reduce((sum, n) => sum + countChars(n.content), 0);
+  const tagCounts = groupNotesByTag(notes);
+  return { total: notes.length, totalChars, tagTotal: Object.keys(tagCounts).length };
+}

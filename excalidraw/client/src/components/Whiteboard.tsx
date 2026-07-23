@@ -16,7 +16,7 @@ import TitleIcon from '@mui/icons-material/Title';
 import rough from 'roughjs';
 import type { RoughCanvas } from 'roughjs/bin/canvas';
 import type { CanvasElement, Point, Scene, Tool } from '../types';
-import { normalizeRect, hitTest, uid, serializeScene, snapPoint, boundingBox } from '../utils/geometry';
+import { normalizeRect, hitTest, uid, serializeScene, snapPoint, boundingBox, getCenter } from '../utils/geometry';
 import { sceneApi } from '../api/scenes';
 
 interface Props {
@@ -337,6 +337,14 @@ export default function Whiteboard({ elements, setElements }: Props): JSX.Elemen
           return bb ? (
             <Chip size="small" variant="outlined" sx={{ ml: 1 }} title="内容边界尺寸" label={`内容 ${Math.round(bb.width)}×${Math.round(bb.height)}`} />
           ) : null;
+        })()}
+        {selectedId && (() => {
+          const sel = elements.find((e) => e.id === selectedId);
+          if (!sel) return null;
+          const c = getCenter(sel);
+          return (
+            <Chip size="small" variant="outlined" sx={{ ml: 1 }} title="选中元素中心坐标" label={`中心 ${Math.round(c.x)}, ${Math.round(c.y)}`} />
+          );
         })()}
       </Stack>
       <Dialog open={loadOpen} onClose={() => setLoadOpen(false)} fullWidth maxWidth="xs">

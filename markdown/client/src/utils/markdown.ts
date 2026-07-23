@@ -107,6 +107,16 @@ export function sortNotes(notes: Note[]): Note[] {
   });
 }
 
+/**
+ * 按文件夹过滤笔记：folder 为空或 'all' 时返回全部，否则按精确匹配过滤。
+ * 笔记 folder 为空字符串时归入「未分类」。
+ */
+export function filterNotesByFolder(notes: Note[], folder: string): Note[] {
+  const f = folder.trim();
+  if (!f || f === 'all') return notes;
+  return notes.filter((n) => (n.folder ?? '').trim() === f);
+}
+
 /** 单个 Markdown 链接（文本 + 地址）。 */
 export interface MdLink {
   text: string;
@@ -139,4 +149,24 @@ export function extractLinks(content: string): MdLink[] {
     }
   }
   return out;
+}
+
+/** 笔记列表统计概览。 */
+export interface NotesSummary {
+  total: number;
+  totalWords: number;
+  tagTotal: number;
+}
+
+/** 汇总笔记列表：总篇数、总字数、标签总数（去重，小写归一）。不修改入参。 */
+export function summarizeNotes(notes: Note[]): NotesSummary {
+  const tagSet = new Set<string>();
+  let totalWords = 0;
+  for (const n of notes) {
+    totalWords += countWords(n.content ?? '');
+    for (const t of n.tags ?? []) {
+      if (t) tagSet.add(t.toLowerCase());
+    }
+  }
+  return { total: notes.length, totalWords, tagTotal: tagSet.size };
 }

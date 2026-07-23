@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   Box,
+  Chip,
   Typography,
   TextField,
   Button,
@@ -25,7 +26,7 @@ import { postApi } from '../api/posts';
 import type { Channel, Post } from '../types';
 import ChannelFilter from '../components/ChannelFilter';
 import PostCard from '../components/PostCard';
-import { parseTags, searchPosts } from '../utils/forum';
+import { parseTags, searchPosts, topPosts, summarizePosts } from '../utils/forum';
 
 export default function HomePage(): JSX.Element {
   const [channels, setChannels] = useState<Channel[]>([]);
@@ -60,6 +61,8 @@ export default function HomePage(): JSX.Element {
 
   const filtered = useMemo(() => searchPosts(query, activeChannel, posts), [posts, activeChannel, query]);
 
+  const summary = useMemo(() => summarizePosts(filtered), [filtered]);
+
   const sorted = useMemo(() => {
     const arr = [...filtered];
     if (sort === 'likes') arr.sort((a, b) => b.likes - a.likes);
@@ -67,6 +70,8 @@ export default function HomePage(): JSX.Element {
     else arr.sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
     return arr;
   }, [filtered, sort]);
+
+  const hotPosts = useMemo(() => topPosts(posts, 3, 'likes'), [posts]);
 
   const handleLike = async (id: number) => {
     try {
@@ -109,6 +114,10 @@ export default function HomePage(): JSX.Element {
 
       <ChannelFilter channels={channels} activeId={activeChannel} onSelect={setActiveChannel} />
 
+      <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+        <Chip size="small" color="primary" variant="outlined" label={`共 ${summary.total} 篇 · ${summary.channels} 个频道 · ♥ ${summary.totalLikes} · 💬 ${summary.totalComments}`} />
+      </Stack>
+
       <TextField
         fullWidth
         size="small"
@@ -146,6 +155,22 @@ export default function HomePage(): JSX.Element {
           </Select>
         </FormControl>
       </Box>
+
+      {!query && activeChannel === null && !loading && hotPosts.length > 0 && (
+        <Box sx={{ my: 2, p: 1.5, border: 1, borderColor: 'divider', borderRadius: 2, bgcolor: 'background.paper' }}>
+          <Typography variant="subtitle2" sx={{ mb: 1 }}>🔥 热门帖子</Typography>
+          <Stack spacing={1}>
+            {hotPosts.map((p, i) => (
+              <Box key={p.id} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="body2" noWrap sx={{ flex: 1, mr: 1 }}>
+                  {i + 1}. {p.title}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">♥ {p.likes}</Typography>
+              </Box>
+            ))}
+          </Stack>
+        </Box>
+      )}
 
       {loading && <CircularProgress sx={{ display: 'block', mx: 'auto', my: 4 }} />}
       {error && <Alert severity="error" sx={{ my: 2 }}>{error}</Alert>}

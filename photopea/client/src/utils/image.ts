@@ -1,4 +1,5 @@
 // 纯函数图像处理工具（不依赖 canvas，可在 node 下单元测试）
+import type { FilterKind } from '../types';
 
 /** 生成短随机 id。 */
 export const uid = (): string => Math.random().toString(36).slice(2, 10);
@@ -77,4 +78,19 @@ export function applyFilter(
   else if (kind === 'contrast') contrast(data, factor);
   else if (kind === 'saturate') saturate(data, factor);
   else brightness(data, factor);
+}
+
+/** 滤镜中文标签映射。 */
+export const FILTER_LABELS: Record<FilterKind, string> = {
+  grayscale: '灰度',
+  invert: '反色',
+  brightness: '亮度',
+  sepia: '复古',
+  contrast: '对比度',
+  saturate: '饱和度',
+};
+
+/** 返回滤镜的中文标签（未知 kind 退化为原名，避免界面显示空白）。 */
+export function getFilterLabel(kind: FilterKind): string {
+  return FILTER_LABELS[kind] ?? kind;
 }

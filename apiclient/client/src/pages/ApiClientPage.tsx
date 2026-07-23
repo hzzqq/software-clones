@@ -38,7 +38,7 @@ import { historyApi } from '../api/history';
 import type { HttpMethod, ProxyResponse, SavedRequest, HistoryItem } from '../types';
 import RequestBuilder from '../components/RequestBuilder';
 import ResponseViewer from '../components/ResponseViewer';
-import { parseHeadersText, parseKeyValueText, headersToText as h2t, matchRequest, matchHistory, buildCurlCommand, sortRequests, groupByMethod, type RequestSort } from '../utils/http';
+import { parseHeadersText, parseKeyValueText, headersToText as h2t, matchRequest, matchHistory, buildCurlCommand, sortRequests, groupByMethod, buildUrlWithQuery, type RequestSort } from '../utils/http';
 
 interface Draft {
   method: HttpMethod;
@@ -109,6 +109,7 @@ export default function ApiClientPage(): JSX.Element {
   const filteredHistory = history.filter((h) => matchHistory(sideNeedle, h));
   const sortedRequests = sortRequests(filteredRequests, sideSort);
   const sortedHistory = sortRequests(filteredHistory, sideSort);
+  const resolvedUrl = buildUrlWithQuery(draft.url, parseKeyValueText(draft.paramsText));
 
   const send = async () => {
     if (!draft.url.trim()) return;
@@ -369,6 +370,11 @@ export default function ApiClientPage(): JSX.Element {
             </Button>
             {loading && <CircularProgress size={18} />}
           </Stack>
+          {draft.url.trim() && (
+            <Typography variant="caption" color="text.secondary" sx={{ px: 1.5, pb: 1, display: 'block', wordBreak: 'break-all' }}>
+              请求 URL：{resolvedUrl}
+            </Typography>
+          )}
         </Box>
         <Divider />
         <Box sx={{ flexGrow: 1, overflowY: 'auto' }}>

@@ -39,3 +39,24 @@ export function countWidgetsByType(widgets: Widget[]): Record<string, number> {
   }
   return map;
 }
+
+/** 按类型精确筛选；type 为空串或 'all' 时返回原列表。不修改入参。 */
+export function filterWidgetsByType(widgets: Widget[], type: string): Widget[] {
+  const t = type.trim().toLowerCase();
+  if (!t || t === 'all') return widgets;
+  return widgets.filter((w) => w.type.toLowerCase() === t);
+}
+
+/** 组件统计概览。 */
+export interface WidgetsSummary {
+  total: number;
+  typeCount: number;
+  byType: Record<string, number>;
+}
+
+/** 汇总组件：总数、类型数、各类型数量（不修改入参）。 */
+export function summarizeWidgets(widgets: Widget[]): WidgetsSummary {
+  const byType: Record<string, number> = {};
+  for (const w of widgets) byType[w.type] = (byType[w.type] ?? 0) + 1;
+  return { total: widgets.length, typeCount: Object.keys(byType).length, byType };
+}

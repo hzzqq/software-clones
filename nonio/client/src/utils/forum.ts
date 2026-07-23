@@ -116,3 +116,33 @@ export function excerpt(text: string, max = 180): string {
   if (stripped.length <= max) return stripped;
   return stripped.slice(0, max).trimEnd() + '…';
 }
+
+/**
+ * 取按点赞数或评论数排序的前 N 篇帖子（默认按点赞）。不修改入参。
+ * by='comments' 时使用 commentCount 作为排序键。
+ */
+export function topPosts(posts: Post[], n = 3, by: 'likes' | 'comments' = 'likes'): Post[] {
+  const key = (p: Post) => (by === 'comments' ? p.commentCount : p.likes);
+  return [...posts].sort((a, b) => key(b) - key(a)).slice(0, n);
+}
+
+/** 帖子统计概览。 */
+export interface PostsSummary {
+  total: number;
+  totalLikes: number;
+  totalComments: number;
+  channels: number;
+}
+
+/** 汇总帖子：总数、总点赞、总评论、涉及频道数（不修改入参）。 */
+export function summarizePosts(posts: Post[]): PostsSummary {
+  const chans = new Set<number>();
+  let totalLikes = 0;
+  let totalComments = 0;
+  for (const p of posts) {
+    if (p.channelId != null) chans.add(p.channelId);
+    totalLikes += p.likes ?? 0;
+    totalComments += p.commentCount ?? 0;
+  }
+  return { total: posts.length, totalLikes, totalComments, channels: chans.size };
+}

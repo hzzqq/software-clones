@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { clamp, grayscale, invert, brightness, sepia, uid, applyFilter, contrast, saturate } from './image';
+import { clamp, grayscale, invert, brightness, sepia, uid, applyFilter, contrast, saturate, getFilterLabel, FILTER_LABELS } from './image';
+import type { FilterKind } from '../types';
 
 function makeData(): Uint8ClampedArray {
   // 2 个像素：红 (255,0,0) 与 绿 (0,255,0)
@@ -106,5 +107,18 @@ describe('image utils', () => {
     const d = makeData();
     applyFilter(d, 'saturate', 0);
     expect(d[0]).toBe(d[1]);
+  });
+});
+
+describe('getFilterLabel', () => {
+  const kinds: FilterKind[] = ['grayscale', 'invert', 'brightness', 'sepia', 'contrast', 'saturate'];
+  it('全部 kind 都有中文标签', () => {
+    for (const k of kinds) {
+      expect(FILTER_LABELS[k]).toBeTruthy();
+      expect(getFilterLabel(k)).toBe(FILTER_LABELS[k]);
+    }
+  });
+  it('标签覆盖完整（6 种）', () => {
+    expect(Object.keys(FILTER_LABELS)).toHaveLength(6);
   });
 });

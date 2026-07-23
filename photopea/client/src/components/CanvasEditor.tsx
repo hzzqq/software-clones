@@ -41,7 +41,7 @@ import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import { uid, applyFilter } from '../utils/image';
+import { uid, applyFilter, getFilterLabel } from '../utils/image';
 import { duplicateLayerName } from '../utils/layers';
 import { designApi } from '../api/designs';
 import type { Layer, Tool, FilterKind, Design } from '../types';
@@ -759,9 +759,9 @@ export default function CanvasEditor(): JSX.Element {
           open={Boolean(filterAnchor)}
           onClose={() => setFilterAnchor(null)}
         >
-          <MenuItem onClick={() => { applyImageFilter('grayscale'); setFilterAnchor(null); }}>灰度</MenuItem>
-          <MenuItem onClick={() => { applyImageFilter('invert'); setFilterAnchor(null); }}>反色</MenuItem>
-          <MenuItem onClick={() => { applyImageFilter('sepia'); setFilterAnchor(null); }}>复古</MenuItem>
+          <MenuItem onClick={() => { applyImageFilter('grayscale'); setFilterAnchor(null); }}>{getFilterLabel('grayscale')}</MenuItem>
+          <MenuItem onClick={() => { applyImageFilter('invert'); setFilterAnchor(null); }}>{getFilterLabel('invert')}</MenuItem>
+          <MenuItem onClick={() => { applyImageFilter('sepia'); setFilterAnchor(null); }}>{getFilterLabel('sepia')}</MenuItem>
           <Box sx={{ px: 2, py: 1, minWidth: 200 }} onClick={(e) => e.stopPropagation()}>
             <Typography variant="caption">亮度（{brightnessVal.toFixed(1)}×）</Typography>
             <Slider

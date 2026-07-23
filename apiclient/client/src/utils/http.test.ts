@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseHeadersText, headersToText, parseKeyValueText, statusKind, tryPrettyJson, matchRequest, matchHistory, buildCurlCommand, sortRequests, groupByMethod } from './http';
+import { parseHeadersText, headersToText, parseKeyValueText, statusKind, tryPrettyJson, matchRequest, matchHistory, buildCurlCommand, sortRequests, groupByMethod, buildUrlWithQuery } from './http';
 
 describe('parseHeadersText', () => {
   it('解析多行 header', () => {
@@ -83,6 +83,29 @@ describe('matchHistory', () => {
     expect(matchHistory('401', hist)).toBe(true);
     expect(matchHistory('login', hist)).toBe(true);
     expect(matchHistory('get', hist)).toBe(false);
+  });
+});
+
+describe('buildUrlWithQuery', () => {
+  it('无 params 时原样返回', () => {
+    expect(buildUrlWithQuery('https://x/api')).toBe('https://x/api');
+  });
+  it('拼接 query 字符串', () => {
+    expect(buildUrlWithQuery('https://x/api', { q: '1', page: '2' })).toBe('https://x/api?q=1&page=2');
+  });
+  it('baseUrl 已有 ? 时以 & 追加', () => {
+    expect(buildUrlWithQuery('https://x/api?x=0', { q: '1' })).toBe('https://x/api?x=0&q=1');
+  });
+  it('空值 params 视为无参数', () => {
+    expect(buildUrlWithQuery('https://x/api', {})).toBe('https://x/api');
+  });
+  it('特殊字符被编码', () => {
+    expect(buildUrlWithQuery('https://x/api', { q: 'a b' })).toBe('https://x/api?q=a+b');
+  });
+  it('不修改入参', () => {
+    const p = { q: '1' };
+    buildUrlWithQuery('https://x/api', p);
+    expect(p).toEqual({ q: '1' });
   });
 });
 

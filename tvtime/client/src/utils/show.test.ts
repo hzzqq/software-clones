@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { progressPercent, nextUnwatched, isComplete, filterShows, sortShows, episodesLeft, remainingWatchTime, formatWatchTime } from './show';
+import { progressPercent, nextUnwatched, isComplete, filterShows, sortShows, episodesLeft, remainingWatchTime, formatWatchTime, filterEpisodesByWatched } from './show';
 import type { Episode, Show } from '../types';
 
 function mkShow(id: number, title: string, watchedCount: number, totalEpisodes: number, updatedAt: string): Show {
@@ -126,5 +126,25 @@ describe('formatWatchTime', () => {
   });
   it('非正返回 0 分钟', () => {
     expect(formatWatchTime(0)).toBe('0 分钟');
+  });
+});
+
+describe('filterEpisodesByWatched', () => {
+  const eps = [ep(1, true), ep(2, false), ep(3, true), ep(4, false)];
+  it('all 返回全部', () => {
+    expect(filterEpisodesByWatched(eps, 'all')).toHaveLength(4);
+  });
+  it('仅已看', () => {
+    expect(filterEpisodesByWatched(eps, 'watched').map((e) => e.index)).toEqual([1, 3]);
+  });
+  it('仅未看', () => {
+    expect(filterEpisodesByWatched(eps, 'unwatched').map((e) => e.index)).toEqual([2, 4]);
+  });
+  it('默认参数为 all', () => {
+    expect(filterEpisodesByWatched(eps)).toHaveLength(4);
+  });
+  it('不修改入参', () => {
+    filterEpisodesByWatched(eps, 'watched');
+    expect(eps).toHaveLength(4);
   });
 });

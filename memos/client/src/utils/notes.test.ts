@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseTags, formatRelativeTime, visibilityLabel, groupNotesByTag, pinnedNotes } from './notes';
+import { parseTags, formatRelativeTime, visibilityLabel, groupNotesByTag, pinnedNotes, sortNotesByPinned, summarizeNotes } from './notes';
 import { Visibility, Note } from '../types';
 
 describe('parseTags', () => {
@@ -77,6 +77,60 @@ describe('pinnedNotes', () => {
   it('不修改入参', () => {
     const before = notes.map((n) => n.id);
     pinnedNotes(notes);
+    expect(notes.map((n) => n.id)).toEqual(before);
+  });
+});
+
+describe('sortNotesByPinned', () => {
+  const notes: Note[] = [
+    { id: 1, content: '', visibility: 'private', pinned: false, archived: false, createdAt: '', updatedAt: '', tags: [] },
+    { id: 2, content: '', visibility: 'private', pinned: true, archived: false, createdAt: '', updatedAt: '', tags: [] },
+    { id: 3, content: '', visibility: 'private', pinned: false, archived: false, createdAt: '', updatedAt: '', tags: [] },
+    { id: 4, content: '', visibility: 'private', pinned: true, archived: false, createdAt: '', updatedAt: '', tags: [] },
+  ];
+  it('置顶笔记排在最前', () => {
+    expect(sortNotesByPinned(notes).map((n) => n.id)).toEqual([2, 4, 1, 3]);
+  });
+  it('组内保持原相对顺序（稳定排序）', () => {
+    const r = sortNotesByPinned(notes);
+    expect(r.slice(0, 2).map((n) => n.id)).toEqual([2, 4]);
+    expect(r.slice(2).map((n) => n.id)).toEqual([1, 3]);
+  });
+  it('全部未置顶时顺序不变', () => {
+    const flat = notes.map((n) => ({ ...n, pinned: false }));
+    expect(sortNotesByPinned(flat).map((n) => n.id)).toEqual([1, 2, 3, 4]);
+  });
+  it('不修改入参', () => {
+    const before = notes.map((n) => n.id);
+    sortNotesByPinned(notes);
+    expect(notes.map((n) => n.id)).toEqual(before);
+  });
+});
+
+describe('summarizeNotes', () => {
+  const notes: Note[] = [
+    { id: 1, content: '你好 世界', visibility: 'private', pinned: false, archived: false, createdAt: '', updatedAt: '', tags: ['a', 'b'] },
+    { id: 2, content: 'hello world', visibility: 'private', pinned: false, archived: false, createdAt: '', updatedAt: '', tags: ['b'] },
+    { id: 3, content: '', visibility: 'private', pinned: false, archived: false, createdAt: '', updatedAt: '', tags: [] },
+  ];
+  it('汇总总数与总字数（忽略空白）', () => {
+    const s = summarizeNotes(notes);
+    expect(s.total).toBe(3);
+    // 「你好 世界」=4 非空白字符，「hello world」=10 非空白字符，空串=0
+    expect(s.totalChars).toBe(14);
+  });
+  it('标签去重计数', () => {
+    expect(summarizeNotes(notes).tagTotal).toBe(2);
+  });
+  it('空列表为零', () => {
+    const s = summarizeNotes([]);
+    expect(s.total).toBe(0);
+    expect(s.totalChars).toBe(0);
+    expect(s.tagTotal).toBe(0);
+  });
+  it('不修改入参', () => {
+    const before = notes.map((n) => n.id);
+    summarizeNotes(notes);
     expect(notes.map((n) => n.id)).toEqual(before);
   });
 });

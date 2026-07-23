@@ -50,3 +50,29 @@ export function countCardsByPriority(cards: Card[]): Record<number, number> {
   }
   return map;
 }
+
+/**
+ * 临近到期（含已逾期）且未完成的卡片。
+ * 条件：dueDate 非空、completed !== 1、且 dueDate ≤ now + withinDays 天。
+ * 不修改入参。
+ */
+export function dueSoonCards(cards: Card[], withinDays = 3): Card[] {
+  const horizon = Date.now() + withinDays * 24 * 60 * 60 * 1000;
+  return cards.filter(
+    (c) =>
+      c.completed !== 1 &&
+      c.dueDate !== null &&
+      new Date(c.dueDate).getTime() <= horizon
+  );
+}
+
+/**
+ * 已逾期且未完成的卡片：dueDate < now 且 completed !== 1。
+ * 与 dueSoonCards 的区别：这里只统计「已经过期」的部分（不含未来窗口内的临期项）。
+ */
+export function overdueCards(cards: Card[]): Card[] {
+  const now = Date.now();
+  return cards.filter(
+    (c) => c.completed !== 1 && c.dueDate !== null && new Date(c.dueDate).getTime() < now
+  );
+}

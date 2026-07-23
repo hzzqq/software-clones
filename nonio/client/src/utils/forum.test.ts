@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseTags, slugify, buildCommentTree, countComments, searchPosts, excerpt } from './forum';
+import { parseTags, slugify, buildCommentTree, countComments, searchPosts, excerpt, topPosts, summarizePosts } from './forum';
 import type { Comment, Post } from '../types';
 
 function mkComment(id: number, parentId: number | null): Comment {
@@ -118,5 +118,57 @@ describe('excerpt', () => {
   });
   it('空串返回空串', () => {
     expect(excerpt('')).toBe('');
+  });
+});
+
+describe('topPosts', () => {
+  const posts: Post[] = [
+    { id: 1, channelId: 1, channelName: 'a', title: 'A', body: '', authorName: '', tags: [], likes: 5, commentCount: 2, createdAt: '', updatedAt: '' },
+    { id: 2, channelId: 1, channelName: 'a', title: 'B', body: '', authorName: '', tags: [], likes: 20, commentCount: 8, createdAt: '', updatedAt: '' },
+    { id: 3, channelId: 1, channelName: 'a', title: 'C', body: '', authorName: '', tags: [], likes: 12, commentCount: 1, createdAt: '', updatedAt: '' },
+    { id: 4, channelId: 1, channelName: 'a', title: 'D', body: '', authorName: '', tags: [], likes: 3, commentCount: 30, createdAt: '', updatedAt: '' },
+  ];
+  it('默认按点赞取前 N', () => {
+    expect(topPosts(posts, 3).map((p) => p.id)).toEqual([2, 3, 1]);
+  });
+  it('按评论数排序', () => {
+    expect(topPosts(posts, 2, 'comments').map((p) => p.id)).toEqual([4, 2]);
+  });
+  it('n 大于列表长度时返回全部', () => {
+    expect(topPosts(posts, 99)).toHaveLength(4);
+  });
+  it('空列表返回空数组', () => {
+    expect(topPosts([], 3)).toEqual([]);
+  });
+  it('不修改入参', () => {
+    const before = posts.map((p) => p.id);
+    topPosts(posts, 3);
+    expect(posts.map((p) => p.id)).toEqual(before);
+  });
+});
+
+describe('summarizePosts', () => {
+  const posts: Post[] = [
+    { id: 1, channelId: 1, channelName: 'a', title: 'A', body: '', authorName: '', tags: [], likes: 5, commentCount: 2, createdAt: '', updatedAt: '' },
+    { id: 2, channelId: 2, channelName: 'b', title: 'B', body: '', authorName: '', tags: [], likes: 20, commentCount: 8, createdAt: '', updatedAt: '' },
+    { id: 3, channelId: 1, channelName: 'a', title: 'C', body: '', authorName: '', tags: [], likes: 12, commentCount: 1, createdAt: '', updatedAt: '' },
+  ];
+  it('统计总数、总点赞、总评论、频道数', () => {
+    expect(summarizePosts(posts)).toEqual({ total: 3, totalLikes: 37, totalComments: 11, channels: 2 });
+  });
+  it('空列表返回全零', () => {
+    expect(summarizePosts([])).toEqual({ total: 0, totalLikes: 0, totalComments: 0, channels: 0 });
+  });
+  it('缺省点赞/评论视为 0', () => {
+    const messy: Post[] = [
+      { id: 1, channelId: 1, channelName: 'a', title: 'x', body: '', authorName: '', tags: [], likes: 0, commentCount: 0, createdAt: '', updatedAt: '' },
+      { id: 2, channelId: 3, channelName: 'c', title: 'y', body: '', authorName: '', tags: [], likes: 4, commentCount: 0, createdAt: '', updatedAt: '' },
+    ];
+    expect(summarizePosts(messy)).toEqual({ total: 2, totalLikes: 4, totalComments: 0, channels: 2 });
+  });
+  it('不修改入参', () => {
+    const before = posts.map((p) => p.id);
+    summarizePosts(posts);
+    expect(posts.map((p) => p.id)).toEqual(before);
   });
 });

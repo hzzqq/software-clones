@@ -25,7 +25,7 @@ import StationCard from '../components/StationCard';
 import CategoryFilter from '../components/CategoryFilter';
 import { Station } from '../types';
 import { stationApi } from '../api/stations';
-import { filterStations, sortStations, groupStationsByCategory, categoryLabel, type StationSort } from '../utils/station';
+import { filterStations, sortStations, groupStationsByCategory, categoryLabel, filterStationsByLikes, summarizeStations, type StationSort } from '../utils/station';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
 export default function RadioPage(): JSX.Element {
@@ -37,6 +37,7 @@ export default function RadioPage(): JSX.Element {
   const [category, setCategory] = useState<string | undefined>(undefined);
   const [q, setQ] = useState('');
   const [sortBy, setSortBy] = useState<StationSort>('name');
+  const [minLikes, setMinLikes] = useState<number>(0);
   const [groupView, setGroupView] = useState(false);
   const [recentIds, setRecentIds] = useLocalStorage<number[]>('lofi:recent', []);
   const [loading, setLoading] = useState(true);
@@ -58,12 +59,17 @@ export default function RadioPage(): JSX.Element {
 
   const categories = useMemo(() => Array.from(new Set(stations.map((s) => s.category))), [stations]);
 
-  const filtered = useMemo(() => sortStations(filterStations(q, stations), sortBy), [stations, q, sortBy]);
+  const filtered = useMemo(
+    () => sortStations(filterStationsByLikes(filterStations(q, stations), minLikes), sortBy),
+    [stations, q, sortBy, minLikes]
+  );
 
   const recentStations = useMemo(
     () => recentIds.map((id) => stations.find((s) => s.id === id)).filter((s): s is Station => !!s),
     [recentIds, stations],
   );
+
+  const summary = useMemo(() => summarizeStations(filtered), [filtered]);
 
   const handlePlay = (s: Station) => {
     setRecentIds((prev) => [s.id, ...prev.filter((id) => id !== s.id)].slice(0, 5));
@@ -140,6 +146,20 @@ export default function RadioPage(): JSX.Element {
             <MenuItem value="category">按分类</MenuItem>
             <MenuItem value="likes">按点赞数</MenuItem>
             <MenuItem value="createdAt">按添加时间</MenuItem>
+          </Select>
+        </FormControl>
+        <FormControl size="small" sx={{ minWidth: 140 }}>
+          <InputLabel id="station-likes-label">最少点赞</InputLabel>
+          <Select
+            labelId="station-likes-label"
+            label="最少点赞"
+            value={minLikes}
+            onChange={(e) => setMinLikes(Number(e.target.value))}
+          >
+            <MenuItem value={0}>不限</MenuItem>
+            <MenuItem value={5}>≥ 5</MenuItem>
+            <MenuItem value={10}>≥ 10</MenuItem>
+            <MenuItem value={20}>≥ 20</MenuItem>
           </Select>
         </FormControl>
         <FormControlLabel control={<Switch size="small" checked={groupView} onChange={(e) => setGroupView(e.target.checked)} />} label="按分类分组" />
@@ -229,6 +249,10 @@ export default function RadioPage(): JSX.Element {
           </Stack>
         </Box>
       )}
+
+      <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+        <Chip size="small" color="primary" variant="outlined" label={`共 ${summary.total} 个电台 · ${summary.categories} 类 · ❤ ${summary.totalLikes}`} />
+      </Stack>
 
       <CategoryFilter categories={categories} active={category} onSelect={setCategory} />
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { statusFromCode, uptimePercent, overallStatus } from './status';
+import { statusFromCode, uptimePercent, overallStatus, statusLabel, STATUS_LABELS } from './status';
 
 describe('status utils', () => {
   it('maps http codes to statuses', () => {
@@ -58,5 +58,15 @@ describe('status utils', () => {
 
   it('treats an empty list as fully up', () => {
     expect(overallStatus([])).toBe('up');
+  });
+
+  it('statusLabel 返回中文标签', () => {
+    expect(statusLabel('up')).toBe('正常');
+    expect(statusLabel('degraded')).toBe('降级');
+    expect(statusLabel('down')).toBe('故障');
+  });
+
+  it('STATUS_LABELS 覆盖全部状态', () => {
+    expect(Object.keys(STATUS_LABELS).sort()).toEqual(['degraded', 'down', 'up']);
   });
 });

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { categoryLabel, truncate, filterStations, sortStations, groupStationsByCategory } from './station';
+import { categoryLabel, truncate, filterStations, sortStations, groupStationsByCategory, filterStationsByLikes, summarizeStations } from './station';
 import { Station } from '../types';
 
 const sample: Station[] = [
@@ -87,6 +87,56 @@ describe('groupStationsByCategory', () => {
   it('不修改入参', () => {
     const before = stations.map((s) => s.id);
     groupStationsByCategory(stations);
+    expect(stations.map((s) => s.id)).toEqual(before);
+  });
+});
+
+describe('filterStationsByLikes', () => {
+  const stations: Station[] = [
+    { id: 1, name: 'a', category: 'lofi', likes: 3, createdAt: '', streamUrl: '', description: '' },
+    { id: 2, name: 'b', category: 'chill', likes: 12, createdAt: '', streamUrl: '', description: '' },
+    { id: 3, name: 'c', category: 'lofi', likes: 25, createdAt: '', streamUrl: '', description: '' },
+  ];
+  it('minLikes ≤ 0 返回全部', () => {
+    expect(filterStationsByLikes(stations, 0)).toHaveLength(3);
+    expect(filterStationsByLikes(stations, -1)).toHaveLength(3);
+  });
+  it('仅保留 ≥ 阈值的电台', () => {
+    expect(filterStationsByLikes(stations, 10).map((s) => s.id)).toEqual([2, 3]);
+    expect(filterStationsByLikes(stations, 20).map((s) => s.id)).toEqual([3]);
+  });
+  it('无命中返回空数组', () => {
+    expect(filterStationsByLikes(stations, 100)).toEqual([]);
+  });
+  it('不修改入参', () => {
+    const before = stations.map((s) => s.id);
+    filterStationsByLikes(stations, 10);
+    expect(stations.map((s) => s.id)).toEqual(before);
+  });
+});
+
+describe('summarizeStations', () => {
+  const stations: Station[] = [
+    { id: 1, name: 'a', category: 'lofi', likes: 3, createdAt: '', streamUrl: '', description: '' },
+    { id: 2, name: 'b', category: 'chill', likes: 12, createdAt: '', streamUrl: '', description: '' },
+    { id: 3, name: 'c', category: 'lofi', likes: 25, createdAt: '', streamUrl: '', description: '' },
+  ];
+  it('统计总数、分类数、总点赞数', () => {
+    expect(summarizeStations(stations)).toEqual({ total: 3, categories: 2, totalLikes: 40 });
+  });
+  it('空列表返回全零', () => {
+    expect(summarizeStations([])).toEqual({ total: 0, categories: 0, totalLikes: 0 });
+  });
+  it('忽略缺失分类与点赞', () => {
+    const messy: Station[] = [
+      { id: 1, name: 'x', category: '', likes: 0, createdAt: '', streamUrl: '', description: '' },
+      { id: 2, name: 'y', category: '', likes: 0, createdAt: '', streamUrl: '', description: '' },
+    ];
+    expect(summarizeStations(messy)).toEqual({ total: 2, categories: 0, totalLikes: 0 });
+  });
+  it('不修改入参', () => {
+    const before = stations.map((s) => s.id);
+    summarizeStations(stations);
     expect(stations.map((s) => s.id)).toEqual(before);
   });
 });

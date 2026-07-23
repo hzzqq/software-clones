@@ -39,3 +39,24 @@ export function uptimePercentage(items: { lastStatus?: ServiceStatus }[]): numbe
   const sum = items.reduce((acc, it) => acc + score(it.lastStatus), 0);
   return Math.max(0, Math.min(100, Math.round(sum / items.length)));
 }
+
+export interface StatusCounts {
+  up: number;
+  degraded: number;
+  down: number;
+}
+
+/**
+ * 按状态计数：up / degraded 分别累加；down 与未知状态均计入 down。
+ * 不修改入参。
+ */
+export function countByStatus(items: { lastStatus?: ServiceStatus }[]): StatusCounts {
+  const counts: StatusCounts = { up: 0, degraded: 0, down: 0 };
+  for (const it of items) {
+    const s = it.lastStatus;
+    if (s === 'up') counts.up++;
+    else if (s === 'degraded') counts.degraded++;
+    else counts.down++;
+  }
+  return counts;
+}

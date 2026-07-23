@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { filterWidgets, sortWidgets, countWidgetsByType } from './filterWidgets';
+import { filterWidgets, sortWidgets, countWidgetsByType, filterWidgetsByType, summarizeWidgets } from './filterWidgets';
 import type { Widget } from '../types';
 
 function mk(id: number, title: string, type: Widget['type']): Widget {
@@ -64,6 +64,49 @@ describe('countWidgetsByType', () => {
   it('不修改入参', () => {
     const before = ws.map((w) => w.id);
     countWidgetsByType(ws);
+    expect(ws.map((w) => w.id)).toEqual(before);
+  });
+});
+
+describe('filterWidgetsByType', () => {
+  const ws = [mk(1, '天气', 'weather'), mk(2, '我的 RSS', 'rss'), mk(3, '书签栏', 'bookmarks')];
+  it('按类型精确筛选', () => {
+    expect(filterWidgetsByType(ws, 'weather').map((w) => w.id)).toEqual([1]);
+  });
+  it('大小写不敏感', () => {
+    expect(filterWidgetsByType(ws, 'RSS').map((w) => w.id)).toEqual([2]);
+  });
+  it('空串/“all” 返回全部', () => {
+    expect(filterWidgetsByType(ws, '')).toHaveLength(3);
+    expect(filterWidgetsByType(ws, 'all')).toHaveLength(3);
+  });
+  it('无命中返回空数组', () => {
+    expect(filterWidgetsByType(ws, 'unknown')).toHaveLength(0);
+  });
+  it('不修改入参', () => {
+    const before = ws.map((w) => w.id);
+    filterWidgetsByType(ws, 'weather');
+    expect(ws.map((w) => w.id)).toEqual(before);
+  });
+});
+
+describe('summarizeWidgets', () => {
+  it('汇总总数与类型数', () => {
+    const s = summarizeWidgets([mk(1, 'a', 'clock'), mk(2, 'b', 'weather'), mk(3, 'c', 'clock')]);
+    expect(s.total).toBe(3);
+    expect(s.typeCount).toBe(2);
+    expect(s.byType).toEqual({ clock: 2, weather: 1 });
+  });
+  it('空列表为零', () => {
+    const s = summarizeWidgets([]);
+    expect(s.total).toBe(0);
+    expect(s.typeCount).toBe(0);
+    expect(s.byType).toEqual({});
+  });
+  it('不修改入参', () => {
+    const ws = [mk(1, 'a', 'clock')];
+    const before = ws.map((w) => w.id);
+    summarizeWidgets(ws);
     expect(ws.map((w) => w.id)).toEqual(before);
   });
 });

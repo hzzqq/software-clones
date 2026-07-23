@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { filterTools, sortTools, groupToolsByCategory } from '../src/utils/search';
+import { filterTools, sortTools, groupToolsByCategory, levenshtein, fuzzyMatchTools, summarizeTools } from '../src/utils/search';
 import type { ToolModule } from '../src/tools/types';
 
 const noop = (() => null) as unknown as ToolModule['Component'];
@@ -62,5 +62,72 @@ describe('groupToolsByCategory', () => {
   });
   it('空列表返回空对象', () => {
     expect(groupToolsByCategory([])).toEqual({});
+  });
+});
+
+describe('summarizeTools', () => {
+  it('汇总总数与分类数', () => {
+    const s = summarizeTools(mock);
+    expect(s.total).toBe(3);
+    expect(s.categories).toBe(3);
+    expect(s.byCategory['格式化']).toBe(1);
+  });
+  it('空列表为零', () => {
+    const s = summarizeTools([]);
+    expect(s.total).toBe(0);
+    expect(s.categories).toBe(0);
+    expect(s.byCategory).toEqual({});
+  });
+  it('分类计数正确累加', () => {
+    const s = summarizeTools([
+      { key: 'a', title: 'A', category: 'X', description: '', Component: (null as never) },
+      { key: 'b', title: 'B', category: 'X', description: '', Component: (null as never) },
+      { key: 'c', title: 'C', category: 'Y', description: '', Component: (null as never) },
+    ]);
+    expect(s.byCategory).toEqual({ X: 2, Y: 1 });
+    expect(s.categories).toBe(2);
+  });
+  it('不修改入参', () => {
+    const before = [...mock];
+    summarizeTools(mock);
+    expect(mock).toEqual(before);
+  });
+});
+
+describe('levenshtein', () => {
+  it('空串距离为另一串长度', () => {
+    expect(levenshtein('', 'abc')).toBe(3);
+    expect(levenshtein('abc', '')).toBe(3);
+  });
+  it('相同串距离为 0', () => {
+    expect(levenshtein('json', 'json')).toBe(0);
+  });
+  it('单字符替换距离为 1（大小写不敏感）', () => {
+    expect(levenshtein('JSON', 'JSOX')).toBe(1);
+  });
+  it('插入/删除距离正确', () => {
+    expect(levenshtein('cat', 'cart')).toBe(1);
+    expect(levenshtein('cart', 'cat')).toBe(1);
+  });
+});
+
+describe('fuzzyMatchTools', () => {
+  it('空白查询返回全部', () => {
+    expect(fuzzyMatchTools(mock, '  ')).toHaveLength(3);
+  });
+  it('子串命中（大小写不敏感）', () => {
+    expect(fuzzyMatchTools(mock, 'json').map((t) => t.key)).toEqual(['json']);
+  });
+  it('编辑距离内模糊命中（拼写纠错）', () => {
+    // "jsom" 与 "json" 距离 1，应被容错匹配
+    expect(fuzzyMatchTools(mock, 'jsom').map((t) => t.key)).toEqual(['json']);
+  });
+  it('超出阈值无命中', () => {
+    expect(fuzzyMatchTools(mock, 'zzzzz')).toHaveLength(0);
+  });
+  it('不修改入参', () => {
+    const before = [...mock];
+    fuzzyMatchTools(mock, 'json');
+    expect(mock).toEqual(before);
   });
 });

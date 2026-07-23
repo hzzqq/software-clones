@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { normalizeRect, distance, hitTest, elementBounds, uid, serializeScene, snapPoint, boundingBox } from './geometry';
+import { normalizeRect, distance, hitTest, elementBounds, uid, serializeScene, snapPoint, boundingBox, getCenter } from './geometry';
 import type { CanvasElement } from '../types';
 
 describe('normalizeRect', () => {
@@ -78,5 +78,16 @@ describe('boundingBox', () => {
   });
   it('空列表返回 null', () => {
     expect(boundingBox([])).toBeNull();
+  });
+});
+
+describe('getCenter', () => {
+  const rect = { id: '1', type: 'rect', stroke: '#000', strokeWidth: 2, x: 0, y: 0, w: 50, h: 30 } as CanvasElement;
+  it('矩形中心', () => {
+    expect(getCenter(rect)).toEqual({ x: 25, y: 15 });
+  });
+  it('负坐标矩形中心', () => {
+    const r = { id: '2', type: 'rect', stroke: '#000', strokeWidth: 2, x: -10, y: -20, w: 20, h: 40 } as CanvasElement;
+    expect(getCenter(r)).toEqual({ x: 0, y: 0 });
   });
 });

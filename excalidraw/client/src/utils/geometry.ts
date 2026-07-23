@@ -92,3 +92,9 @@ export function boundingBox(els: CanvasElement[]): { x: number; y: number; width
   }
   return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
 }
+
+/** 返回元素包围盒的中心点坐标。 */
+export function getCenter(el: CanvasElement): Point {
+  const b = elementBounds(el);
+  return { x: (b.minX + b.maxX) / 2, y: (b.minY + b.maxY) / 2 };
+}

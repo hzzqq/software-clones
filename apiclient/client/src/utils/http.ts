@@ -76,6 +76,14 @@ export function matchHistory(
   return `${h.method} ${h.url} ${h.status}`.toLowerCase().includes(n);
 }
 
+/** 将 query params 拼接到 baseUrl，返回完整请求 URL（无 params 时原样返回）。 */
+export function buildUrlWithQuery(baseUrl: string, params: Record<string, string> = {}): string {
+  const hasParams = params && Object.keys(params).length > 0;
+  if (!hasParams) return baseUrl;
+  const qs = new URLSearchParams(params).toString();
+  return baseUrl.includes('?') ? `${baseUrl}&${qs}` : `${baseUrl}?${qs}`;
+}
+
 /** 由请求草稿生成可复制的 curl 命令（含 query/headers/body，多行拼接）。 */
 export function buildCurlCommand(input: {
   method: string;
@@ -84,10 +92,7 @@ export function buildCurlCommand(input: {
   params?: Record<string, string>;
   body?: string;
 }): string {
-  const hasParams = input.params && Object.keys(input.params).length > 0;
-  const url = hasParams
-    ? `${input.url}?${new URLSearchParams(input.params as Record<string, string>).toString()}`
-    : input.url;
+  const url = buildUrlWithQuery(input.url, input.params ?? {});
   const parts = [`curl -X ${input.method} '${url}'`];
   for (const [k, v] of Object.entries(input.headers ?? {})) {
     parts.push(`  -H '${k}: ${v.replace(/'/g, "'\\''")}'`);

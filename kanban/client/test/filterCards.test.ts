@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { filterCardsByQuery, sortCards, countCardsByPriority } from '../src/utils/filterCards';
+import { filterCardsByQuery, sortCards, countCardsByPriority, dueSoonCards, overdueCards } from '../src/utils/filterCards';
 import type { Card } from '../src/types';
 
 function mk(id: number, title: string, description = ''): Card {
@@ -78,5 +78,62 @@ describe('countCardsByPriority', () => {
     const before = cards.map((c) => c.id);
     countCardsByPriority(cards);
     expect(cards.map((c) => c.id)).toEqual(before);
+  });
+});
+
+describe('dueSoonCards', () => {
+  const day = 24 * 60 * 60 * 1000;
+  const iso = (offsetMs: number) => new Date(Date.now() + offsetMs).toISOString();
+  const cards: Card[] = [
+    { id: 1, listId: 1, title: 'a', description: '', dueDate: iso(1 * day), priority: 0, completed: 0, position: 0, createdAt: '', updatedAt: '', tagIds: [] },
+    { id: 2, listId: 1, title: 'b', description: '', dueDate: iso(10 * day), priority: 0, completed: 0, position: 1, createdAt: '', updatedAt: '', tagIds: [] },
+    { id: 3, listId: 1, title: 'c', description: '', dueDate: iso(-1 * day), priority: 0, completed: 0, position: 2, createdAt: '', updatedAt: '', tagIds: [] },
+    { id: 4, listId: 1, title: 'd', description: '', dueDate: iso(1 * day), priority: 0, completed: 1, position: 3, createdAt: '', updatedAt: '', tagIds: [] },
+    { id: 5, listId: 1, title: 'e', description: '', dueDate: null, priority: 0, completed: 0, position: 4, createdAt: '', updatedAt: '', tagIds: [] },
+  ];
+  it('包含 3 天内到期与已逾期（未完成）', () => {
+    expect(dueSoonCards(cards).map((c) => c.id)).toEqual([1, 3]);
+  });
+  it('10 天后到期不计入', () => {
+    expect(dueSoonCards(cards).map((c) => c.id)).not.toContain(2);
+  });
+  it('已完成卡片不计入', () => {
+    expect(dueSoonCards(cards).map((c) => c.id)).not.toContain(4);
+  });
+  it('无截止日不计入', () => {
+    expect(dueSoonCards(cards).map((c) => c.id)).not.toContain(5);
+  });
+  it('可调整窗口天数', () => {
+    // 调到 11 天窗口后，id=2（10 天后）也应纳入
+    expect(dueSoonCards(cards, 11).map((c) => c.id).sort()).toEqual([1, 2, 3]);
+  });
+  it('空列表返回空数组', () => {
+    expect(dueSoonCards([])).toEqual([]);
+  });
+});
+
+describe('overdueCards', () => {
+  const day = 24 * 60 * 60 * 1000;
+  const iso = (offsetMs: number) => new Date(Date.now() + offsetMs).toISOString();
+  const cards: Card[] = [
+    { id: 1, listId: 1, title: 'a', description: '', dueDate: iso(1 * day), priority: 0, completed: 0, position: 0, createdAt: '', updatedAt: '', tagIds: [] },
+    { id: 2, listId: 1, title: 'b', description: '', dueDate: iso(-1 * day), priority: 0, completed: 0, position: 1, createdAt: '', updatedAt: '', tagIds: [] },
+    { id: 3, listId: 1, title: 'c', description: '', dueDate: iso(-10 * day), priority: 0, completed: 1, position: 2, createdAt: '', updatedAt: '', tagIds: [] },
+    { id: 4, listId: 1, title: 'd', description: '', dueDate: null, priority: 0, completed: 0, position: 3, createdAt: '', updatedAt: '', tagIds: [] },
+  ];
+  it('仅统计已逾期且未完成', () => {
+    expect(overdueCards(cards).map((c) => c.id)).toEqual([2]);
+  });
+  it('临期但未到（1 天后）不计入', () => {
+    expect(overdueCards(cards).map((c) => c.id)).not.toContain(1);
+  });
+  it('已逾期但已完成不计入', () => {
+    expect(overdueCards(cards).map((c) => c.id)).not.toContain(3);
+  });
+  it('无截止日不计入', () => {
+    expect(overdueCards(cards).map((c) => c.id)).not.toContain(4);
+  });
+  it('空列表返回空数组', () => {
+    expect(overdueCards([])).toEqual([]);
   });
 });

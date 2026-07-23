@@ -31,7 +31,7 @@ import { useWidgets } from '../hooks/useWidgets';
 import { CreateWidgetInput, UpdateWidgetInput } from '../api/widgets';
 import { configApi } from '../api/config';
 import { Widget, WidgetLayout } from '../types';
-import { filterWidgets, sortWidgets, countWidgetsByType, type WidgetSort } from '../utils/filterWidgets';
+import { filterWidgets, sortWidgets, countWidgetsByType, filterWidgetsByType, summarizeWidgets, type WidgetSort } from '../utils/filterWidgets';
 
 interface WidgetHandlers {
   onConfigure: (widget: Widget) => void;
@@ -82,12 +82,15 @@ export default function DashboardPage(): JSX.Element {
   const [importError, setImportError] = useState<string>('');
   const [search, setSearch] = useState<string>('');
   const [sortBy, setSortBy] = useState<WidgetSort>('title');
+  const [typeFilter, setTypeFilter] = useState<string>('');
   const [deleteTarget, setDeleteTarget] = useState<Widget | null>(null);
   const [clearAllOpen, setClearAllOpen] = useState<boolean>(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const visibleWidgets = sortWidgets(filterWidgets(search, widgets), sortBy);
+  const scoped = filterWidgetsByType(widgets, typeFilter);
+  const visibleWidgets = sortWidgets(filterWidgets(search, scoped), sortBy);
   const typeCounts = countWidgetsByType(widgets);
+  const summary = summarizeWidgets(visibleWidgets);
 
   const openCreate = useCallback((): void => {
     setEditing(null);
@@ -199,6 +202,24 @@ export default function DashboardPage(): JSX.Element {
             <MenuItem value="updatedAt">按更新时间</MenuItem>
           </Select>
         </FormControl>
+        {Object.keys(typeCounts).length > 0 && (
+          <FormControl size="small" sx={{ minWidth: 140 }}>
+            <InputLabel id="widget-type-label">类型</InputLabel>
+            <Select
+              labelId="widget-type-label"
+              label="类型"
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value as string)}
+            >
+              <MenuItem value="">全部</MenuItem>
+              {Object.keys(typeCounts).map((t) => (
+                <MenuItem key={t} value={t}>
+                  {t}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        )}
         <Button startIcon={<UploadIcon />} onClick={() => fileRef.current?.click()}>
           导入 YAML
         </Button>
@@ -224,6 +245,7 @@ export default function DashboardPage(): JSX.Element {
           {Object.entries(typeCounts).map(([t, n]) => (
             <Chip key={t} size="small" variant="outlined" label={`${t}: ${n}`} />
           ))}
+          <Chip size="small" color="primary" variant="outlined" label={`共 ${summary.total} 个组件 · ${summary.typeCount} 类`} />
         </Stack>
       )}
 

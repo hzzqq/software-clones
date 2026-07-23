@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatDuration, incidentDurationSeconds, uptimePercentage } from './format';
+import { formatDuration, incidentDurationSeconds, uptimePercentage, countByStatus } from './format';
 import type { Incident } from '../types';
 
 describe('formatDuration', () => {
@@ -67,5 +67,29 @@ describe('uptimePercentage', () => {
   });
   it('空列表返回 0', () => {
     expect(uptimePercentage([])).toBe(0);
+  });
+});
+
+describe('countByStatus', () => {
+  it('按状态分别计数', () => {
+    expect(
+      countByStatus([{ lastStatus: 'up' }, { lastStatus: 'degraded' }, { lastStatus: 'down' }])
+    ).toEqual({ up: 1, degraded: 1, down: 1 });
+  });
+  it('未知状态计入 down', () => {
+    expect(countByStatus([{ lastStatus: undefined }, { lastStatus: 'up' }])).toEqual({
+      up: 1,
+      degraded: 0,
+      down: 1,
+    });
+  });
+  it('空列表返回全 0', () => {
+    expect(countByStatus([])).toEqual({ up: 0, degraded: 0, down: 0 });
+  });
+  it('不修改入参', () => {
+    const items = [{ lastStatus: 'up' as const }];
+    const before = JSON.stringify(items);
+    countByStatus(items);
+    expect(JSON.stringify(items)).toBe(before);
   });
 });

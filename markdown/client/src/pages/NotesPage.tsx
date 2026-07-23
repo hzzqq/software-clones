@@ -14,6 +14,9 @@ import {
   Chip,
   Menu,
   MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
@@ -24,7 +27,7 @@ import { noteApi } from '../api/notes';
 import type { Note } from '../types';
 import NoteList from '../components/NoteList';
 import MarkdownPreview from '../components/MarkdownPreview';
-import { parseTags, countWords, countCodeBlocks, estimateReadingTime, extractHeadings, extractLinks, sortNotes } from '../utils/markdown';
+import { parseTags, countWords, countCodeBlocks, estimateReadingTime, extractHeadings, extractLinks, sortNotes, filterNotesByFolder, summarizeNotes } from '../utils/markdown';
 
 type ViewMode = 'edit' | 'split' | 'preview';
 
@@ -35,6 +38,7 @@ export default function NotesPage(): JSX.Element {
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const [mode, setMode] = useState<ViewMode>('split');
+  const [folderFilter, setFolderFilter] = useState('');
   const [saving, setSaving] = useState(false);
   const [outlineAnchor, setOutlineAnchor] = useState<null | HTMLElement>(null);
   const [linkAnchor, setLinkAnchor] = useState<null | HTMLElement>(null);
@@ -43,6 +47,19 @@ export default function NotesPage(): JSX.Element {
   const headings = useMemo(() => (active ? extractHeadings(active.content) : []), [active]);
   const links = useMemo(() => (active ? extractLinks(active.content) : []), [active]);
   const sortedNotes = useMemo(() => sortNotes(notes), [notes]);
+  const folderOptions = useMemo(() => {
+    const set = new Set<string>();
+    for (const n of sortedNotes) {
+      const f = (n.folder ?? '').trim();
+      if (f) set.add(f);
+    }
+    return Array.from(set).sort();
+  }, [sortedNotes]);
+  const visibleNotes = useMemo(
+    () => (folderOptions.length ? filterNotesByFolder(sortedNotes, folderFilter) : sortedNotes),
+    [sortedNotes, folderOptions, folderFilter],
+  );
+  const summary = useMemo(() => summarizeNotes(visibleNotes), [visibleNotes]);
 
   const jumpToHeading = (id: string) => {
     setOutlineAnchor(null);
@@ -153,12 +170,31 @@ export default function NotesPage(): JSX.Element {
             </IconButton>
           </Tooltip>
         </Stack>
+        {folderOptions.length > 0 && (
+          <FormControl size="small" sx={{ px: 1, mb: 1 }}>
+            <InputLabel id="folder-filter-label">文件夹</InputLabel>
+            <Select
+              labelId="folder-filter-label"
+              label="文件夹"
+              value={folderFilter}
+              onChange={(e) => setFolderFilter(e.target.value)}
+            >
+              <MenuItem value="all">全部文件夹</MenuItem>
+              {folderOptions.map((f) => (
+                <MenuItem key={f} value={f}>{f}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        )}
+        <Stack direction="row" spacing={1} sx={{ px: 1, pb: 1 }}>
+          <Chip size="small" color="primary" variant="outlined" label={`共 ${summary.total} 篇 · ${summary.totalWords} 词 · ${summary.tagTotal} 标签`} />
+        </Stack>
         <Divider />
         <Box sx={{ flexGrow: 1, overflowY: 'auto' }}>
             {loading ? (
               <CircularProgress sx={{ display: 'block', mx: 'auto', my: 3 }} />
             ) : (
-              <NoteList notes={sortedNotes} activeId={active?.id ?? null} onSelect={selectNote} />
+              <NoteList notes={visibleNotes} activeId={active?.id ?? null} onSelect={selectNote} />
             )}
         </Box>
       </Box>

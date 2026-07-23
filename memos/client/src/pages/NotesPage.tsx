@@ -25,7 +25,7 @@ import { Note, Visibility } from '../types';
 import { noteApi } from '../api/notes';
 import { tagApi } from '../api/tags';
 import { useNotes } from '../hooks/useNotes';
-import { countChars, groupNotesByTag, pinnedNotes } from '../utils/notes';
+import { pinnedNotes, sortNotesByPinned, summarizeNotes } from '../utils/notes';
 
 export default function NotesPage(): JSX.Element {
   const navigate = useNavigate();
@@ -45,13 +45,12 @@ export default function NotesPage(): JSX.Element {
     return arr;
   }, [notes, sort]);
 
-  const summary = useMemo(() => {
-    const totalChars = notes.reduce((sum, n) => sum + countChars(n.content), 0);
-    const tagCounts = groupNotesByTag(notes);
-    return { total: notes.length, totalChars, tagTotal: Object.keys(tagCounts).length };
-  }, [notes]);
+  const summary = useMemo(() => summarizeNotes(notes), [notes]);
 
-  const visible = useMemo(() => (onlyPinned ? pinnedNotes(sorted) : sorted), [onlyPinned, sorted]);
+  const visible = useMemo(
+    () => sortNotesByPinned(onlyPinned ? pinnedNotes(sorted) : sorted),
+    [onlyPinned, sorted]
+  );
 
   const refreshTags = () => tagApi.list().then(setTags).catch(() => undefined);
   useEffect(() => {

@@ -60,3 +60,27 @@ export function groupStationsByCategory(stations: Station[]): Record<string, Sta
   }
   return map;
 }
+
+/** 仅保留点赞数 ≥ minLikes 的电台；minLikes ≤ 0 时返回原列表。不修改入参。 */
+export function filterStationsByLikes(stations: Station[], minLikes = 0): Station[] {
+  if (minLikes <= 0) return stations;
+  return stations.filter((s) => s.likes >= minLikes);
+}
+
+/** 电台统计概览。 */
+export interface StationsSummary {
+  total: number;
+  categories: number;
+  totalLikes: number;
+}
+
+/** 汇总电台：总数、分类数、总点赞数（不修改入参）。 */
+export function summarizeStations(stations: Station[]): StationsSummary {
+  const cats = new Set<string>();
+  let totalLikes = 0;
+  for (const s of stations) {
+    if (s.category) cats.add(s.category);
+    totalLikes += s.likes ?? 0;
+  }
+  return { total: stations.length, categories: cats.size, totalLikes };
+}
