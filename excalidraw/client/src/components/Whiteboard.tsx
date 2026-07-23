@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Box, Stack, ToggleButton, ToggleButtonGroup, IconButton, TextField, MenuItem, Divider, Dialog, DialogTitle, DialogContent, DialogActions, List, ListItemButton, ListItemText, Typography, Button } from '@mui/material';
+import { Box, Stack, ToggleButton, ToggleButtonGroup, IconButton, TextField, MenuItem, Divider, Dialog, DialogTitle, DialogContent, DialogActions, List, ListItemButton, ListItemText, Typography, Button, Chip } from '@mui/material';
 import UndoIcon from '@mui/icons-material/Undo';
 import RedoIcon from '@mui/icons-material/Redo';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
@@ -16,7 +16,7 @@ import TitleIcon from '@mui/icons-material/Title';
 import rough from 'roughjs';
 import type { RoughCanvas } from 'roughjs/bin/canvas';
 import type { CanvasElement, Point, Scene, Tool } from '../types';
-import { normalizeRect, hitTest, uid, serializeScene, snapPoint } from '../utils/geometry';
+import { normalizeRect, hitTest, uid, serializeScene, snapPoint, boundingBox } from '../utils/geometry';
 import { sceneApi } from '../api/scenes';
 
 interface Props {
@@ -332,6 +332,12 @@ export default function Whiteboard({ elements, setElements }: Props): JSX.Elemen
             {saveStatus}
           </Typography>
         )}
+        {(() => {
+          const bb = boundingBox(elements);
+          return bb ? (
+            <Chip size="small" variant="outlined" sx={{ ml: 1 }} title="内容边界尺寸" label={`内容 ${Math.round(bb.width)}×${Math.round(bb.height)}`} />
+          ) : null;
+        })()}
       </Stack>
       <Dialog open={loadOpen} onClose={() => setLoadOpen(false)} fullWidth maxWidth="xs">
         <DialogTitle>打开已存白板</DialogTitle>

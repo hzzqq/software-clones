@@ -75,3 +75,20 @@ export function snapPoint(p: Point, gridSize: number): Point {
   if (gridSize <= 0) return p;
   return { x: Math.round(p.x / gridSize) * gridSize, y: Math.round(p.y / gridSize) * gridSize };
 }
+
+/** 计算所有图形的并集包围盒（内容边界）；空列表返回 null。 */
+export function boundingBox(els: CanvasElement[]): { x: number; y: number; width: number; height: number } | null {
+  if (!els.length) return null;
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (const el of els) {
+    const b = elementBounds(el);
+    minX = Math.min(minX, b.minX);
+    minY = Math.min(minY, b.minY);
+    maxX = Math.max(maxX, b.maxX);
+    maxY = Math.max(maxY, b.maxY);
+  }
+  return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+}

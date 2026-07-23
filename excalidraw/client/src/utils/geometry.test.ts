@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { normalizeRect, distance, hitTest, elementBounds, uid, serializeScene, snapPoint } from './geometry';
+import { normalizeRect, distance, hitTest, elementBounds, uid, serializeScene, snapPoint, boundingBox } from './geometry';
 import type { CanvasElement } from '../types';
 
 describe('normalizeRect', () => {
@@ -64,5 +64,19 @@ describe('snapPoint', () => {
   });
   it('gridSize<=0 不吸附', () => {
     expect(snapPoint({ x: 23, y: 37 }, 0)).toEqual({ x: 23, y: 37 });
+  });
+});
+
+describe('boundingBox', () => {
+  const r1 = { id: '1', type: 'rect', stroke: '#000', strokeWidth: 2, x: 0, y: 0, w: 50, h: 30 } as CanvasElement;
+  const r2 = { id: '2', type: 'rect', stroke: '#000', strokeWidth: 2, x: 100, y: 40, w: 20, h: 20 } as CanvasElement;
+  it('并集包围盒', () => {
+    expect(boundingBox([r1, r2])).toEqual({ x: 0, y: 0, width: 120, height: 60 });
+  });
+  it('单个图形即其自身包围盒', () => {
+    expect(boundingBox([r1])).toEqual({ x: 0, y: 0, width: 50, height: 30 });
+  });
+  it('空列表返回 null', () => {
+    expect(boundingBox([])).toBeNull();
   });
 });

@@ -128,6 +128,7 @@ export default function CanvasEditor(): JSX.Element {
   const [exportScale, setExportScale] = useState(1);
   const [brightnessVal, setBrightnessVal] = useState(1.2);
   const [contrastVal, setContrastVal] = useState(1.2);
+  const [saturationVal, setSaturationVal] = useState(1);
 
   const selectLayer = useCallback((id: string): void => {
     selectedIdRef.current = id;
@@ -801,6 +802,27 @@ export default function CanvasEditor(): JSX.Element {
               }}
             >
               应用对比度
+            </Button>
+          </Box>
+          <Box sx={{ px: 2, py: 1, minWidth: 200 }} onClick={(e) => e.stopPropagation()}>
+            <Typography variant="caption">饱和度（{saturationVal.toFixed(1)}×）</Typography>
+            <Slider
+              min={0}
+              max={2}
+              step={0.1}
+              value={saturationVal}
+              onChange={(_e, v) => setSaturationVal(v as number)}
+            />
+            <Button
+              size="small"
+              fullWidth
+              variant="outlined"
+              onClick={() => {
+                applyImageFilter('saturate', saturationVal);
+                setFilterAnchor(null);
+              }}
+            >
+              应用饱和度
             </Button>
           </Box>
           <Divider />

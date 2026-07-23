@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { clamp, grayscale, invert, brightness, sepia, uid, applyFilter, contrast } from './image';
+import { clamp, grayscale, invert, brightness, sepia, uid, applyFilter, contrast, saturate } from './image';
 
 function makeData(): Uint8ClampedArray {
   // 2 个像素：红 (255,0,0) 与 绿 (0,255,0)
@@ -79,5 +79,32 @@ describe('image utils', () => {
     const d = makeData();
     applyFilter(d, 'contrast', 2);
     expect(d[0]).toBe(255);
+  });
+
+  it('saturate sat=0 退化为灰度', () => {
+    const d = makeData();
+    saturate(d, 0);
+    expect(d[0]).toBe(d[1]);
+    expect(d[1]).toBe(d[2]);
+  });
+
+  it('saturate sat=1 不变', () => {
+    const d = makeData();
+    const before = [...d];
+    saturate(d, 1);
+    expect(Array.from(d)).toEqual(before);
+  });
+
+  it('saturate sat=2 提升饱和度（红色通道触顶 255，绿通道归 0）', () => {
+    const d = makeData();
+    saturate(d, 2);
+    expect(d[0]).toBe(255); // 红通道 (255-76.2)*2+76.2 超出上限被夹到 255
+    expect(d[1]).toBe(0);
+  });
+
+  it('applyFilter 分发到饱和度滤镜', () => {
+    const d = makeData();
+    applyFilter(d, 'saturate', 0);
+    expect(d[0]).toBe(d[1]);
   });
 });

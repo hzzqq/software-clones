@@ -55,15 +55,26 @@ export function contrast(data: Uint8ClampedArray, factor: number): void {
   }
 }
 
+/** 原地饱和度调节，sat=0 变灰度，=1 不变，>1 增强、<1 减弱。 */
+export function saturate(data: Uint8ClampedArray, sat: number): void {
+  for (let i = 0; i < data.length; i += 4) {
+    const g = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
+    data[i] = clamp(g + (data[i] - g) * sat, 0, 255);
+    data[i + 1] = clamp(g + (data[i + 1] - g) * sat, 0, 255);
+    data[i + 2] = clamp(g + (data[i + 2] - g) * sat, 0, 255);
+  }
+}
+
 /** 统一入口：按类型应用滤镜。 */
 export function applyFilter(
   data: Uint8ClampedArray,
-  kind: 'grayscale' | 'invert' | 'brightness' | 'sepia' | 'contrast',
+  kind: 'grayscale' | 'invert' | 'brightness' | 'sepia' | 'contrast' | 'saturate',
   factor = 1
 ): void {
   if (kind === 'grayscale') grayscale(data);
   else if (kind === 'invert') invert(data);
   else if (kind === 'sepia') sepia(data);
   else if (kind === 'contrast') contrast(data, factor);
+  else if (kind === 'saturate') saturate(data, factor);
   else brightness(data, factor);
 }

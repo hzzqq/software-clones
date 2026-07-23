@@ -145,3 +145,30 @@ export function sortRequests<T extends {
     return tb.localeCompare(ta);
   });
 }
+
+/** 常见方法的 canonical 顺序，用于分组展示时排序。 */
+const METHOD_ORDER = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
+
+/**
+ * 按 HTTP 方法分组（不修改入参）。
+ * 组内保持原始插入顺序；组间按 METHOD_ORDER 排列，其余方法按字典序排在最后。
+ */
+export function groupByMethod<T extends { method: string }>(items: T[]): Record<string, T[]> {
+  const map: Record<string, T[]> = {};
+  for (const it of items) {
+    const m = (it.method || 'UNKNOWN').toUpperCase();
+    (map[m] ||= []).push(it);
+  }
+  const ordered: Record<string, T[]> = {};
+  const seen = new Set<string>();
+  for (const m of METHOD_ORDER) {
+    if (map[m]) {
+      ordered[m] = map[m];
+      seen.add(m);
+    }
+  }
+  for (const m of Object.keys(map).sort()) {
+    if (!seen.has(m)) ordered[m] = map[m];
+  }
+  return ordered;
+}

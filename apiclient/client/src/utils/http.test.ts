@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseHeadersText, headersToText, parseKeyValueText, statusKind, tryPrettyJson, matchRequest, matchHistory, buildCurlCommand, sortRequests } from './http';
+import { parseHeadersText, headersToText, parseKeyValueText, statusKind, tryPrettyJson, matchRequest, matchHistory, buildCurlCommand, sortRequests, groupByMethod } from './http';
 
 describe('parseHeadersText', () => {
   it('解析多行 header', () => {
@@ -130,6 +130,36 @@ describe('sortRequests', () => {
   it('不修改入参', () => {
     const copy = JSON.parse(JSON.stringify(reqs));
     sortRequests(reqs, 'name');
+    expect(reqs).toEqual(copy);
+  });
+});
+
+describe('groupByMethod', () => {
+  const reqs = [
+    { method: 'get', name: 'a' },
+    { method: 'POST', name: 'b' },
+    { method: 'get', name: 'c' },
+    { method: 'DELETE', name: 'd' },
+    { method: 'custom', name: 'e' },
+  ];
+  it('按方法分组并保留组内顺序', () => {
+    const g = groupByMethod(reqs);
+    expect(g.GET.map((r) => r.name)).toEqual(['a', 'c']);
+    expect(g.POST.map((r) => r.name)).toEqual(['b']);
+    expect(g.DELETE.map((r) => r.name)).toEqual(['d']);
+    expect(g.CUSTOM.map((r) => r.name)).toEqual(['e']);
+  });
+  it('组间按 canonical 顺序（GET/POST/.../未知）', () => {
+    const g = groupByMethod(reqs);
+    expect(Object.keys(g)).toEqual(['GET', 'POST', 'DELETE', 'CUSTOM']);
+  });
+  it('方法名统一大写', () => {
+    const g = groupByMethod([{ method: 'get' }]);
+    expect(Object.keys(g)).toEqual(['GET']);
+  });
+  it('不修改入参', () => {
+    const copy = JSON.parse(JSON.stringify(reqs));
+    groupByMethod(reqs);
     expect(reqs).toEqual(copy);
   });
 });

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Fragment } from 'react';
 import {
   Box,
   Typography,
@@ -21,6 +21,9 @@ import {
   Alert,
   CircularProgress,
   InputAdornment,
+  Switch,
+  FormControlLabel,
+  ListSubheader,
 } from '@mui/material';
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
@@ -35,7 +38,7 @@ import { historyApi } from '../api/history';
 import type { HttpMethod, ProxyResponse, SavedRequest, HistoryItem } from '../types';
 import RequestBuilder from '../components/RequestBuilder';
 import ResponseViewer from '../components/ResponseViewer';
-import { parseHeadersText, parseKeyValueText, headersToText as h2t, matchRequest, matchHistory, buildCurlCommand, sortRequests, type RequestSort } from '../utils/http';
+import { parseHeadersText, parseKeyValueText, headersToText as h2t, matchRequest, matchHistory, buildCurlCommand, sortRequests, groupByMethod, type RequestSort } from '../utils/http';
 
 interface Draft {
   method: HttpMethod;
@@ -74,6 +77,7 @@ export default function ApiClientPage(): JSX.Element {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [sideQuery, setSideQuery] = useState('');
   const [sideSort, setSideSort] = useState<RequestSort>('name');
+  const [sideGroup, setSideGroup] = useState(false);
   const [name, setName] = useState('');
   const [curlCopied, setCurlCopied] = useState(false);
 
@@ -244,6 +248,7 @@ export default function ApiClientPage(): JSX.Element {
               <MenuItem value="updatedAt">按更新时间</MenuItem>
             </Select>
           </FormControl>
+          <FormControlLabel control={<Switch size="small" checked={sideGroup} onChange={(e) => setSideGroup(e.target.checked)} />} label="按方法分组" />
         </Box>
         <Box sx={{ flexGrow: 1, overflowY: 'auto' }}>
           {sideTab === 0 ? (
@@ -253,25 +258,52 @@ export default function ApiClientPage(): JSX.Element {
                   暂无保存的请求。
                 </Typography>
               )}
-              {sortedRequests.map((r) => (
-                <ListItemButton key={r.id} onClick={() => loadSaved(r)}>
-                  <ListItemText
-                    primary={
-                      <Stack direction="row" spacing={0.5} alignItems="center">
-                        <Chip size="small" label={r.method} color={methodColor(r.method)} />
-                        <Typography noWrap>{r.name || r.url}</Typography>
-                      </Stack>
-                    }
-                    secondary={r.url}
-                    secondaryTypographyProps={{ noWrap: true }}
-                  />
-                  <Tooltip title="删除">
-                    <IconButton edge="end" size="small" onClick={(e) => { e.stopPropagation(); void removeSaved(r.id); }}>
-                      <DeleteOutlineIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                </ListItemButton>
-              ))}
+              {sideGroup
+                ? Object.entries(groupByMethod(sortedRequests)).map(([method, items]) => (
+                    <Fragment key={method}>
+                      <ListSubheader disableSticky sx={{ bgcolor: 'transparent', lineHeight: 2 }}>
+                        {method}（{items.length}）
+                      </ListSubheader>
+                      {items.map((r) => (
+                        <ListItemButton key={r.id} onClick={() => loadSaved(r)}>
+                          <ListItemText
+                            primary={
+                              <Stack direction="row" spacing={0.5} alignItems="center">
+                                <Chip size="small" label={r.method} color={methodColor(r.method)} />
+                                <Typography noWrap>{r.name || r.url}</Typography>
+                              </Stack>
+                            }
+                            secondary={r.url}
+                            secondaryTypographyProps={{ noWrap: true }}
+                          />
+                          <Tooltip title="删除">
+                            <IconButton edge="end" size="small" onClick={(e) => { e.stopPropagation(); void removeSaved(r.id); }}>
+                              <DeleteOutlineIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        </ListItemButton>
+                      ))}
+                    </Fragment>
+                  ))
+                : sortedRequests.map((r) => (
+                    <ListItemButton key={r.id} onClick={() => loadSaved(r)}>
+                      <ListItemText
+                        primary={
+                          <Stack direction="row" spacing={0.5} alignItems="center">
+                            <Chip size="small" label={r.method} color={methodColor(r.method)} />
+                            <Typography noWrap>{r.name || r.url}</Typography>
+                          </Stack>
+                        }
+                        secondary={r.url}
+                        secondaryTypographyProps={{ noWrap: true }}
+                      />
+                      <Tooltip title="删除">
+                        <IconButton edge="end" size="small" onClick={(e) => { e.stopPropagation(); void removeSaved(r.id); }}>
+                          <DeleteOutlineIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </ListItemButton>
+                  ))}
             </List>
           ) : (
             <List dense>

@@ -1,6 +1,6 @@
 {
-  "cycle": 90,
-  "max_cycles": 90,
+  "cycle": 93,
+  "max_cycles": 100,
   "paused": false,
   "phase": "optimize",
   "log": [
@@ -93,7 +93,10 @@
     { "cycle": 87, "app": "nonio", "task_id": "excerpt", "new_requirement": "excerpt 纯函数(剥离 md 标记/截断)+测试；PostCard 改用摘要预览", "files": ["client/src/utils/forum.ts", "client/src/utils/forum.test.ts", "client/src/components/PostCard.tsx"], "verify": "client 19 passed + typecheck pass", "score": 76 },
     { "cycle": 88, "app": "markdown", "task_id": "extract_links", "new_requirement": "extractLinks 纯函数(去重/跳过图片与代码块)+测试；NotesPage 新增文档内链接菜单", "files": ["client/src/utils/markdown.ts", "client/src/utils/markdown.test.ts", "client/src/pages/NotesPage.tsx"], "verify": "client 21 passed + typecheck pass", "score": 80 },
     { "cycle": 89, "app": "apiclient", "task_id": "sort_requests", "new_requirement": "sortRequests 纯函数(名称/方法/创建/更新)+测试；侧栏集合/历史新增排序下拉", "files": ["client/src/utils/http.ts", "client/src/utils/http.test.ts", "client/src/pages/ApiClientPage.tsx"], "verify": "client 25 passed + typecheck pass", "score": 78 },
-    { "cycle": 90, "app": "tvtime", "task_id": "episodes_left", "new_requirement": "episodesLeft 纯函数(剩余集数,越界夹0)+测试；详情页展示「剩 N 集」", "files": ["client/src/utils/show.ts", "client/src/utils/show.test.ts", "client/src/pages/ShowDetailPage.tsx"], "verify": "client 18 passed + typecheck pass", "score": 76 }
+    { "cycle": 90, "app": "tvtime", "task_id": "episodes_left", "new_requirement": "episodesLeft 纯函数(剩余集数,越界夹0)+测试；详情页展示「剩 N 集」", "files": ["client/src/utils/show.ts", "client/src/utils/show.test.ts", "client/src/pages/ShowDetailPage.tsx"], "verify": "client 18 passed + typecheck pass", "score": 76 },
+    { "cycle": 91, "app": "excalidraw", "task_id": "bounding_box", "new_requirement": "boundingBox 纯函数(并集包围盒)+测试；工具栏展示内容尺寸 chip", "files": ["client/src/utils/geometry.ts", "client/src/utils/geometry.test.ts", "client/src/components/Whiteboard.tsx"], "verify": "client 15 passed + typecheck pass", "score": 78 },
+    { "cycle": 92, "app": "photopea", "task_id": "saturate_filter", "new_requirement": "saturate 饱和度纯函数+测试；滤镜菜单新增饱和度连续滑块；FilterKind 扩展", "files": ["client/src/utils/image.ts", "client/src/utils/image.test.ts", "client/src/types.ts", "client/src/components/CanvasEditor.tsx"], "verify": "client 17 passed + typecheck pass", "score": 80 },
+    { "cycle": 93, "app": "apiclient", "task_id": "group_by_method", "new_requirement": "groupByMethod 纯函数(按HTTP方法分组)+测试；侧栏集合新增「按方法分组」开关", "files": ["client/src/utils/http.ts", "client/src/utils/http.test.ts", "client/src/pages/ApiClientPage.tsx"], "verify": "client 29 passed + typecheck pass", "score": 80 }
   ],
   "last_task_id": "episodes_left",
   "repeat_count": 0,
