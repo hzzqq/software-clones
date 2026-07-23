@@ -1,5 +1,5 @@
 {
-  "cycle": 83,
+  "cycle": 86,
   "max_cycles": 90,
   "paused": false,
   "phase": "optimize",
@@ -86,11 +86,14 @@
     { "cycle": 80, "app": "photopea", "task_id": "duplicate_layer", "new_requirement": "duplicateLayerName 纯函数+测试；图层面板「复制图层」按钮(生成不重名副本并插入选中层下方)", "files": ["client/src/utils/layers.ts", "client/src/utils/layers.test.ts", "client/src/components/CanvasEditor.tsx"], "verify": "client 13 passed + typecheck pass", "score": 78 },
     { "cycle": 81, "app": "it-tools", "task_id": "sort_tools", "new_requirement": "sortTools 纯函数(按标题/key 排序)+测试；抽屉新增排序下拉", "files": ["client/src/utils/search.ts", "client/test/search.test.ts", "client/src/layouts/MainLayout.tsx"], "verify": "client 56 passed + typecheck pass", "score": 78 },
     { "cycle": 82, "app": "kanban", "task_id": "sort_cards", "new_requirement": "sortCards 纯函数(原序/标题/优先级/截止日/更新时间)+测试；看板新增卡片排序下拉", "files": ["client/src/utils/filterCards.ts", "client/test/filterCards.test.ts", "client/src/components/Board.tsx"], "verify": "client 16 passed + typecheck pass", "score": 80 },
-    { "cycle": 83, "app": "glance", "task_id": "sort_widgets", "new_requirement": "sortWidgets 纯函数(标题/类型/更新时间)+测试；仪表盘新增排序下拉", "files": ["client/src/utils/filterWidgets.ts", "client/src/utils/filterWidgets.test.ts", "client/src/pages/DashboardPage.tsx"], "verify": "client 17 passed + typecheck pass", "score": 78 }
+    { "cycle": 83, "app": "glance", "task_id": "sort_widgets", "new_requirement": "sortWidgets 纯函数(标题/类型/更新时间)+测试；仪表盘新增排序下拉", "files": ["client/src/utils/filterWidgets.ts", "client/src/utils/filterWidgets.test.ts", "client/src/pages/DashboardPage.tsx"], "verify": "client 17 passed + typecheck pass", "score": 78 },
+    { "cycle": 84, "app": "kener", "task_id": "format_duration", "new_requirement": "formatDuration+incidentDurationSeconds 纯函数+测试；进行中事件展示已持续时长", "files": ["client/src/utils/format.ts", "client/src/utils/format.test.ts", "client/src/pages/DashboardPage.tsx"], "verify": "client 15 passed + typecheck pass", "score": 80 },
+    { "cycle": 85, "app": "memos", "task_id": "group_notes_by_tag", "new_requirement": "groupNotesByTag 纯函数+测试；笔记页新增「共N篇·M字·K标签」统计条", "files": ["client/src/utils/notes.ts", "client/src/utils/notes.test.ts", "client/src/pages/NotesPage.tsx"], "verify": "client 14 passed + typecheck pass", "score": 78 },
+    { "cycle": 86, "app": "lofi", "task_id": "sort_stations", "new_requirement": "sortStations 纯函数(名称/分类/点赞/添加时间)+测试；电台列表新增排序下拉", "files": ["client/src/utils/station.ts", "client/src/utils/station.test.ts", "client/src/pages/RadioPage.tsx"], "verify": "client 13 passed + typecheck pass", "score": 80 }
   ],
-  "last_task_id": "sort_widgets",
+  "last_task_id": "sort_stations",
   "repeat_count": 0,
-  "last_score": 78,
+  "last_score": 80,
   "coverage": {
     "B1": { "it-tools": "optimized", "kanban": "optimized", "glance": "optimized" },
     "B2": { "kener": "optimized", "memos": "optimized", "lofi": "optimized" },

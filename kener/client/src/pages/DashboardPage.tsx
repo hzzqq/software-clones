@@ -20,6 +20,7 @@ import { useServices } from '../hooks/useServices';
 import ServiceCard from '../components/ServiceCard';
 import { servicesApi } from '../api/services';
 import { incidentsApi } from '../api/incidents';
+import { formatDuration, incidentDurationSeconds } from '../utils/format';
 import { overallStatus, ServiceStatus } from '../utils/status';
 import type { Incident } from '../types';
 
@@ -139,10 +140,11 @@ export default function DashboardPage() {
           </Typography>
           <Stack spacing={1}>
             {openIncidents.map((inc) => (
-              <Box key={inc.id} sx={{ display: 'flex', justifyContent: 'space-between' }}>
+              <Box key={inc.id}>
                 <Typography variant="body2">{inc.title}</Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {inc.status}
+                  {inc.status} · 已持续{' '}
+                  {formatDuration(incidentDurationSeconds(inc, Date.now()))}
                 </Typography>
               </Box>
             ))}

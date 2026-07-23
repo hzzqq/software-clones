@@ -1,4 +1,4 @@
-import { Visibility } from '../types';
+import { Visibility, Note } from '../types';
 
 /** Extract inline #tags and @mentions (lower-cased, de-duped). */
 export function parseTags(content: string): string[] {
@@ -49,4 +49,20 @@ export function countChars(content: string): number {
 export function estimateReading(content: string): number {
   if (!content) return 0;
   return Math.max(1, Math.round(countChars(content) / 200));
+}
+
+/**
+ * 按标签聚合笔记数量（标签小写去重），返回 标签 -> 数量 的映射。
+ * 笔记若没有标签则不计入；同一标签出现在多篇笔记则累加。
+ */
+export function groupNotesByTag(notes: Note[]): Record<string, number> {
+  const result: Record<string, number> = {};
+  for (const note of notes) {
+    for (const raw of note.tags ?? []) {
+      const tag = raw.toLowerCase();
+      if (!tag) continue;
+      result[tag] = (result[tag] ?? 0) + 1;
+    }
+  }
+  return result;
 }

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { parseTags, formatRelativeTime, visibilityLabel } from './notes';
-import { Visibility } from '../types';
+import { parseTags, formatRelativeTime, visibilityLabel, groupNotesByTag } from './notes';
+import { Visibility, Note } from '../types';
 
 describe('parseTags', () => {
   it('extracts #tags and @mentions lower-cased and de-duped', () => {
@@ -45,5 +45,19 @@ describe('formatRelativeTime', () => {
   it('treats future timestamps as 刚刚 (clock skew guard)', () => {
     const future = new Date(Date.now() + 5 * 60 * 1000).toISOString();
     expect(formatRelativeTime(future)).toBe('刚刚');
+  });
+});
+
+describe('groupNotesByTag', () => {
+  const notes: Note[] = [
+    { id: 1, content: '', visibility: 'private', pinned: false, archived: false, createdAt: '', updatedAt: '', tags: ['Work', 'Idea'] },
+    { id: 2, content: '', visibility: 'private', pinned: false, archived: false, createdAt: '', updatedAt: '', tags: ['work', 'Plan'] },
+    { id: 3, content: '', visibility: 'private', pinned: false, archived: false, createdAt: '', updatedAt: '', tags: [] },
+  ];
+  it('标签小写去重并累加数量', () => {
+    expect(groupNotesByTag(notes)).toEqual({ work: 2, idea: 1, plan: 1 });
+  });
+  it('空标签不计，空数组返回空对象', () => {
+    expect(groupNotesByTag([])).toEqual({});
   });
 });

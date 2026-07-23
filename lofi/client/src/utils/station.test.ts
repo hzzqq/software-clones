@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { categoryLabel, truncate, filterStations } from './station';
+import { categoryLabel, truncate, filterStations, sortStations } from './station';
 import { Station } from '../types';
 
 const sample: Station[] = [
@@ -41,5 +41,30 @@ describe('filterStations', () => {
   });
   it('returns empty when nothing matches', () => {
     expect(filterStations('rock', sample)).toHaveLength(0);
+  });
+});
+
+describe('sortStations', () => {
+  const stations: Station[] = [
+    { id: 1, name: 'B', streamUrl: '', description: '', category: 'lofi', likes: 5, createdAt: '2026-01-01' },
+    { id: 2, name: 'A', streamUrl: '', description: '', category: 'jazz', likes: 20, createdAt: '2026-03-01' },
+    { id: 3, name: 'C', streamUrl: '', description: '', category: 'ambient', likes: 10, createdAt: '2026-02-01' },
+  ];
+  it('name：按名称字典序', () => {
+    expect(sortStations(stations, 'name').map((s) => s.id)).toEqual([2, 1, 3]);
+  });
+  it('category：按分类字典序', () => {
+    expect(sortStations(stations, 'category').map((s) => s.id)).toEqual([3, 2, 1]);
+  });
+  it('likes：点赞数降序', () => {
+    expect(sortStations(stations, 'likes').map((s) => s.id)).toEqual([2, 3, 1]);
+  });
+  it('createdAt：最近在前', () => {
+    expect(sortStations(stations, 'createdAt').map((s) => s.id)).toEqual([2, 3, 1]);
+  });
+  it('不修改原数组', () => {
+    const before = stations.map((s) => s.id);
+    sortStations(stations, 'name');
+    expect(stations.map((s) => s.id)).toEqual(before);
   });
 });

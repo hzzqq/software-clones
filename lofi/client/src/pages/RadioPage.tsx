@@ -1,5 +1,19 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Box, Button, Chip, Grid, IconButton, InputAdornment, Stack, TextField, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  Chip,
+  FormControl,
+  Grid,
+  IconButton,
+  InputAdornment,
+  InputLabel,
+  MenuItem,
+  Select,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
@@ -9,7 +23,7 @@ import StationCard from '../components/StationCard';
 import CategoryFilter from '../components/CategoryFilter';
 import { Station } from '../types';
 import { stationApi } from '../api/stations';
-import { filterStations } from '../utils/station';
+import { filterStations, sortStations, type StationSort } from '../utils/station';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
 export default function RadioPage(): JSX.Element {
@@ -20,6 +34,7 @@ export default function RadioPage(): JSX.Element {
   const [volume, setVolume] = useState(0.7);
   const [category, setCategory] = useState<string | undefined>(undefined);
   const [q, setQ] = useState('');
+  const [sortBy, setSortBy] = useState<StationSort>('name');
   const [recentIds, setRecentIds] = useLocalStorage<number[]>('lofi:recent', []);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
@@ -40,7 +55,7 @@ export default function RadioPage(): JSX.Element {
 
   const categories = useMemo(() => Array.from(new Set(stations.map((s) => s.category))), [stations]);
 
-  const filtered = useMemo(() => filterStations(q, stations), [stations, q]);
+  const filtered = useMemo(() => sortStations(filterStations(q, stations), sortBy), [stations, q, sortBy]);
 
   const recentStations = useMemo(
     () => recentIds.map((id) => stations.find((s) => s.id === id)).filter((s): s is Station => !!s),
@@ -108,6 +123,23 @@ export default function RadioPage(): JSX.Element {
           ) : null,
         }}
       />
+
+      <Stack direction="row" spacing={1} sx={{ mt: 1, alignItems: 'center' }}>
+        <FormControl size="small" sx={{ minWidth: 160 }}>
+          <InputLabel id="station-sort-label">排序</InputLabel>
+          <Select
+            labelId="station-sort-label"
+            label="排序"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as StationSort)}
+          >
+            <MenuItem value="name">按名称</MenuItem>
+            <MenuItem value="category">按分类</MenuItem>
+            <MenuItem value="likes">按点赞数</MenuItem>
+            <MenuItem value="createdAt">按添加时间</MenuItem>
+          </Select>
+        </FormControl>
+      </Stack>
 
       {featured && (
         <Box
