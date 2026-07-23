@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { normalizeRect, distance, hitTest, elementBounds, uid } from './geometry';
+import { normalizeRect, distance, hitTest, elementBounds, uid, serializeScene, snapPoint } from './geometry';
 import type { CanvasElement } from '../types';
 
 describe('normalizeRect', () => {
@@ -42,5 +42,27 @@ describe('hitTest', () => {
 describe('uid', () => {
   it('生成不同 id', () => {
     expect(uid()).not.toBe(uid());
+  });
+});
+
+describe('serializeScene', () => {
+  const els: CanvasElement[] = [
+    { id: 'a', type: 'rect', stroke: '#000', strokeWidth: 2, x: 1, y: 2, w: 3, h: 4 },
+  ];
+  it('序列化为 JSON 且可还原', () => {
+    const json = serializeScene(els);
+    expect(JSON.parse(json)).toEqual(els);
+  });
+  it('空场景为 "[]"', () => {
+    expect(serializeScene([])).toBe('[]');
+  });
+});
+
+describe('snapPoint', () => {
+  it('对齐到网格', () => {
+    expect(snapPoint({ x: 23, y: 37 }, 20)).toEqual({ x: 20, y: 40 });
+  });
+  it('gridSize<=0 不吸附', () => {
+    expect(snapPoint({ x: 23, y: 37 }, 0)).toEqual({ x: 23, y: 37 });
   });
 });

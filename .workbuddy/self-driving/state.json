@@ -1,5 +1,5 @@
 {
-  "cycle": 75,
+  "cycle": 78,
   "max_cycles": 80,
   "paused": false,
   "phase": "optimize",
@@ -78,9 +78,12 @@
     { "cycle": 72, "app": "apiclient", "task_id": "side_filter", "new_requirement": "抽出 matchRequest/matchHistory 纯函数+测试，接入侧栏筛选", "files": ["client/src/utils/http.ts", "client/src/utils/http.test.ts", "client/src/pages/ApiClientPage.tsx"], "verify": "client 20 passed + typecheck pass", "score": 80 },
     { "cycle": 73, "app": "apiclient", "task_id": "copy_curl", "new_requirement": "buildCurlCommand 纯函数+测试；主区「复制 cURL」按钮", "files": ["client/src/utils/http.ts", "client/src/utils/http.test.ts", "client/src/pages/ApiClientPage.tsx"], "verify": "client 20 passed + typecheck pass", "score": 80 },
     { "cycle": 74, "app": "tvtime", "task_id": "filter_shows", "new_requirement": "抽出 filterShows 纯函数+测试，接入 ShowsPage", "files": ["client/src/utils/show.ts", "client/src/utils/show.test.ts", "client/src/pages/ShowsPage.tsx"], "verify": "client 15 passed + typecheck pass", "score": 80 },
-    { "cycle": 75, "app": "tvtime", "task_id": "sort_status_filter", "new_requirement": "sortShows 纯函数+测试；按名称/进度/更新排序 + 全部/进行中/已完结筛选", "files": ["client/src/utils/show.ts", "client/src/utils/show.test.ts", "client/src/pages/ShowsPage.tsx"], "verify": "client 15 passed + typecheck pass", "score": 82 }
+    { "cycle": 75, "app": "tvtime", "task_id": "sort_status_filter", "new_requirement": "sortShows 纯函数+测试；按名称/进度/更新排序 + 全部/进行中/已完结筛选", "files": ["client/src/utils/show.ts", "client/src/utils/show.test.ts", "client/src/pages/ShowsPage.tsx"], "verify": "client 15 passed + typecheck pass", "score": 82 },
+    { "cycle": 76, "app": "excalidraw", "task_id": "export_json", "new_requirement": "serializeScene 纯函数+测试；工具栏「导出 JSON」按钮", "files": ["client/src/utils/geometry.ts", "client/src/utils/geometry.test.ts", "client/src/components/Whiteboard.tsx"], "verify": "client 12 passed + typecheck pass", "score": 78 },
+    { "cycle": 77, "app": "excalidraw", "task_id": "grid_snap", "new_requirement": "snapPoint 纯函数+测试；网格吸附开关（绘制/拖拽坐标对齐）", "files": ["client/src/utils/geometry.ts", "client/src/utils/geometry.test.ts", "client/src/components/Whiteboard.tsx"], "verify": "client 12 passed + typecheck pass", "score": 76 },
+    { "cycle": 78, "app": "excalidraw", "task_id": "clear_confirm", "new_requirement": "清空画布前确认弹窗（避免误删，仍可撤销）", "files": ["client/src/components/Whiteboard.tsx"], "verify": "client 12 passed + typecheck pass", "score": 72 }
   ],
-  "last_task_id": "sort_status_filter",
+  "last_task_id": "clear_confirm",
   "repeat_count": 0,
   "last_score": 74,
   "coverage": {

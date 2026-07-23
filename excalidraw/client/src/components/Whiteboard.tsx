@@ -5,6 +5,8 @@ import RedoIcon from '@mui/icons-material/Redo';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import SaveIcon from '@mui/icons-material/Save';
 import DownloadIcon from '@mui/icons-material/Download';
+import DescriptionIcon from '@mui/icons-material/Description';
+import GridOnIcon from '@mui/icons-material/GridOn';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import GestureIcon from '@mui/icons-material/Gesture';
 import CropSquareIcon from '@mui/icons-material/CropSquare';
@@ -14,7 +16,7 @@ import TitleIcon from '@mui/icons-material/Title';
 import rough from 'roughjs';
 import type { RoughCanvas } from 'roughjs/bin/canvas';
 import type { CanvasElement, Point, Scene, Tool } from '../types';
-import { normalizeRect, hitTest, uid } from '../utils/geometry';
+import { normalizeRect, hitTest, uid, serializeScene, snapPoint } from '../utils/geometry';
 import { sceneApi } from '../api/scenes';
 
 interface Props {
@@ -33,6 +35,9 @@ export default function Whiteboard({ elements, setElements }: Props): JSX.Elemen
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
   const [loadOpen, setLoadOpen] = useState(false);
+  const [clearOpen, setClearOpen] = useState(false);
+  const [snap, setSnap] = useState(false);
+  const GRID = 20;
   const [scenes, setScenes] = useState<Scene[]>([]);
   const sceneIdRef = useRef<number | null>(null);
 
@@ -43,7 +48,8 @@ export default function Whiteboard({ elements, setElements }: Props): JSX.Elemen
 
   const getPos = (e: React.MouseEvent): Point => {
     const rect = canvasRef.current!.getBoundingClientRect();
-    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    const p = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    return snap ? snapPoint(p, GRID) : p;
   };
 
   const pushUndo = useCallback(() => {
@@ -179,6 +185,10 @@ export default function Whiteboard({ elements, setElements }: Props): JSX.Elemen
     setElements(redoStack.current.pop() ?? []);
   };
   const clearAll = () => {
+    setClearOpen(true);
+  };
+  const confirmClear = () => {
+    setClearOpen(false);
     pushUndo();
     setElements([]);
     setSelectedId(null);
@@ -241,6 +251,16 @@ export default function Whiteboard({ elements, setElements }: Props): JSX.Elemen
     link.click();
   };
 
+  const exportJson = () => {
+    const blob = new Blob([serializeScene(elements)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.download = 'excalidraw.json';
+    link.href = url;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   // 键盘快捷键：撤销/重做/删除选中/取消选择
   const shortcutRef = useRef({ undo, redo, deleteSelected, selectedId });
   shortcutRef.current = { undo, redo, deleteSelected, selectedId };
@@ -297,11 +317,16 @@ export default function Whiteboard({ elements, setElements }: Props): JSX.Elemen
         <IconButton onClick={undo} aria-label="撤销"><UndoIcon /></IconButton>
         <IconButton onClick={redo} aria-label="重做"><RedoIcon /></IconButton>
         <IconButton onClick={deleteSelected} aria-label="删除选中" disabled={!selectedId}><DeleteSweepIcon /></IconButton>
-        <IconButton onClick={clearAll} aria-label="清空"><DeleteSweepIcon /></IconButton>
+        <IconButton onClick={clearAll} aria-label="清空" color="error"><DeleteSweepIcon /></IconButton>
+        <Divider orientation="vertical" flexItem />
+        <IconButton onClick={() => setSnap((v) => !v)} aria-label="网格吸附" color={snap ? 'primary' : 'default'} title="网格吸附">
+          <GridOnIcon />
+        </IconButton>
         <Divider orientation="vertical" flexItem />
         <IconButton onClick={openLoad} aria-label="打开已存白板"><FolderOpenIcon /></IconButton>
         <IconButton onClick={saveScene} aria-label="保存"><SaveIcon /></IconButton>
         <IconButton onClick={exportPng} aria-label="导出 PNG"><DownloadIcon /></IconButton>
+        <IconButton onClick={exportJson} aria-label="导出 JSON"><DescriptionIcon /></IconButton>
         {saveStatus && (
           <Typography variant="caption" color={saveStatus.includes('失败') ? 'error' : 'success.main'} sx={{ ml: 1 }}>
             {saveStatus}
@@ -325,6 +350,16 @@ export default function Whiteboard({ elements, setElements }: Props): JSX.Elemen
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setLoadOpen(false)}>关闭</Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog open={clearOpen} onClose={() => setClearOpen(false)} fullWidth maxWidth="xs">
+        <DialogTitle>清空画布</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2">此操作会移除当前所有图形，且可通过撤销恢复。确定继续吗？</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setClearOpen(false)}>取消</Button>
+          <Button color="error" variant="contained" onClick={confirmClear}>清空</Button>
         </DialogActions>
       </Dialog>
       <Box sx={{ flexGrow: 1, position: 'relative', overflow: 'hidden', bgcolor: '#fafafa' }}>

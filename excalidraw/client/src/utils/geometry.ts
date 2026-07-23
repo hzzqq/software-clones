@@ -64,3 +64,14 @@ function distanceToSegment(p: Point, a: Point, b: Point): number {
 export function uid(): string {
   return `el-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 }
+
+/** 将场景元素序列化为可保存/导出的 JSON 字符串。 */
+export function serializeScene(elements: CanvasElement[]): string {
+  return JSON.stringify(elements);
+}
+
+/** 将点对齐到网格（gridSize 为步长；<=0 表示不吸附，原样返回）。 */
+export function snapPoint(p: Point, gridSize: number): Point {
+  if (gridSize <= 0) return p;
+  return { x: Math.round(p.x / gridSize) * gridSize, y: Math.round(p.y / gridSize) * gridSize };
+}
