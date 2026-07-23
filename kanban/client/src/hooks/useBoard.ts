@@ -124,6 +124,18 @@ export function useBoard(boardId: number) {
     );
   }, []);
 
+  const clearCompleted = useCallback(async (): Promise<void> => {
+    const cur = detailRef.current;
+    if (!cur) return;
+    const done = cur.cards.filter((c) => c.completed === 1);
+    for (const c of done) {
+      await cardsApi.remove(c.id);
+    }
+    setDetail((prev) =>
+      prev ? { ...prev, cards: prev.cards.filter((c) => c.completed !== 1) } : prev
+    );
+  }, []);
+
   /**
    * Moves a card to a new list/index based on the dnd-kit drop target.
    * `overId` is either a card id or `list-<id>` (empty-column droppable).
@@ -227,6 +239,7 @@ export function useBoard(boardId: number) {
     addCard,
     updateCard,
     removeCard,
+    clearCompleted,
     moveCard,
     addTag,
     removeTag,

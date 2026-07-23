@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Box, IconButton, Paper, Stack, TextField } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import Column from './Column';
+import { filterCardsByQuery } from '../utils/filterCards';
 import { Card, List, Tag } from '../types';
 
 interface BoardProps {
@@ -9,6 +10,7 @@ interface BoardProps {
   cardsByList: Record<number, Card[]>;
   tags: Tag[];
   filterTagId: number | null;
+  searchQuery: string;
   onAddList: (title: string) => void;
   onDeleteList: (id: number) => void;
   onAddCard: (listId: number, title: string) => void;
@@ -22,6 +24,7 @@ export default function Board({
   cardsByList,
   tags,
   filterTagId,
+  searchQuery,
   onAddList,
   onDeleteList,
   onAddCard,
@@ -37,8 +40,11 @@ export default function Board({
     setTitle('');
   };
 
-  const visibleCards = (cards: Card[]): Card[] =>
-    filterTagId === null ? cards : cards.filter((c) => c.tagIds.includes(filterTagId));
+  const visibleCards = (cards: Card[]): Card[] => {
+    const byTag =
+      filterTagId === null ? cards : cards.filter((c) => c.tagIds.includes(filterTagId));
+    return filterCardsByQuery(searchQuery, byTag);
+  };
 
   return (
     <Box sx={{ display: 'flex', gap: 2, overflowX: 'auto', pb: 2, alignItems: 'flex-start' }}>

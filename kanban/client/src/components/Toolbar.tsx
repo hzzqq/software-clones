@@ -6,6 +6,7 @@ import {
   MenuItem,
   Select,
   Stack,
+  TextField,
   Typography,
 } from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
@@ -21,6 +22,11 @@ interface ToolbarProps {
   onFilterChange: (tagId: number | null) => void;
   onDeleteBoard: () => void;
   onTagsChanged: () => void;
+  searchQuery: string;
+  onSearchChange: (q: string) => void;
+  onClearCompleted: () => void;
+  totalCards?: number;
+  completedCards?: number;
 }
 
 /** Board header: name, tag filter, edit tags, and delete. */
@@ -31,6 +37,11 @@ export default function Toolbar({
   onFilterChange,
   onDeleteBoard,
   onTagsChanged,
+  searchQuery,
+  onSearchChange,
+  onClearCompleted,
+  totalCards,
+  completedCards,
 }: ToolbarProps): JSX.Element {
   const [editOpen, setEditOpen] = useState<boolean>(false);
   return (
@@ -45,8 +56,20 @@ export default function Toolbar({
         <Typography variant="h5" fontWeight={700}>
           {board.name}
         </Typography>
+        {typeof totalCards === 'number' && (
+          <Typography variant="caption" color="text.secondary">
+            共 {totalCards} 张 · 已完成 {completedCards ?? 0} 张
+          </Typography>
+        )}
       </Box>
       <Stack direction="row" spacing={1} alignItems="center">
+        <TextField
+          size="small"
+          placeholder="搜索卡片…"
+          value={searchQuery}
+          onChange={(e) => onSearchChange(e.target.value)}
+          sx={{ minWidth: 160 }}
+        />
         <Button
           variant="outlined"
           startIcon={<EditNoteIcon />}
@@ -69,6 +92,14 @@ export default function Toolbar({
             ))}
           </Select>
         </FormControl>
+        <Button
+          color="warning"
+          variant="outlined"
+          onClick={onClearCompleted}
+          disabled={(completedCards ?? 0) === 0}
+        >
+          清除已完成
+        </Button>
         <Button
           color="error"
           variant="outlined"

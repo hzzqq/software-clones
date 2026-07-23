@@ -34,6 +34,7 @@ export default function BoardPage(): JSX.Element {
   const [modalOpen, setModalOpen] = useState<boolean>(false);
   const [activeCard, setActiveCard] = useState<Card | null>(null);
   const [filterTagId, setFilterTagId] = useState<number | null>(null);
+  const [search, setSearch] = useState<string>('');
   const [error, setError] = useState<string>('');
 
   const selectedCard: Card | null =
@@ -131,6 +132,11 @@ export default function BoardPage(): JSX.Element {
         onFilterChange={setFilterTagId}
         onDeleteBoard={() => void deleteBoard()}
         onTagsChanged={() => board.reload()}
+        searchQuery={search}
+        onSearchChange={setSearch}
+        onClearCompleted={() => void board.clearCompleted()}
+        totalCards={board.detail.cards.length}
+        completedCards={board.detail.cards.filter((c) => c.completed === 1).length}
       />
       <DndProvider onDragEnd={onDragEnd} onDragStart={onDragStart} overlay={overlay}>
         <Board
@@ -138,6 +144,7 @@ export default function BoardPage(): JSX.Element {
           cardsByList={board.cardsByList}
           tags={board.tags}
           filterTagId={filterTagId}
+          searchQuery={search}
           onAddList={(t) => void board.addList(t)}
           onDeleteList={(lid) => void board.removeList(lid)}
           onAddCard={(lid, t) => void board.addCard(lid, t)}

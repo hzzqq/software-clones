@@ -1,5 +1,5 @@
 {
-  "cycle": 53,
+  "cycle": 56,
   "max_cycles": 80,
   "paused": false,
   "phase": "optimize",
@@ -56,11 +56,14 @@
     { "cycle": 50, "app": "photopea", "task_id": "brightness_slider_clear", "new_requirement": "亮度改为连续滑块(0.3x–2x 应用)；新增清空当前图层动作", "files": ["client/src/components/CanvasEditor.tsx"], "verify": "client 7 passed + typecheck pass", "score": 80 },
     { "cycle": 51, "app": "it-tools", "task_id": "search_filter", "new_requirement": "抽屉工具搜索过滤（抽 filterTools 纯函数+测试）", "files": ["client/src/layouts/MainLayout.tsx", "client/src/utils/search.ts", "client/test/search.test.ts"], "verify": "client 53 passed + typecheck pass", "score": 80 },
     { "cycle": 52, "app": "it-tools", "task_id": "favorites_clear_all", "new_requirement": "收藏夹清空全部（确认弹窗 + useFavorites.clearAll）", "files": ["client/src/hooks/useFavorites.ts", "client/src/pages/FavoritesPage.tsx"], "verify": "client 53 passed + typecheck pass", "score": 76 },
-    { "cycle": 53, "app": "it-tools", "task_id": "history_page", "new_requirement": "新增「最近使用」历史页（historyApi 已有列表接口，此前无页面）+ 抽屉入口", "files": ["client/src/pages/HistoryPage.tsx", "client/src/router.tsx", "client/src/layouts/MainLayout.tsx"], "verify": "client 53 passed + typecheck pass", "score": 82 }
+    { "cycle": 53, "app": "it-tools", "task_id": "history_page", "new_requirement": "新增「最近使用」历史页（historyApi 已有列表接口，此前无页面）+ 抽屉入口", "files": ["client/src/pages/HistoryPage.tsx", "client/src/router.tsx", "client/src/layouts/MainLayout.tsx"], "verify": "client 53 passed + typecheck pass", "score": 82 },
+    { "cycle": 54, "app": "kanban", "task_id": "card_search", "new_requirement": "看板全局卡片搜索（抽 filterCardsByQuery 纯函数+测试，标题/描述匹配）", "files": ["client/src/utils/filterCards.ts", "client/test/filterCards.test.ts", "client/src/components/Board.tsx", "client/src/pages/BoardPage.tsx", "client/src/components/Toolbar.tsx"], "verify": "client 10 passed + typecheck pass", "score": 80 },
+    { "cycle": 55, "app": "kanban", "task_id": "clear_completed", "new_requirement": "清除已完成卡片（批量删除 completed=1，useBoard.clearCompleted）", "files": ["client/src/hooks/useBoard.ts", "client/src/components/Toolbar.tsx", "client/src/pages/BoardPage.tsx"], "verify": "client 10 passed + typecheck pass", "score": 76 },
+    { "cycle": 56, "app": "kanban", "task_id": "board_stats", "new_requirement": "看板统计（总数/已完成）展示于工具栏", "files": ["client/src/components/Toolbar.tsx", "client/src/pages/BoardPage.tsx"], "verify": "client 10 passed + typecheck pass", "score": 72 }
   ],
-  "last_task_id": "history_page",
+  "last_task_id": "board_stats",
   "repeat_count": 0,
-  "last_score": 82,
+  "last_score": 72,
   "coverage": {
     "B1": { "it-tools": "optimized", "kanban": "optimized", "glance": "optimized" },
     "B2": { "kener": "optimized", "memos": "optimized", "lofi": "optimized" },
