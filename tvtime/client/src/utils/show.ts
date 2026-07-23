@@ -1,4 +1,4 @@
-import type { Episode } from '../types';
+import type { Episode, Show } from '../types';
 
 /** 观看进度百分比（0-100，越界会被夹回合法区间）。 */
 export function progressPercent(watched: number, total: number): number {
@@ -19,4 +19,27 @@ export function nextUnwatched(episodes: Episode[]): number | null {
 /** 是否已完结（全部已看）。 */
 export function isComplete(watched: number, total: number): boolean {
   return total > 0 && watched >= total;
+}
+
+/** 按名称过滤剧集（空白匹配全部，忽略大小写）。 */
+export function filterShows(query: string, shows: Show[]): Show[] {
+  const needle = query.trim().toLowerCase();
+  if (!needle) return shows;
+  return shows.filter((s) => s.title.toLowerCase().includes(needle));
+}
+
+export type ShowSort = 'title' | 'progress' | 'updated';
+
+/** 剧集排序：按名称 / 观看进度 / 最近更新。 */
+export function sortShows(shows: Show[], by: ShowSort): Show[] {
+  const arr = [...shows];
+  if (by === 'title') arr.sort((a, b) => a.title.localeCompare(b.title, 'zh'));
+  else if (by === 'progress')
+    arr.sort(
+      (a, b) =>
+        progressPercent(b.watchedCount, b.totalEpisodes) -
+        progressPercent(a.watchedCount, a.totalEpisodes),
+    );
+  else arr.sort((a, b) => +new Date(b.updatedAt) - +new Date(a.updatedAt));
+  return arr;
 }

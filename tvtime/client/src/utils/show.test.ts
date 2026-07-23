@@ -1,6 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { progressPercent, nextUnwatched, isComplete } from './show';
-import type { Episode } from '../types';
+import { progressPercent, nextUnwatched, isComplete, filterShows, sortShows } from './show';
+import type { Episode, Show } from '../types';
+
+function mkShow(id: number, title: string, watchedCount: number, totalEpisodes: number, updatedAt: string): Show {
+  return { id, title, note: '', totalEpisodes, watchedCount, createdAt: '', updatedAt };
+}
 
 function ep(index: number, watched: boolean): Episode {
   return {
@@ -52,5 +56,33 @@ describe('isComplete', () => {
   });
   it('未完结', () => {
     expect(isComplete(9, 10)).toBe(false);
+  });
+});
+
+describe('filterShows', () => {
+  const shows = [mkShow(1, 'Breaking Bad', 5, 10, ''), mkShow(2, '绝命毒师前传', 3, 10, '')];
+  it('空白匹配全部', () => {
+    expect(filterShows('', shows)).toHaveLength(2);
+  });
+  it('按名称匹配（忽略大小写）', () => {
+    expect(filterShows('BREAKING', shows).map((s) => s.id)).toEqual([1]);
+    expect(filterShows('绝命', shows).map((s) => s.id)).toEqual([2]);
+  });
+});
+
+describe('sortShows', () => {
+  const shows = [
+    mkShow(1, 'Beta', 2, 10, '2026-01-01'),
+    mkShow(2, 'Alpha', 9, 10, '2026-03-01'),
+    mkShow(3, 'Gamma', 5, 10, '2026-02-01'),
+  ];
+  it('按名称', () => {
+    expect(sortShows(shows, 'title').map((s) => s.id)).toEqual([2, 1, 3]);
+  });
+  it('按进度（高到低）', () => {
+    expect(sortShows(shows, 'progress').map((s) => s.id)).toEqual([2, 3, 1]);
+  });
+  it('按更新时间（新到旧）', () => {
+    expect(sortShows(shows, 'updated').map((s) => s.id)).toEqual([2, 3, 1]);
   });
 });

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Box,
   Typography,
@@ -13,6 +13,12 @@ import {
   Stack,
   InputAdornment,
   IconButton,
+  ToggleButton,
+  ToggleButtonGroup,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
@@ -20,18 +26,27 @@ import ClearIcon from '@mui/icons-material/Clear';
 import { showApi } from '../api/shows';
 import type { Show } from '../types';
 import ShowCard from '../components/ShowCard';
+import { filterShows, sortShows, isComplete, type ShowSort } from '../utils/show';
 
 export default function ShowsPage(): JSX.Element {
   const [shows, setShows] = useState<Show[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [q, setQ] = useState('');
+  const [sort, setSort] = useState<ShowSort>('updated');
+  const [status, setStatus] = useState<'all' | 'watching' | 'done'>('all');
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ title: '', totalEpisodes: '12', note: '' });
 
-  const filtered = q.trim()
-    ? shows.filter((s) => s.title.toLowerCase().includes(q.trim().toLowerCase()))
-    : shows;
+  const visible = useMemo(() => {
+    const byQuery = filterShows(q, shows);
+    const byStatus = byQuery.filter((s) => {
+      if (status === 'watching') return !isComplete(s.watchedCount, s.totalEpisodes);
+      if (status === 'done') return isComplete(s.watchedCount, s.totalEpisodes);
+      return true;
+    });
+    return sortShows(byStatus, sort);
+  }, [shows, q, status, sort]);
 
   const load = async () => {
     setLoading(true);
@@ -106,6 +121,32 @@ export default function ShowsPage(): JSX.Element {
         }}
       />
 
+      <Stack direction="row" spacing={1} sx={{ my: 2 }} alignItems="center" flexWrap="wrap">
+        <ToggleButtonGroup
+          size="small"
+          value={status}
+          exclusive
+          onChange={(_e, v) => v && setStatus(v)}
+        >
+          <ToggleButton value="all">全部</ToggleButton>
+          <ToggleButton value="watching">进行中</ToggleButton>
+          <ToggleButton value="done">已完结</ToggleButton>
+        </ToggleButtonGroup>
+        <Box sx={{ flexGrow: 1 }} />
+        <FormControl size="small" sx={{ minWidth: 150 }}>
+          <InputLabel>排序</InputLabel>
+          <Select
+            label="排序"
+            value={sort}
+            onChange={(e) => setSort(e.target.value as ShowSort)}
+          >
+            <MenuItem value="updated">最近更新</MenuItem>
+            <MenuItem value="progress">观看进度</MenuItem>
+            <MenuItem value="title">名称</MenuItem>
+          </Select>
+        </FormControl>
+      </Stack>
+
       {loading && <CircularProgress sx={{ display: 'block', mx: 'auto', my: 4 }} />}
       {error && <Alert severity="error" sx={{ my: 2 }}>{error}</Alert>}
       {!loading && !error && shows.length === 0 && (
@@ -113,12 +154,12 @@ export default function ShowsPage(): JSX.Element {
           还没有追的剧，点「添加剧集」开始记录吧。
         </Typography>
       )}
-      {!loading && !error && shows.length > 0 && filtered.length === 0 && (
+      {!loading && !error && shows.length > 0 && visible.length === 0 && (
         <Typography color="text.secondary" sx={{ textAlign: 'center', my: 4 }}>
           没有匹配“{q}”的剧集。
         </Typography>
       )}
-      {!loading && filtered.map((s) => <ShowCard key={s.id} show={s} onDelete={handleDelete} />)}
+      {!loading && visible.map((s) => <ShowCard key={s.id} show={s} onDelete={handleDelete} />)}
 
       <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="xs">
         <DialogTitle>添加剧集</DialogTitle>
