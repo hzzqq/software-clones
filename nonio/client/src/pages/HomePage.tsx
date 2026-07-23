@@ -9,6 +9,9 @@ import {
   DialogContent,
   DialogActions,
   MenuItem,
+  FormControl,
+  InputLabel,
+  Select,
   CircularProgress,
   Alert,
   Stack,
@@ -22,7 +25,7 @@ import { postApi } from '../api/posts';
 import type { Channel, Post } from '../types';
 import ChannelFilter from '../components/ChannelFilter';
 import PostCard from '../components/PostCard';
-import { parseTags } from '../utils/forum';
+import { parseTags, searchPosts } from '../utils/forum';
 
 export default function HomePage(): JSX.Element {
   const [channels, setChannels] = useState<Channel[]>([]);
@@ -31,6 +34,7 @@ export default function HomePage(): JSX.Element {
   const [error, setError] = useState<string | null>(null);
   const [activeChannel, setActiveChannel] = useState<number | null>(null);
   const [query, setQuery] = useState('');
+  const [sort, setSort] = useState<'newest' | 'likes' | 'comments'>('newest');
 
   // 发帖弹窗
   const [open, setOpen] = useState(false);
@@ -54,13 +58,15 @@ export default function HomePage(): JSX.Element {
     void load();
   }, []);
 
-  const filtered = useMemo(() => {
-    return posts.filter((p) => {
-      if (activeChannel && p.channelId !== activeChannel) return false;
-      if (query && !`${p.title} ${p.body}`.toLowerCase().includes(query.toLowerCase())) return false;
-      return true;
-    });
-  }, [posts, activeChannel, query]);
+  const filtered = useMemo(() => searchPosts(query, activeChannel, posts), [posts, activeChannel, query]);
+
+  const sorted = useMemo(() => {
+    const arr = [...filtered];
+    if (sort === 'likes') arr.sort((a, b) => b.likes - a.likes);
+    else if (sort === 'comments') arr.sort((a, b) => b.commentCount - a.commentCount);
+    else arr.sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
+    return arr;
+  }, [filtered, sort]);
 
   const handleLike = async (id: number) => {
     try {
@@ -126,14 +132,29 @@ export default function HomePage(): JSX.Element {
         </Typography>
       )}
 
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
+        <FormControl size="small" sx={{ minWidth: 150 }}>
+          <InputLabel>排序</InputLabel>
+          <Select
+            label="排序"
+            value={sort}
+            onChange={(e) => setSort(e.target.value as 'newest' | 'likes' | 'comments')}
+          >
+            <MenuItem value="newest">最新发布</MenuItem>
+            <MenuItem value="likes">最多点赞</MenuItem>
+            <MenuItem value="comments">最多评论</MenuItem>
+          </Select>
+        </FormControl>
+      </Box>
+
       {loading && <CircularProgress sx={{ display: 'block', mx: 'auto', my: 4 }} />}
       {error && <Alert severity="error" sx={{ my: 2 }}>{error}</Alert>}
-      {!loading && !error && filtered.length === 0 && (
+      {!loading && !error && sorted.length === 0 && (
         <Typography color="text.secondary" sx={{ textAlign: 'center', my: 4 }}>
           这里还没有帖子，来发第一条吧。
         </Typography>
       )}
-      {!loading && filtered.map((p) => <PostCard key={p.id} post={p} onLike={handleLike} />)}
+      {!loading && sorted.map((p) => <PostCard key={p.id} post={p} onLike={handleLike} />)}
 
       <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
         <DialogTitle>发布新帖</DialogTitle>

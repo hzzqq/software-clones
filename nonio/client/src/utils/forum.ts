@@ -1,4 +1,4 @@
-import type { Comment, CommentNode } from '../types';
+import type { Comment, CommentNode, Post } from '../types';
 
 /**
  * Non.io 论坛纯函数工具：标签解析、评论树构建、slug 生成。
@@ -83,4 +83,14 @@ export function countComments(tree: CommentNode[]): number {
     total += 1 + countComments(node.children);
   }
   return total;
+}
+
+/** 按频道 + 关键字（标题/正文）过滤帖子；空白关键字匹配全部。 */
+export function searchPosts(query: string, channelId: number | null, posts: Post[]): Post[] {
+  const needle = query.trim().toLowerCase();
+  return posts.filter((p) => {
+    if (channelId != null && p.channelId !== channelId) return false;
+    if (needle && !`${p.title} ${p.body}`.toLowerCase().includes(needle)) return false;
+    return true;
+  });
 }

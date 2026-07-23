@@ -1,5 +1,5 @@
 {
-  "cycle": 67,
+  "cycle": 69,
   "max_cycles": 80,
   "paused": false,
   "phase": "optimize",
@@ -70,9 +70,11 @@
     { "cycle": 64, "app": "memos", "task_id": "char_count", "new_requirement": "字数统计(非空白字符)+ 阅读时长估算工具 + 卡片展示", "files": ["client/src/utils/notes.ts", "client/src/utils/textcount.test.ts", "client/src/components/NoteCard.tsx"], "verify": "client 12 passed + typecheck pass", "score": 76 },
     { "cycle": 65, "app": "memos", "task_id": "copy_button", "new_requirement": "卡片一键复制内容（clipboard + 1.5s 提示）", "files": ["client/src/components/NoteCard.tsx"], "verify": "client 12 passed + typecheck pass", "score": 74 },
     { "cycle": 66, "app": "lofi", "task_id": "filter_stations", "new_requirement": "抽出 filterStations 纯函数(名称/描述搜索)+ 测试，接入 RadioPage", "files": ["client/src/utils/station.ts", "client/src/utils/station.test.ts", "client/src/pages/RadioPage.tsx"], "verify": "client 8 passed + typecheck pass", "score": 80 },
-    { "cycle": 67, "app": "lofi", "task_id": "recently_played", "new_requirement": "最近播放(localStorage 记录最近 5 个，Chip 可点击重播)", "files": ["client/src/pages/RadioPage.tsx", "client/src/hooks/useLocalStorage.ts"], "verify": "client 8 passed + typecheck pass", "score": 76 }
+    { "cycle": 67, "app": "lofi", "task_id": "recently_played", "new_requirement": "最近播放(localStorage 记录最近 5 个，Chip 可点击重播)", "files": ["client/src/pages/RadioPage.tsx", "client/src/hooks/useLocalStorage.ts"], "verify": "client 8 passed + typecheck pass", "score": 76 },
+    { "cycle": 68, "app": "nonio", "task_id": "search_posts", "new_requirement": "抽出 searchPosts 纯函数(频道+关键字)+ 测试，接入 HomePage", "files": ["client/src/utils/forum.ts", "client/src/utils/forum.test.ts", "client/src/pages/HomePage.tsx"], "verify": "client 15 passed + typecheck pass", "score": 80 },
+    { "cycle": 69, "app": "nonio", "task_id": "post_sort", "new_requirement": "帖子排序（最新/最多点赞/最多评论）", "files": ["client/src/pages/HomePage.tsx"], "verify": "client 15 passed + typecheck pass", "score": 72 }
   ],
-  "last_task_id": "recently_played",
+  "last_task_id": "post_sort",
   "repeat_count": 0,
   "last_score": 74,
   "coverage": {

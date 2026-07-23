@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { parseTags, slugify, buildCommentTree, countComments } from './forum';
-import type { Comment } from '../types';
+import { parseTags, slugify, buildCommentTree, countComments, searchPosts } from './forum';
+import type { Comment, Post } from '../types';
 
 function mkComment(id: number, parentId: number | null): Comment {
   return {
@@ -78,5 +78,26 @@ describe('buildCommentTree', () => {
     const t = buildCommentTree(selfRef);
     expect(t.length).toBe(1);
     expect(t[0].children.length).toBe(0);
+  });
+});
+
+describe('searchPosts', () => {
+  const posts: Post[] = [
+    { id: 1, channelId: 1, channelName: 'a', title: 'Lofi 入门', body: '放松音乐', authorName: '', tags: [], likes: 0, commentCount: 0, createdAt: '', updatedAt: '' },
+    { id: 2, channelId: 2, channelName: 'b', title: 'React 技巧', body: 'hooks 精讲', authorName: '', tags: [], likes: 0, commentCount: 0, createdAt: '', updatedAt: '' },
+    { id: 3, channelId: 1, channelName: 'a', title: 'Lofi 进阶', body: 'sleep beats', authorName: '', tags: [], likes: 0, commentCount: 0, createdAt: '', updatedAt: '' },
+  ];
+  it('query 与 channel 都为空时返回全部', () => {
+    expect(searchPosts('', null, posts)).toHaveLength(3);
+  });
+  it('按频道过滤', () => {
+    expect(searchPosts('', 1, posts).map((p) => p.id)).toEqual([1, 3]);
+  });
+  it('按关键字过滤（标题/正文，忽略大小写）', () => {
+    expect(searchPosts('LOFI', null, posts).map((p) => p.id)).toEqual([1, 3]);
+    expect(searchPosts('hooks', null, posts).map((p) => p.id)).toEqual([2]);
+  });
+  it('频道 + 关键字叠加生效', () => {
+    expect(searchPosts('lofi', 1, posts).map((p) => p.id)).toEqual([1, 3]);
   });
 });
