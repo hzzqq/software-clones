@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { filterTools, sortTools, groupToolsByCategory, levenshtein, fuzzyMatchTools, summarizeTools } from '../src/utils/search';
+import { filterTools, sortTools, groupToolsByCategory, levenshtein, fuzzyMatchTools, summarizeTools, normalizeQuery } from '../src/utils/search';
 import type { ToolModule } from '../src/tools/types';
 
 const noop = (() => null) as unknown as ToolModule['Component'];
@@ -25,6 +25,23 @@ describe('filterTools', () => {
   });
   it('无命中返回空数组', () => {
     expect(filterTools('zzz', mock)).toHaveLength(0);
+  });
+  it('容忍多余空白（归一化后匹配）', () => {
+    expect(filterTools('  JSON  ', mock).map((t) => t.key)).toEqual(['json']);
+  });
+});
+
+describe('normalizeQuery', () => {
+  it('折叠多余空白并转小写', () => {
+    expect(normalizeQuery('  JSON  ')).toBe('json');
+    expect(normalizeQuery('A  B\nC')).toBe('a b c');
+  });
+  it('剥离变音符号（重音）', () => {
+    expect(normalizeQuery('Café')).toBe('cafe');
+    expect(normalizeQuery('Naïve')).toBe('naive');
+  });
+  it('空串返回空串', () => {
+    expect(normalizeQuery('   ')).toBe('');
   });
 });
 

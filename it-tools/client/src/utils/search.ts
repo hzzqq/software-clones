@@ -1,17 +1,30 @@
 import type { ToolModule } from '../tools/types';
 
 /**
+ * 归一化搜索词：小写 + 折叠空白 + 剥离变音符号（重音）。
+ * 让 "  JSON  " / "Café" 等都能稳定命中，纯函数、无副作用。
+ */
+export function normalizeQuery(input: string): string {
+  return input
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
+/**
  * Case-insensitive filter across title, description and category.
  * Returns the original list untouched when the query is blank.
  */
 export function filterTools(query: string, tools: ToolModule[]): ToolModule[] {
-  const q = query.trim().toLowerCase();
+  const q = normalizeQuery(query);
   if (!q) return tools;
   return tools.filter(
     (t) =>
-      t.title.toLowerCase().includes(q) ||
-      (t.description?.toLowerCase().includes(q) ?? false) ||
-      t.category.toLowerCase().includes(q)
+      normalizeQuery(t.title).includes(q) ||
+      normalizeQuery(t.description ?? '').includes(q) ||
+      normalizeQuery(t.category).includes(q)
   );
 }
 
@@ -91,10 +104,10 @@ export function fuzzyMatchTools(
   query: string,
   maxDistance = 1
 ): ToolModule[] {
-  const q = query.trim().toLowerCase();
+  const q = normalizeQuery(query);
   if (!q) return tools;
   return tools.filter((tool) => {
-    const hay = [tool.title, tool.category, tool.description ?? ''].join(' ').toLowerCase();
+    const hay = normalizeQuery([tool.title, tool.category, tool.description ?? ''].join(' '));
     if (hay.includes(q)) return true;
     return hay
       .split(/\s+/)

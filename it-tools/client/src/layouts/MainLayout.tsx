@@ -8,6 +8,7 @@ import {
   Drawer,
   FormControl,
   IconButton,
+  InputAdornment,
   InputLabel,
   List,
   ListItemButton,
@@ -24,6 +25,7 @@ import StarIcon from '@mui/icons-material/Star';
 import SettingsIcon from '@mui/icons-material/Settings';
 import HistoryIcon from '@mui/icons-material/History';
 import ExtensionIcon from '@mui/icons-material/Extension';
+import ClearIcon from '@mui/icons-material/Clear';
 import { sortTools, fuzzyMatchTools, summarizeTools } from '../utils/search';
 
 import { tools } from '../tools/registry';
@@ -83,6 +85,15 @@ export default function MainLayout(): JSX.Element {
           placeholder="搜索工具…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
+          InputProps={{
+            endAdornment: query ? (
+              <InputAdornment position="end">
+                <IconButton size="small" aria-label="清除搜索" onClick={() => setQuery('')}>
+                  <ClearIcon fontSize="small" />
+                </IconButton>
+              </InputAdornment>
+            ) : null,
+          }}
         />
         <FormControl size="small" fullWidth sx={{ mt: 1 }}>
           <InputLabel id="tool-sort-label">排序</InputLabel>
