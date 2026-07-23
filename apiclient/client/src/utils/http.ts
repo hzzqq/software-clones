@@ -55,3 +55,45 @@ export function tryPrettyJson(text: string): string {
     return text;
   }
 }
+
+/** 侧栏集合项按 方法/名称/URL 匹配关键字（空白匹配全部）。 */
+export function matchRequest(
+  needle: string,
+  r: { method: string; name?: string; url: string },
+): boolean {
+  const n = needle.trim().toLowerCase();
+  if (!n) return true;
+  return `${r.method} ${r.name ?? ''} ${r.url}`.toLowerCase().includes(n);
+}
+
+/** 侧栏历史项按 方法/URL/状态码 匹配关键字（空白匹配全部）。 */
+export function matchHistory(
+  needle: string,
+  h: { method: string; url: string; status: number },
+): boolean {
+  const n = needle.trim().toLowerCase();
+  if (!n) return true;
+  return `${h.method} ${h.url} ${h.status}`.toLowerCase().includes(n);
+}
+
+/** 由请求草稿生成可复制的 curl 命令（含 query/headers/body，多行拼接）。 */
+export function buildCurlCommand(input: {
+  method: string;
+  url: string;
+  headers?: Record<string, string>;
+  params?: Record<string, string>;
+  body?: string;
+}): string {
+  const hasParams = input.params && Object.keys(input.params).length > 0;
+  const url = hasParams
+    ? `${input.url}?${new URLSearchParams(input.params as Record<string, string>).toString()}`
+    : input.url;
+  const parts = [`curl -X ${input.method} '${url}'`];
+  for (const [k, v] of Object.entries(input.headers ?? {})) {
+    parts.push(`  -H '${k}: ${v.replace(/'/g, "'\\''")}'`);
+  }
+  if (input.body) {
+    parts.push(`  -d '${input.body.replace(/'/g, "'\\''")}'`);
+  }
+  return parts.join(' \\\n');
+}

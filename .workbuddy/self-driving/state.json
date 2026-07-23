@@ -1,5 +1,5 @@
 {
-  "cycle": 71,
+  "cycle": 73,
   "max_cycles": 80,
   "paused": false,
   "phase": "optimize",
@@ -74,9 +74,11 @@
     { "cycle": 68, "app": "nonio", "task_id": "search_posts", "new_requirement": "抽出 searchPosts 纯函数(频道+关键字)+ 测试，接入 HomePage", "files": ["client/src/utils/forum.ts", "client/src/utils/forum.test.ts", "client/src/pages/HomePage.tsx"], "verify": "client 15 passed + typecheck pass", "score": 80 },
     { "cycle": 69, "app": "nonio", "task_id": "post_sort", "new_requirement": "帖子排序（最新/最多点赞/最多评论）", "files": ["client/src/pages/HomePage.tsx"], "verify": "client 15 passed + typecheck pass", "score": 72 },
     { "cycle": 70, "app": "markdown", "task_id": "outline_nav", "new_requirement": "extractHeadings 纯函数+测试；预览注入锚点 id；工具栏「大纲」菜单可跳转", "files": ["client/src/utils/markdown.ts", "client/src/utils/markdown.test.ts", "client/src/components/MarkdownPreview.tsx", "client/src/pages/NotesPage.tsx"], "verify": "client 16 passed + typecheck pass", "score": 84 },
-    { "cycle": 71, "app": "markdown", "task_id": "sort_notes", "new_requirement": "sortNotes 纯函数+测试；侧栏置顶优先+最近更新排序", "files": ["client/src/utils/markdown.ts", "client/src/utils/markdown.test.ts", "client/src/pages/NotesPage.tsx"], "verify": "client 16 passed + typecheck pass", "score": 74 }
+    { "cycle": 71, "app": "markdown", "task_id": "sort_notes", "new_requirement": "sortNotes 纯函数+测试；侧栏置顶优先+最近更新排序", "files": ["client/src/utils/markdown.ts", "client/src/utils/markdown.test.ts", "client/src/pages/NotesPage.tsx"], "verify": "client 16 passed + typecheck pass", "score": 74 },
+    { "cycle": 72, "app": "apiclient", "task_id": "side_filter", "new_requirement": "抽出 matchRequest/matchHistory 纯函数+测试，接入侧栏筛选", "files": ["client/src/utils/http.ts", "client/src/utils/http.test.ts", "client/src/pages/ApiClientPage.tsx"], "verify": "client 20 passed + typecheck pass", "score": 80 },
+    { "cycle": 73, "app": "apiclient", "task_id": "copy_curl", "new_requirement": "buildCurlCommand 纯函数+测试；主区「复制 cURL」按钮", "files": ["client/src/utils/http.ts", "client/src/utils/http.test.ts", "client/src/pages/ApiClientPage.tsx"], "verify": "client 20 passed + typecheck pass", "score": 80 }
   ],
-  "last_task_id": "sort_notes",
+  "last_task_id": "copy_curl",
   "repeat_count": 0,
   "last_score": 74,
   "coverage": {

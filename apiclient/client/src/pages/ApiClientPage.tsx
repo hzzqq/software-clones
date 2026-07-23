@@ -19,6 +19,7 @@ import {
   InputAdornment,
 } from '@mui/material';
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import HistoryIcon from '@mui/icons-material/History';
 import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined';
@@ -30,7 +31,7 @@ import { historyApi } from '../api/history';
 import type { HttpMethod, ProxyResponse, SavedRequest, HistoryItem } from '../types';
 import RequestBuilder from '../components/RequestBuilder';
 import ResponseViewer from '../components/ResponseViewer';
-import { parseHeadersText, parseKeyValueText, headersToText as h2t } from '../utils/http';
+import { parseHeadersText, parseKeyValueText, headersToText as h2t, matchRequest, matchHistory, buildCurlCommand } from '../utils/http';
 
 interface Draft {
   method: HttpMethod;
@@ -69,6 +70,7 @@ export default function ApiClientPage(): JSX.Element {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [sideQuery, setSideQuery] = useState('');
   const [name, setName] = useState('');
+  const [curlCopied, setCurlCopied] = useState(false);
 
   const refreshRequests = async () => {
     try {
@@ -94,12 +96,8 @@ export default function ApiClientPage(): JSX.Element {
   const set = (patch: Partial<Draft>) => setDraft((d) => ({ ...d, ...patch }));
 
   const sideNeedle = sideQuery.trim().toLowerCase();
-  const filteredRequests = sideNeedle
-    ? requests.filter((r) => `${r.method} ${r.name} ${r.url}`.toLowerCase().includes(sideNeedle))
-    : requests;
-  const filteredHistory = sideNeedle
-    ? history.filter((h) => `${h.method} ${h.url} ${h.status}`.toLowerCase().includes(sideNeedle))
-    : history;
+  const filteredRequests = requests.filter((r) => matchRequest(sideNeedle, r));
+  const filteredHistory = history.filter((h) => matchHistory(sideNeedle, h));
 
   const send = async () => {
     if (!draft.url.trim()) return;
@@ -172,6 +170,24 @@ export default function ApiClientPage(): JSX.Element {
       void refreshHistory();
     } catch {
       /* ignore */
+    }
+  };
+
+  const copyCurl = async () => {
+    if (!draft.url.trim()) return;
+    const cmd = buildCurlCommand({
+      method: draft.method,
+      url: draft.url,
+      headers: parseHeadersText(draft.headersText),
+      params: parseKeyValueText(draft.paramsText),
+      body: draft.body || undefined,
+    });
+    try {
+      await navigator.clipboard.writeText(cmd);
+      setCurlCopied(true);
+      setTimeout(() => setCurlCopied(false), 1500);
+    } catch {
+      setError('复制失败，请检查浏览器剪贴板权限');
     }
   };
 
@@ -286,6 +302,15 @@ export default function ApiClientPage(): JSX.Element {
             <TextField size="small" label="名称（可选）" value={name} onChange={(e) => setName(e.target.value)} sx={{ width: 200 }} />
             <Button variant="outlined" startIcon={<SaveOutlinedIcon />} onClick={save} disabled={!draft.url.trim()}>
               保存到集合
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<ContentCopyIcon />}
+              onClick={copyCurl}
+              disabled={!draft.url.trim()}
+              color={curlCopied ? 'success' : 'primary'}
+            >
+              {curlCopied ? '已复制 cURL' : '复制 cURL'}
             </Button>
             {loading && <CircularProgress size={18} />}
           </Stack>
