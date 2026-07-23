@@ -41,3 +41,12 @@ export function sortCards(cards: Card[], by: CardSort = 'position'): Card[] {
   });
   return arr;
 }
+
+/** 统计各优先级（数值）下的卡片数量，不修改入参。 */
+export function countCardsByPriority(cards: Card[]): Record<number, number> {
+  const map: Record<number, number> = {};
+  for (const c of cards) {
+    map[c.priority] = (map[c.priority] ?? 0) + 1;
+  }
+  return map;
+}

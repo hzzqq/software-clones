@@ -27,6 +27,21 @@ export function episodesLeft(show: Show): number {
   return left > 0 ? left : 0;
 }
 
+/** 估算剩余观看时长（秒）；secPerEp 为单集时长，默认 45 分钟。 */
+export function remainingWatchTime(show: Show, secPerEp = 45 * 60): number {
+  return episodesLeft(show) * secPerEp;
+}
+
+/** 将秒数格式化为「X 小时 Y 分」中文时长描述。 */
+export function formatWatchTime(totalSeconds: number): string {
+  if (totalSeconds <= 0) return '0 分钟';
+  const minutes = Math.round(totalSeconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  if (hours > 0) return mins > 0 ? `${hours} 小时 ${mins} 分` : `${hours} 小时`;
+  return `${minutes} 分钟`;
+}
+
 /** 按名称过滤剧集（空白匹配全部，忽略大小写）。 */
 export function filterShows(query: string, shows: Show[]): Show[] {
   const needle = query.trim().toLowerCase();

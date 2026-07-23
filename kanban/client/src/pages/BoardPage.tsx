@@ -22,6 +22,7 @@ import { boardsApi } from '../api/boards';
 import { ApiError } from '../api/client';
 import { CardPatch } from '../api/cards';
 import { Card } from '../types';
+import { countCardsByPriority } from '../utils/filterCards';
 
 /** Single-board view: toolbar + drag-enabled columns + card editor. */
 export default function BoardPage(): JSX.Element {
@@ -137,6 +138,7 @@ export default function BoardPage(): JSX.Element {
         onClearCompleted={() => void board.clearCompleted()}
         totalCards={board.detail.cards.length}
         completedCards={board.detail.cards.filter((c) => c.completed === 1).length}
+        priorityCounts={countCardsByPriority(board.detail.cards)}
       />
       <DndProvider onDragEnd={onDragEnd} onDragStart={onDragStart} overlay={overlay}>
         <Board

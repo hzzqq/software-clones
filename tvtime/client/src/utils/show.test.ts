@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { progressPercent, nextUnwatched, isComplete, filterShows, sortShows, episodesLeft } from './show';
+import { progressPercent, nextUnwatched, isComplete, filterShows, sortShows, episodesLeft, remainingWatchTime, formatWatchTime } from './show';
 import type { Episode, Show } from '../types';
 
 function mkShow(id: number, title: string, watchedCount: number, totalEpisodes: number, updatedAt: string): Show {
@@ -96,5 +96,35 @@ describe('sortShows', () => {
   });
   it('按更新时间（新到旧）', () => {
     expect(sortShows(shows, 'updated').map((s) => s.id)).toEqual([2, 3, 1]);
+  });
+});
+
+describe('remainingWatchTime', () => {
+  it('剩余集数 × 单集时长（默认 45 分钟）', () => {
+    const s = mkShow(1, 'X', 3, 10, '2026-01-01');
+    expect(remainingWatchTime(s)).toBe(7 * 45 * 60);
+  });
+  it('自定义单集时长', () => {
+    const s = mkShow(2, 'Y', 8, 10, '2026-01-01');
+    expect(remainingWatchTime(s, 30 * 60)).toBe(2 * 30 * 60);
+  });
+  it('已看完返回 0', () => {
+    const s = mkShow(3, 'Z', 10, 10, '2026-01-01');
+    expect(remainingWatchTime(s)).toBe(0);
+  });
+});
+
+describe('formatWatchTime', () => {
+  it('不足 1 小时显示分钟', () => {
+    expect(formatWatchTime(45 * 60)).toBe('45 分钟');
+  });
+  it('整小时', () => {
+    expect(formatWatchTime(2 * 60 * 60)).toBe('2 小时');
+  });
+  it('小时 + 分钟', () => {
+    expect(formatWatchTime((2 * 60 + 15) * 60)).toBe('2 小时 15 分');
+  });
+  it('非正返回 0 分钟', () => {
+    expect(formatWatchTime(0)).toBe('0 分钟');
   });
 });

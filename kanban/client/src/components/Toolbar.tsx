@@ -1,6 +1,7 @@
 import {
   Box,
   Button,
+  Chip,
   FormControl,
   InputLabel,
   MenuItem,
@@ -27,6 +28,7 @@ interface ToolbarProps {
   onClearCompleted: () => void;
   totalCards?: number;
   completedCards?: number;
+  priorityCounts?: Record<number, number>;
 }
 
 /** Board header: name, tag filter, edit tags, and delete. */
@@ -42,6 +44,7 @@ export default function Toolbar({
   onClearCompleted,
   totalCards,
   completedCards,
+  priorityCounts,
 }: ToolbarProps): JSX.Element {
   const [editOpen, setEditOpen] = useState<boolean>(false);
   return (
@@ -60,6 +63,16 @@ export default function Toolbar({
           <Typography variant="caption" color="text.secondary">
             共 {totalCards} 张 · 已完成 {completedCards ?? 0} 张
           </Typography>
+        )}
+        {priorityCounts && Object.keys(priorityCounts).length > 0 && (
+          <Stack direction="row" spacing={0.5} sx={{ mt: 0.5 }}>
+            {Object.entries(priorityCounts)
+              .map(([p, n]) => [Number(p), n] as [number, number])
+              .sort((a, b) => b[0] - a[0])
+              .map(([p, n]) => (
+                <Chip key={p} size="small" variant="outlined" label={`P${p}: ${n}`} />
+              ))}
+          </Stack>
         )}
       </Box>
       <Stack direction="row" spacing={1} alignItems="center">

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { filterCardsByQuery, sortCards } from '../src/utils/filterCards';
+import { filterCardsByQuery, sortCards, countCardsByPriority } from '../src/utils/filterCards';
 import type { Card } from '../src/types';
 
 function mk(id: number, title: string, description = ''): Card {
@@ -58,6 +58,25 @@ describe('sortCards', () => {
   it('不修改原数组', () => {
     const before = cards.map((c) => c.id);
     sortCards(cards, 'title');
+    expect(cards.map((c) => c.id)).toEqual(before);
+  });
+});
+
+describe('countCardsByPriority', () => {
+  const cards: Card[] = [
+    { id: 1, title: 'a', description: '', priority: 1, columnId: 1, position: 0, createdAt: '', updatedAt: '' },
+    { id: 2, title: 'b', description: '', priority: 3, columnId: 1, position: 1, createdAt: '', updatedAt: '' },
+    { id: 3, title: 'c', description: '', priority: 3, columnId: 2, position: 0, createdAt: '', updatedAt: '' },
+  ];
+  it('按优先级计数', () => {
+    expect(countCardsByPriority(cards)).toEqual({ 1: 1, 3: 2 });
+  });
+  it('空列表返回空对象', () => {
+    expect(countCardsByPriority([])).toEqual({});
+  });
+  it('不修改入参', () => {
+    const before = cards.map((c) => c.id);
+    countCardsByPriority(cards);
     expect(cards.map((c) => c.id)).toEqual(before);
   });
 });

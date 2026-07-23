@@ -52,16 +52,18 @@ export default function MainLayout(): JSX.Element {
   const [mobileOpen, setMobileOpen] = useState<boolean>(false);
   const [query, setQuery] = useState<string>('');
   const [sortBy, setSortBy] = useState<'title' | 'key'>('title');
+  const [catFilter, setCatFilter] = useState<string>('');
   const navigate = useNavigate();
 
   const filteredGroups = useMemo(() => {
+    const scoped = catFilter ? groups.filter((g) => g.category === catFilter) : groups;
     const base = query.trim()
-      ? groups
+      ? scoped
           .map((g) => ({ ...g, items: filterTools(query, g.items) }))
           .filter((g) => g.items.length > 0)
-      : groups;
+      : scoped;
     return base.map((g) => ({ ...g, items: sortTools(g.items, sortBy) }));
-  }, [query, sortBy]);
+  }, [query, sortBy, catFilter]);
 
   const drawerContent = (
     <Box sx={{ overflow: 'auto' }}>
@@ -89,6 +91,22 @@ export default function MainLayout(): JSX.Element {
           >
             <MenuItem value="title">按名称</MenuItem>
             <MenuItem value="key">按标识</MenuItem>
+          </Select>
+        </FormControl>
+        <FormControl size="small" fullWidth sx={{ mt: 1 }}>
+          <InputLabel id="tool-cat-label">分类</InputLabel>
+          <Select
+            labelId="tool-cat-label"
+            label="分类"
+            value={catFilter}
+            onChange={(e) => setCatFilter(e.target.value as string)}
+          >
+            <MenuItem value="">全部</MenuItem>
+            {groups.map((g) => (
+              <MenuItem key={g.category} value={g.category}>
+                {g.category}
+              </MenuItem>
+            ))}
           </Select>
         </FormControl>
       </Box>

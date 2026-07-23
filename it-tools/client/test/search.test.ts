@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { filterTools, sortTools } from '../src/utils/search';
+import { filterTools, sortTools, groupToolsByCategory } from '../src/utils/search';
 import type { ToolModule } from '../src/tools/types';
 
 const noop = (() => null) as unknown as ToolModule['Component'];
@@ -40,5 +40,27 @@ describe('sortTools', () => {
   });
   it('空数组返回空数组', () => {
     expect(sortTools([])).toHaveLength(0);
+  });
+});
+
+describe('groupToolsByCategory', () => {
+  const mock: ToolModule[] = [
+    { key: 'a', title: 'A', category: '编码', description: '', component: null as never },
+    { key: 'b', title: 'B', category: '编码', description: '', component: null as never },
+    { key: 'c', title: 'C', category: '网络', description: '', component: null as never },
+  ];
+  it('按分类分组并保留组内顺序', () => {
+    const g = groupToolsByCategory(mock);
+    expect(Object.keys(g)).toEqual(['编码', '网络']);
+    expect(g['编码'].map((t) => t.key)).toEqual(['a', 'b']);
+    expect(g['网络'].map((t) => t.key)).toEqual(['c']);
+  });
+  it('不修改入参', () => {
+    const before = [...mock];
+    groupToolsByCategory(mock);
+    expect(mock).toEqual(before);
+  });
+  it('空列表返回空对象', () => {
+    expect(groupToolsByCategory([])).toEqual({});
   });
 });

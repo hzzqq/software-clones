@@ -29,3 +29,15 @@ export function sortTools(tools: ToolModule[], by: ToolSort = 'title'): ToolModu
     return av.localeCompare(bv);
   });
 }
+
+/**
+ * 按分类分组（不修改入参），组内保持原始顺序。
+ * 返回对象的键即为分类名；空列表返回空对象。
+ */
+export function groupToolsByCategory(tools: ToolModule[]): Record<string, ToolModule[]> {
+  const map: Record<string, ToolModule[]> = {};
+  for (const t of tools) {
+    (map[t.category] ||= []).push(t);
+  }
+  return map;
+}

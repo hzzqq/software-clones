@@ -1,5 +1,5 @@
 {
-  "cycle": 93,
+  "cycle": 96,
   "max_cycles": 100,
   "paused": false,
   "phase": "optimize",
@@ -96,7 +96,10 @@
     { "cycle": 90, "app": "tvtime", "task_id": "episodes_left", "new_requirement": "episodesLeft 纯函数(剩余集数,越界夹0)+测试；详情页展示「剩 N 集」", "files": ["client/src/utils/show.ts", "client/src/utils/show.test.ts", "client/src/pages/ShowDetailPage.tsx"], "verify": "client 18 passed + typecheck pass", "score": 76 },
     { "cycle": 91, "app": "excalidraw", "task_id": "bounding_box", "new_requirement": "boundingBox 纯函数(并集包围盒)+测试；工具栏展示内容尺寸 chip", "files": ["client/src/utils/geometry.ts", "client/src/utils/geometry.test.ts", "client/src/components/Whiteboard.tsx"], "verify": "client 15 passed + typecheck pass", "score": 78 },
     { "cycle": 92, "app": "photopea", "task_id": "saturate_filter", "new_requirement": "saturate 饱和度纯函数+测试；滤镜菜单新增饱和度连续滑块；FilterKind 扩展", "files": ["client/src/utils/image.ts", "client/src/utils/image.test.ts", "client/src/types.ts", "client/src/components/CanvasEditor.tsx"], "verify": "client 17 passed + typecheck pass", "score": 80 },
-    { "cycle": 93, "app": "apiclient", "task_id": "group_by_method", "new_requirement": "groupByMethod 纯函数(按HTTP方法分组)+测试；侧栏集合新增「按方法分组」开关", "files": ["client/src/utils/http.ts", "client/src/utils/http.test.ts", "client/src/pages/ApiClientPage.tsx"], "verify": "client 29 passed + typecheck pass", "score": 80 }
+    { "cycle": 93, "app": "apiclient", "task_id": "group_by_method", "new_requirement": "groupByMethod 纯函数(按HTTP方法分组)+测试；侧栏集合新增「按方法分组」开关", "files": ["client/src/utils/http.ts", "client/src/utils/http.test.ts", "client/src/pages/ApiClientPage.tsx"], "verify": "client 29 passed + typecheck pass", "score": 80 },
+    { "cycle": 94, "app": "tvtime", "task_id": "remaining_watch_time", "new_requirement": "remainingWatchTime+formatWatchTime 纯函数(剩余观看时长估算)+测试；详情页展示「还需约 X」", "files": ["client/src/utils/show.ts", "client/src/utils/show.test.ts", "client/src/pages/ShowDetailPage.tsx"], "verify": "client 25 passed + typecheck pass", "score": 78 },
+    { "cycle": 95, "app": "it-tools", "task_id": "group_tools_by_category", "new_requirement": "groupToolsByCategory 纯函数+测试；抽屉新增「分类」筛选下拉", "files": ["client/src/utils/search.ts", "client/test/search.test.ts", "client/src/layouts/MainLayout.tsx"], "verify": "client 59 passed + typecheck pass", "score": 80 },
+    { "cycle": 96, "app": "kanban", "task_id": "count_cards_by_priority", "new_requirement": "countCardsByPriority 纯函数+测试；工具栏新增优先级计数 chips", "files": ["client/src/utils/filterCards.ts", "client/test/filterCards.test.ts", "client/src/components/Toolbar.tsx", "client/src/pages/BoardPage.tsx"], "verify": "client 19 passed + typecheck pass", "score": 78 }
   ],
   "last_task_id": "episodes_left",
   "repeat_count": 0,
