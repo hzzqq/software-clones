@@ -20,6 +20,7 @@ import rough from 'roughjs';
 import type { RoughCanvas } from 'roughjs/bin/canvas';
 import type { CanvasElement, Point, Scene, Tool } from '../types';
 import { normalizeRect, hitTest, uid, serializeScene, snapPoint, boundingBox, getCenter, translateElement, rotateElement, scaleElement } from '../utils/geometry';
+import { formatRelativeTime } from '../utils/time';
 import { sceneApi } from '../api/scenes';
 
 interface Props {
@@ -397,7 +398,7 @@ export default function Whiteboard({ elements, setElements }: Props): JSX.Elemen
             <List dense>
               {scenes.map((s) => (
                 <ListItemButton key={s.id} onClick={() => loadScene(s)}>
-                  <ListItemText primary={s.name} secondary={new Date(s.updatedAt).toLocaleString()} />
+                  <ListItemText primary={s.name} secondary={formatRelativeTime(s.updatedAt) || '时间未知'} />
                 </ListItemButton>
               ))}
             </List>
