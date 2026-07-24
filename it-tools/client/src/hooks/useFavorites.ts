@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { favoritesApi, Favorite } from '../api/favorites';
 import { useLocalStorage } from './useLocalStorage';
+import { isFavoriteTool } from '../utils/search';
 
 const LS_KEY = 'it-tools:favorites';
 
@@ -29,9 +30,12 @@ export function useFavorites() {
     void load();
   }, [load]);
 
+  // 派生收藏工具 key 集合（Set），复用于判定，避免每次遍历数组。
+  const favoriteIds = useMemo(() => new Set(favorites.map((f) => f.toolKey)), [favorites]);
+
   const isFavorite = useCallback(
-    (toolKey: string): boolean => favorites.some((f) => f.toolKey === toolKey),
-    [favorites]
+    (toolKey: string): boolean => isFavoriteTool(favoriteIds, toolKey),
+    [favoriteIds]
   );
 
   const add = useCallback(

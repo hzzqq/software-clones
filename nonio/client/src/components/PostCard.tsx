@@ -3,7 +3,7 @@ import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import CommentOutlinedIcon from '@mui/icons-material/CommentOutlined';
 import { Link as RouterLink } from 'react-router-dom';
 import type { Post } from '../types';
-import { excerpt } from '../utils/forum';
+import { excerpt, postReadingTime } from '../utils/forum';
 
 interface Props {
   post: Post;
@@ -18,6 +18,9 @@ export default function PostCard({ post, onLike }: Props): JSX.Element {
           <Chip size="small" color="secondary" label={post.channelName} />
           <Typography variant="caption" color="text.secondary">
             @{post.authorName} · {new Date(post.createdAt).toLocaleString()}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            约 {postReadingTime(post.body)} 分钟阅读
           </Typography>
         </Stack>
         <Typography

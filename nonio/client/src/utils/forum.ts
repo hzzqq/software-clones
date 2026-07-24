@@ -151,6 +151,44 @@ export interface PostsSummary {
   channels: number;
 }
 
+/**
+ * 估算帖子正文阅读时长（分钟）。
+ * 先粗略去除 Markdown 标记（代码块/行内代码/图片/链接/标题/加粗/斜体/引用/列表），
+ * 再分别统计：
+ * - CJK 字符（中日韩统一表意文字及假名等）：按 ~300 字/分钟；
+ * - 非 CJK 词语（按空白切分）：按 ~200 词/分钟。
+ * 规则：空串返回 0；非空内容至少 1 分钟；结果四舍五入。
+ * 不修改入参（仅基于副本计算）。
+ */
+export function postReadingTime(content: string): number {
+  if (content == null || content.trim() === '') return 0;
+
+  const text = content
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/`([^`]+)`/g, ' $1 ')
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, ' $1 ')
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/(\*\*|__)(.*?)\1/g, ' $2 ')
+    .replace(/(\*|_)(.*?)\1/g, ' $2 ')
+    .replace(/^>\s?/gm, '')
+    .replace(/^[-*+]\s+/gm, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  // CJK 字符数（含中日韩表意文字与日文假名）
+  const cjkMatches =
+    text.match(/[぀-ヿ㐀-鿿豈-﫿]/gu) ?? [];
+  const cjkCount = cjkMatches.length;
+
+  // 其余按空白切分为「词」
+  const nonCjk = text.replace(/[぀-ヿ㐀-鿿豈-﫿]/gu, ' ');
+  const words = nonCjk.split(/\s+/).filter((w) => w.length > 0);
+
+  const minutes = cjkCount / 300 + words.length / 200;
+  return Math.max(1, Math.round(minutes));
+}
+
 /** 汇总帖子：总数、总点赞、总评论、涉及频道数（不修改入参）。 */
 export function summarizePosts(posts: Post[]): PostsSummary {
   const chans = new Set<number>();

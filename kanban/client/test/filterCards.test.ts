@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { filterCardsByQuery, sortCards, countCardsByPriority, dueSoonCards, overdueCards, filterCardsByPriority, filterCardsByCompleted } from '../src/utils/filterCards';
+import { filterCardsByQuery, sortCards, countCardsByPriority, dueSoonCards, overdueCards, filterCardsByPriority, filterCardsByCompleted, formatDueLabel } from '../src/utils/filterCards';
 import type { Card } from '../src/types';
 
 function mk(id: number, title: string, description = ''): Card {
@@ -179,5 +179,30 @@ describe('filterCardsByCompleted', () => {
     const before = cards.map((c) => c.id);
     filterCardsByCompleted(cards, true);
     expect(cards.map((c) => c.id)).toEqual(before);
+  });
+});
+
+describe('formatDueLabel', () => {
+  // 固定参考时间：2026-07-23 10:00（本地时区），保证测试可重现。
+  const now = new Date(2026, 6, 23, 10, 0, 0);
+  const iso = (d: Date): string => d.toISOString();
+  it('null → 无截止 / none', () => {
+    expect(formatDueLabel(null, now)).toEqual({ text: '无截止', tone: 'none' });
+  });
+  it('已逾期（2 天前）→ 逾期 2天 / overdue', () => {
+    const due = new Date(2026, 6, 21, 9, 0, 0); // 比 now 早 2 个日历日
+    expect(formatDueLabel(iso(due), now)).toEqual({ text: '逾期 2天', tone: 'overdue' });
+  });
+  it('今天（同日历日，更晚时刻）→ 今天 / today', () => {
+    const due = new Date(2026, 6, 23, 22, 30, 0); // 同属 7/23，忽略具体时刻
+    expect(formatDueLabel(iso(due), now)).toEqual({ text: '今天', tone: 'today' });
+  });
+  it('3 天内（2 天后）→ 2天后 / soon', () => {
+    const due = new Date(2026, 6, 25, 8, 0, 0); // 比 now 晚 2 个日历日
+    expect(formatDueLabel(iso(due), now)).toEqual({ text: '2天后', tone: 'soon' });
+  });
+  it('较远未来（10 天后）→ 10天后 / none', () => {
+    const due = new Date(2026, 7, 2, 8, 0, 0); // 7/23 + 10 天 = 8/2
+    expect(formatDueLabel(iso(due), now)).toEqual({ text: '10天后', tone: 'none' });
   });
 });

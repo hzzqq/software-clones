@@ -4,6 +4,8 @@ import UndoIcon from '@mui/icons-material/Undo';
 import RedoIcon from '@mui/icons-material/Redo';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import RotateRightIcon from '@mui/icons-material/RotateRight';
+import ZoomInIcon from '@mui/icons-material/ZoomIn';
+import ZoomOutIcon from '@mui/icons-material/ZoomOut';
 import SaveIcon from '@mui/icons-material/Save';
 import DownloadIcon from '@mui/icons-material/Download';
 import DescriptionIcon from '@mui/icons-material/Description';
@@ -17,7 +19,7 @@ import TitleIcon from '@mui/icons-material/Title';
 import rough from 'roughjs';
 import type { RoughCanvas } from 'roughjs/bin/canvas';
 import type { CanvasElement, Point, Scene, Tool } from '../types';
-import { normalizeRect, hitTest, uid, serializeScene, snapPoint, boundingBox, getCenter, translateElement, rotateElement } from '../utils/geometry';
+import { normalizeRect, hitTest, uid, serializeScene, snapPoint, boundingBox, getCenter, translateElement, rotateElement, scaleElement } from '../utils/geometry';
 import { sceneApi } from '../api/scenes';
 
 interface Props {
@@ -210,6 +212,15 @@ export default function Whiteboard({ elements, setElements }: Props): JSX.Elemen
     );
   };
 
+  // 选中元素绕自身中心缩放（factor>1 放大，<1 缩小）
+  const scaleSelected = (factor: number) => {
+    if (!selectedId) return;
+    pushUndo();
+    setElements((prev) =>
+      prev.map((el) => (el.id === selectedId ? scaleElement(el, factor, getCenter(el)) : el))
+    );
+  };
+
   const nudge = useCallback(
     (dx: number, dy: number) => {
       const id = shortcutRef.current.selectedId;
@@ -345,6 +356,8 @@ export default function Whiteboard({ elements, setElements }: Props): JSX.Elemen
         <IconButton onClick={redo} aria-label="重做"><RedoIcon /></IconButton>
         <IconButton onClick={deleteSelected} aria-label="删除选中" disabled={!selectedId}><DeleteSweepIcon /></IconButton>
         <IconButton onClick={rotate90} aria-label="旋转 90°" disabled={!selectedId} title="旋转 90°"><RotateRightIcon /></IconButton>
+        <IconButton onClick={() => scaleSelected(1.25)} aria-label="放大" disabled={!selectedId} title="放大 ×1.25"><ZoomInIcon /></IconButton>
+        <IconButton onClick={() => scaleSelected(0.8)} aria-label="缩小" disabled={!selectedId} title="缩小 ×0.8"><ZoomOutIcon /></IconButton>
         <IconButton onClick={clearAll} aria-label="清空" color="error"><DeleteSweepIcon /></IconButton>
         <Divider orientation="vertical" flexItem />
         <IconButton onClick={() => setSnap((v) => !v)} aria-label="网格吸附" color={snap ? 'primary' : 'default'} title="网格吸附">

@@ -95,3 +95,37 @@ export function filterCardsByCompleted(cards: Card[], onlyIncomplete: boolean): 
   if (!onlyIncomplete) return cards;
   return cards.filter((c) => c.completed !== 1);
 }
+
+/** 截止日语义色调：已逾期 / 今天 / 临近 / 无。 */
+export type DueTone = 'overdue' | 'today' | 'soon' | 'none';
+
+/** 截止日标签结果：展示文本 + 语义色调。 */
+export interface DueLabel {
+  text: string;
+  tone: DueTone;
+}
+
+/**
+ * 根据截止日（ISO 字符串或 null）与「参考时间」生成人类可读标签与语义色调。
+ * - null                     → 无截止 / none
+ * - 日期早于今天（已过期）   → 逾期 n天 / overdue
+ * - 今天（同日历日）         → 今天 / today
+ * - 3 天内（含）             → n天后 / soon
+ * - 其余未来                 → n天后 / none
+ * 仅按日期比较（忽略当天具体时刻），不修改入参。
+ * 第二个可选参数 now 用于测试时固定参考时间；缺省使用真实 Date。
+ */
+export function formatDueLabel(dueDate: string | null, now: Date = new Date()): DueLabel {
+  if (dueDate === null) return { text: '无截止', tone: 'none' };
+
+  const msPerDay = 24 * 60 * 60 * 1000;
+  const startOfDay = (d: Date): Date => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const diffDays = Math.round(
+    (startOfDay(new Date(dueDate)).getTime() - startOfDay(now).getTime()) / msPerDay
+  );
+
+  if (diffDays < 0) return { text: `逾期 ${Math.abs(diffDays)}天`, tone: 'overdue' };
+  if (diffDays === 0) return { text: '今天', tone: 'today' };
+  if (diffDays <= 3) return { text: `${diffDays}天后`, tone: 'soon' };
+  return { text: `${diffDays}天后`, tone: 'none' };
+}

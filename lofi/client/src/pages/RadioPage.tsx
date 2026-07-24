@@ -25,7 +25,7 @@ import StationCard from '../components/StationCard';
 import CategoryFilter from '../components/CategoryFilter';
 import { Station } from '../types';
 import { stationApi } from '../api/stations';
-import { filterStations, sortStations, groupStationsByCategory, categoryLabel, filterStationsByLikes, filterStationsByCategory, summarizeStations, type StationSort } from '../utils/station';
+import { filterStations, sortStations, groupStationsByCategory, categoryLabel, filterStationsByLikes, filterStationsByCategory, summarizeStations, formatCount, type StationSort } from '../utils/station';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
 export default function RadioPage(): JSX.Element {
@@ -272,7 +272,7 @@ export default function RadioPage(): JSX.Element {
       )}
 
       <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-        <Chip size="small" color="primary" variant="outlined" label={`共 ${summary.total} 个电台 · ${summary.categories} 类 · ❤ ${summary.totalLikes}`} />
+        <Chip size="small" color="primary" variant="outlined" label={`共 ${formatCount(summary.total)} 个电台 · ${summary.categories} 类 · ❤ ${formatCount(summary.totalLikes)}`} />
       </Stack>
 
       <CategoryFilter categories={categories} active={category} onSelect={setCategory} />
@@ -289,7 +289,7 @@ export default function RadioPage(): JSX.Element {
         Object.entries(groupStationsByCategory(filtered)).map(([cat, items]) => (
           <Fragment key={cat}>
             <Typography variant="subtitle2" sx={{ mt: 2, mb: 0.5, color: 'text.secondary' }}>
-              {categoryLabel(cat)}（{items.length}）
+              {categoryLabel(cat)}（{formatCount(items.length)}）
             </Typography>
             <Grid container spacing={2} sx={{ mb: 1 }}>
               {items.map((s) => (

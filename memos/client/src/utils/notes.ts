@@ -105,3 +105,20 @@ export function summarizeNotes(notes: Note[]): NotesSummary {
   const tagCounts = groupNotesByTag(notes);
   return { total: notes.length, totalChars, tagTotal: Object.keys(tagCounts).length };
 }
+
+/**
+ * 按创建月份（createdAt 的 YYYY-MM 前缀）分组笔记，键按时间倒序（最新月份在前）。
+ * 空入参返回 {}；createdAt 无法解析为 YYYY-MM 的笔记会被忽略；不修改入参。
+ */
+export function groupNotesByMonth(notes: Note[]): Record<string, Note[]> {
+  const buckets: Record<string, Note[]> = {};
+  for (const note of notes) {
+    const prefix = note.createdAt.slice(0, 7); // YYYY-MM
+    if (!prefix || !/^\d{4}-\d{2}$/.test(prefix)) continue;
+    (buckets[prefix] ??= []).push(note);
+  }
+  const keys = Object.keys(buckets).sort((a, b) => (a < b ? 1 : a > b ? -1 : 0));
+  const ordered: Record<string, Note[]> = {};
+  for (const key of keys) ordered[key] = buckets[key];
+  return ordered;
+}

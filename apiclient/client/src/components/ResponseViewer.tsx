@@ -3,7 +3,7 @@ import { Box, Chip, Typography, Tabs, Tab, Stack, IconButton, Tooltip } from '@m
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CheckIcon from '@mui/icons-material/Check';
 import type { ProxyResponse } from '../types';
-import { statusKind, tryPrettyJson, headersToText } from '../utils/http';
+import { statusKind, statusFamily, tryPrettyJson, headersToText } from '../utils/http';
 
 interface Props {
   response: ProxyResponse | null;
@@ -50,6 +50,12 @@ export default function ResponseViewer({ response, loading }: Props): JSX.Elemen
           label={response.status === 0 ? 'NETWORK ERROR' : `${response.status} ${response.statusText}`}
           color={kind === 'success' ? 'success' : kind === 'warning' ? 'warning' : kind === 'info' ? 'info' : 'error'}
           size="small"
+        />
+        <Chip
+          label={statusFamily(response.status)}
+          color={kind === 'success' ? 'success' : kind === 'warning' ? 'warning' : kind === 'info' ? 'info' : 'error'}
+          size="small"
+          variant="outlined"
         />
         <Typography variant="caption" color="text.secondary">
           {response.timeMs} ms · {response.body.length} 字节

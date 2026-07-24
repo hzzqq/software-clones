@@ -1,6 +1,7 @@
 import { List, ListItemButton, ListItemText, Typography, Box, Chip } from '@mui/material';
 import PushPinIcon from '@mui/icons-material/PushPin';
 import type { Note } from '../types';
+import { truncateText } from '../utils/markdown';
 
 interface Props {
   notes: Note[];
@@ -29,7 +30,7 @@ export default function NoteList({ notes, activeId, onSelect }: Props): JSX.Elem
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                 {n.pinned && <PushPinIcon fontSize="small" color="primary" />}
                 <Typography noWrap sx={{ maxWidth: '70%' }}>
-                  {n.title || '无标题'}
+                  {truncateText(n.title || '无标题', 40)}
                 </Typography>
               </Box>
             }

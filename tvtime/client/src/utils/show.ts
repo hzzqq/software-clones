@@ -49,6 +49,14 @@ export function formatEpisodeCode(season: number, episode: number): string {
   return `S${s}E${e}`;
 }
 
+/** 计算「接下来看」的下一集标签（纯函数，不修改入参）。
+ * 已看完（watched >= total 或 total <= 0）返回「已看完」；
+ * 否则返回「下一集 第 N 集」（N = watched + 1）。 */
+export function nextEpisodeLabel(watched: number, total: number): string {
+  if (total <= 0 || watched >= total) return '已看完';
+  return `下一集 第 ${watched + 1} 集`;
+}
+
 /** 按名称过滤剧集（空白匹配全部，忽略大小写）。 */
 export function filterShows(query: string, shows: Show[]): Show[] {
   const needle = query.trim().toLowerCase();

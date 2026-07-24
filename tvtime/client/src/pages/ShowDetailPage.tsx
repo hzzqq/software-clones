@@ -10,7 +10,7 @@ import { showApi } from '../api/shows';
 import { episodeApi } from '../api/episodes';
 import type { Show, Episode } from '../types';
 import EpisodeGrid from '../components/EpisodeGrid';
-import { progressPercent, nextUnwatched, isComplete, episodesLeft, remainingWatchTime, formatWatchTime, filterEpisodesByWatched, episodesByStatus, type EpisodeFilter } from '../utils/show';
+import { progressPercent, nextUnwatched, isComplete, episodesLeft, remainingWatchTime, formatWatchTime, nextEpisodeLabel, filterEpisodesByWatched, episodesByStatus, type EpisodeFilter } from '../utils/show';
 
 export default function ShowDetailPage(): JSX.Element {
   const { id } = useParams<{ id: string }>();
@@ -98,7 +98,11 @@ export default function ShowDetailPage(): JSX.Element {
       </Stack>
 
       {!isComplete(show.watchedCount, show.totalEpisodes) && nextUnwatched(episodes) != null && (
-        <Alert severity="info" sx={{ mb: 2 }}>
+        <Alert
+          severity="info"
+          sx={{ mb: 2 }}
+          action={<Chip size="small" color="info" label={nextEpisodeLabel(show.watchedCount, show.totalEpisodes)} />}
+        >
           接下来看：第 {nextUnwatched(episodes)} 集
         </Alert>
       )}

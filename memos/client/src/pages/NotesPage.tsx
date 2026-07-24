@@ -25,7 +25,7 @@ import { Note, Visibility } from '../types';
 import { noteApi } from '../api/notes';
 import { tagApi } from '../api/tags';
 import { useNotes } from '../hooks/useNotes';
-import { pinnedNotes, sortNotesByPinned, summarizeNotes, filterNotesByTag } from '../utils/notes';
+import { pinnedNotes, sortNotesByPinned, summarizeNotes, filterNotesByTag, groupNotesByMonth } from '../utils/notes';
 
 export default function NotesPage(): JSX.Element {
   const navigate = useNavigate();
@@ -34,6 +34,7 @@ export default function NotesPage(): JSX.Element {
   const [q, setQ] = useState('');
   const [sort, setSort] = useState<'newest' | 'oldest' | 'updated'>('newest');
   const [onlyPinned, setOnlyPinned] = useState(false);
+  const [groupByMonth, setGroupByMonth] = useState(false);
   const [dropdownTag, setDropdownTag] = useState('');
   const [tags, setTags] = useState<{ id: number; name: string; count: number }[]>([]);
   const { notes, loading, error, reload } = useNotes({ archived, tag: activeTag, q });
@@ -57,6 +58,12 @@ export default function NotesPage(): JSX.Element {
     () => filterNotesByTag(visible, dropdownTag),
     [visible, dropdownTag]
   );
+
+  const groupedByMonth = useMemo(
+    () => (groupByMonth ? groupNotesByMonth(filtered) : {}),
+    [groupByMonth, filtered]
+  );
+  const monthKeys = useMemo(() => Object.keys(groupedByMonth), [groupedByMonth]);
 
   const refreshTags = () => tagApi.list().then(setTags).catch(() => undefined);
   useEffect(() => {
@@ -144,6 +151,7 @@ export default function NotesPage(): JSX.Element {
 
       <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
         <FormControlLabel control={<Switch size="small" checked={onlyPinned} onChange={(e) => setOnlyPinned(e.target.checked)} />} label="仅看置顶" />
+        <FormControlLabel control={<Switch size="small" checked={groupByMonth} onChange={(e) => setGroupByMonth(e.target.checked)} />} label="按月份分组" />
         <FormControl size="small" sx={{ minWidth: 160 }}>
           <InputLabel>按标签筛选</InputLabel>
           <Select
@@ -184,6 +192,34 @@ export default function NotesPage(): JSX.Element {
         <Typography color="text.secondary" sx={{ mt: 2 }}>
           还没有笔记，写下第一条吧。
         </Typography>
+      ) : groupByMonth ? (
+        <Stack spacing={3} sx={{ mt: 2 }}>
+          {monthKeys.map((month) => (
+            <Box key={month}>
+              <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
+                {month}
+                <Typography component="span" color="text.secondary" variant="caption" sx={{ ml: 1 }}>
+                  （{groupedByMonth[month].length} 篇）
+                </Typography>
+              </Typography>
+              <Stack spacing={2}>
+                {groupedByMonth[month].map((n) => (
+                  <NoteCard
+                    key={n.id}
+                    note={n}
+                    onEdit={handleEdit}
+                    onArchive={handleArchive}
+                    onUnarchive={handleUnarchive}
+                    onPin={handlePin}
+                    onUnpin={handleUnpin}
+                    onDelete={handleDelete}
+                    onTagClick={setActiveTag}
+                  />
+                ))}
+              </Stack>
+            </Box>
+          ))}
+        </Stack>
       ) : (
         <Stack spacing={2} sx={{ mt: 2 }}>
           {filtered.map((n) => (

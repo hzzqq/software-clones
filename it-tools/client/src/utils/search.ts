@@ -94,6 +94,21 @@ export function levenshtein(a: string, b: string): number {
 }
 
 /**
+ * 判断某工具是否为已收藏项（收藏判定）。
+ * 入参 favoriteIds 既可为 string[] 也可为 Set<string>，函数内部做防御性识别，
+ * 不依赖调用方传入的具体集合类型；纯函数、无副作用、绝不修改入参。
+ */
+export function isFavoriteTool(favoriteIds: string[] | Set<string>, toolId: string): boolean {
+  if (favoriteIds instanceof Set) {
+    return favoriteIds.has(toolId);
+  }
+  if (Array.isArray(favoriteIds)) {
+    return favoriteIds.includes(toolId);
+  }
+  return false;
+}
+
+/**
  * 分类显示标签映射表：将注册表中的分类标识映射为更紧凑的中文标题。
  * 仅登记需要重写展示形态的分类（如 '加密与哈希' → '加密·哈希'），
  * 其余分类保持原样，便于将来新增分类时无需改动此表。

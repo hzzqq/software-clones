@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseQueryString, buildUrlWithQuery } from '../src/utils/http';
+import { parseQueryString, buildUrlWithQuery, statusFamily } from '../src/utils/http';
 
 describe('parseQueryString', () => {
   it('解析多个 key=value 对', () => {
@@ -37,5 +37,26 @@ describe('buildUrlWithQuery（复用 parseQueryString 解析已有查询串）',
   });
   it('旧参数中的编码值被原样保留', () => {
     expect(buildUrlWithQuery('https://x/api?x=a%20b', { y: '2' })).toBe('https://x/api?x=a+b&y=2');
+  });
+});
+
+describe('statusFamily', () => {
+  it('200 → 成功', () => {
+    expect(statusFamily(200)).toBe('成功');
+  });
+  it('301 → 重定向', () => {
+    expect(statusFamily(301)).toBe('重定向');
+  });
+  it('404 → 客户端错误', () => {
+    expect(statusFamily(404)).toBe('客户端错误');
+  });
+  it('500 → 服务端错误', () => {
+    expect(statusFamily(500)).toBe('服务端错误');
+  });
+  it('0 → 未知', () => {
+    expect(statusFamily(0)).toBe('未知');
+  });
+  it('418 → 客户端错误', () => {
+    expect(statusFamily(418)).toBe('客户端错误');
   });
 });

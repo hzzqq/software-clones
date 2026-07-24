@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseTags, formatRelativeTime, visibilityLabel, groupNotesByTag, filterNotesByTag, pinnedNotes, sortNotesByPinned, summarizeNotes } from './notes';
+import { parseTags, formatRelativeTime, visibilityLabel, groupNotesByTag, filterNotesByTag, pinnedNotes, sortNotesByPinned, summarizeNotes, groupNotesByMonth } from './notes';
 import { Visibility, Note } from '../types';
 
 describe('parseTags', () => {
@@ -132,6 +132,44 @@ describe('filterNotesByTag', () => {
     const before = notes.map((n) => n.id);
     filterNotesByTag(notes, 'work');
     expect(notes.map((n) => n.id)).toEqual(before);
+  });
+});
+
+describe('groupNotesByMonth', () => {
+  const notes: Note[] = [
+    { id: 1, content: '', visibility: 'private', pinned: false, archived: false, createdAt: '2024-03-15T10:00:00.000Z', updatedAt: '', tags: [] },
+    { id: 2, content: '', visibility: 'private', pinned: false, archived: false, createdAt: '2024-03-02T08:00:00.000Z', updatedAt: '', tags: [] },
+    { id: 3, content: '', visibility: 'private', pinned: false, archived: false, createdAt: '2024-01-20T12:00:00.000Z', updatedAt: '', tags: [] },
+    { id: 4, content: '', visibility: 'private', pinned: false, archived: false, createdAt: '2024-01-05T09:00:00.000Z', updatedAt: '', tags: [] },
+    { id: 5, content: '', visibility: 'private', pinned: false, archived: false, createdAt: '2023-12-31T23:00:00.000Z', updatedAt: '', tags: [] },
+  ];
+  it('按 YYYY-MM 分到不同月份', () => {
+    const grouped = groupNotesByMonth(notes);
+    expect(Object.keys(grouped).sort()).toEqual(['2023-12', '2024-01', '2024-03']);
+    expect(grouped['2024-03'].map((n) => n.id)).toEqual([1, 2]);
+    expect(grouped['2024-01'].map((n) => n.id)).toEqual([3, 4]);
+    expect(grouped['2023-12'].map((n) => n.id)).toEqual([5]);
+  });
+  it('键按时间倒序（最新月份在前）', () => {
+    expect(Object.keys(groupNotesByMonth(notes))).toEqual(['2024-03', '2024-01', '2023-12']);
+  });
+  it('空入参返回空对象', () => {
+    expect(groupNotesByMonth([])).toEqual({});
+  });
+  it('不修改入参（顺序与内容均不变）', () => {
+    const before = notes.map((n) => n.id);
+    const grouped = groupNotesByMonth(notes);
+    expect(notes.map((n) => n.id)).toEqual(before);
+    // 每个桶内的笔记保持原相对顺序
+    expect(grouped['2024-03'].map((n) => n.id)).toEqual([1, 2]);
+    expect(grouped['2024-01'].map((n) => n.id)).toEqual([3, 4]);
+  });
+  it('忽略无法解析为 YYYY-MM 的 createdAt', () => {
+    const dirty: Note[] = [
+      { id: 1, content: '', visibility: 'private', pinned: false, archived: false, createdAt: '', updatedAt: '', tags: [] },
+      { id: 2, content: '', visibility: 'private', pinned: false, archived: false, createdAt: 'not-a-date', updatedAt: '', tags: [] },
+    ];
+    expect(groupNotesByMonth(dirty)).toEqual({});
   });
 });
 

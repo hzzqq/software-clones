@@ -8,6 +8,7 @@ import {
   categoryLabel,
   filterStationsByLikes,
   summarizeStations,
+  formatCount,
 } from '../src/utils/station';
 
 function makeStation(partial: Partial<Station> & Pick<Station, 'id' | 'name' | 'category'>): Station {
@@ -50,6 +51,35 @@ describe('filterStationsByCategory', () => {
     const before = [...stations];
     filterStationsByCategory(stations, 'ambient');
     expect(stations).toEqual(before);
+  });
+});
+
+describe('formatCount', () => {
+  it('小于 1000 原样返回', () => {
+    expect(formatCount(42)).toBe('42');
+  });
+
+  it('1000..999999 显示 k（保留 1 位小数）', () => {
+    expect(formatCount(1500)).toBe('1.5k');
+    expect(formatCount(1000)).toBe('1.0k');
+  });
+
+  it('≥ 1000000 显示 M（保留 1 位小数）', () => {
+    expect(formatCount(2500000)).toBe('2.5M');
+  });
+
+  it('负数保留负号', () => {
+    expect(formatCount(-5)).toBe('-5');
+  });
+
+  it('NaN 返回 0', () => {
+    expect(formatCount(NaN)).toBe('0');
+  });
+
+  it('不修改入参', () => {
+    const input = 1500;
+    formatCount(input);
+    expect(input).toBe(1500);
   });
 });
 

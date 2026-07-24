@@ -10,6 +10,7 @@ import {
 } from '@mui/material';
 import EventIcon from '@mui/icons-material/Event';
 import { type Card, Tag, PRIORITY_LABELS } from '../types';
+import { formatDueLabel, type DueTone } from '../utils/filterCards';
 import TagChip from './TagChip';
 
 interface CardProps {
@@ -24,6 +25,14 @@ const PRIORITY_COLOR: Record<number, 'error' | 'warning' | 'default'> = {
   1: 'default',
   2: 'warning',
   3: 'error',
+};
+
+// 截止日语义色调 → MUI Chip 颜色
+const DUE_TONE_COLOR: Record<DueTone, 'error' | 'warning' | 'info' | 'default'> = {
+  overdue: 'error',
+  today: 'warning',
+  soon: 'info',
+  none: 'default',
 };
 
 /** A single sortable card inside a column. */
@@ -80,14 +89,18 @@ export default function Card({
                 color={PRIORITY_COLOR[card.priority]}
               />
             )}
-            {card.dueDate && (
-              <Chip
-                size="small"
-                icon={<EventIcon />}
-                label={card.dueDate.slice(0, 10)}
-                variant="outlined"
-              />
-            )}
+            {card.dueDate && (() => {
+              const due = formatDueLabel(card.dueDate);
+              return (
+                <Chip
+                  size="small"
+                  icon={<EventIcon />}
+                  label={due.text}
+                  color={DUE_TONE_COLOR[due.tone]}
+                  variant={due.tone === 'none' ? 'outlined' : 'filled'}
+                />
+              );
+            })()}
             {cardTags.map((t) => (
               <TagChip key={t.id} name={t.name} color={t.color} />
             ))}

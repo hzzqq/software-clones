@@ -220,3 +220,19 @@ export function statusText(status: number): string {
   if (status === 0) return '网络错误';
   return STATUS_TEXT[status] ?? `状态码 ${status}`;
 }
+
+/** 状态码 → 分类中文（按百位数字）：2xx 成功 / 3xx 重定向 / 4xx 客户端错误 / 5xx 服务端错误 / 其他 未知。 */
+export function statusFamily(code: number): '成功' | '重定向' | '客户端错误' | '服务端错误' | '未知' {
+  switch (Math.floor(code / 100)) {
+    case 2:
+      return '成功';
+    case 3:
+      return '重定向';
+    case 4:
+      return '客户端错误';
+    case 5:
+      return '服务端错误';
+    default:
+      return '未知';
+  }
+}

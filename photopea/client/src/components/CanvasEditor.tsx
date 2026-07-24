@@ -41,7 +41,7 @@ import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import { uid, applyFilter, getFilterLabel, formatPercent, clampOpacity } from '../utils/image';
+import { uid, applyFilter, getFilterLabel, formatPercent, clampOpacity, formatBytes } from '../utils/image';
 import { duplicateLayerName } from '../utils/layers';
 import { designApi } from '../api/designs';
 import type { Layer, Tool, FilterKind, Design } from '../types';
@@ -126,6 +126,8 @@ export default function CanvasEditor(): JSX.Element {
   const [designList, setDesignList] = useState<Design[]>([]);
   const [loadBusy, setLoadBusy] = useState(false);
   const [exportScale, setExportScale] = useState(1);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [estSize, setEstSize] = useState(0);
   const [brightnessVal, setBrightnessVal] = useState(1.2);
   const [contrastVal, setContrastVal] = useState(1.2);
   const [saturationVal, setSaturationVal] = useState(1);
@@ -494,6 +496,27 @@ export default function CanvasEditor(): JSX.Element {
     a.click();
   }, []);
 
+  /** 估算按某倍率导出 PNG 的字节大小（基于实际编码后的 dataURL 长度）。 */
+  const estimatePngBytes = useCallback((scale: number): number => {
+    const main = mainRef.current;
+    if (!main) return 0;
+    const off = document.createElement('canvas');
+    off.width = WIDTH * scale;
+    off.height = HEIGHT * scale;
+    const octx = off.getContext('2d');
+    if (!octx) return 0;
+    octx.drawImage(main, 0, 0, off.width, off.height);
+    const url = off.toDataURL('image/png');
+    const comma = url.indexOf(',');
+    const b64 = comma >= 0 ? url.slice(comma + 1) : '';
+    const padding = b64.endsWith('==') ? 2 : b64.endsWith('=') ? 1 : 0;
+    return Math.max(0, Math.floor((b64.length * 3) / 4) - padding);
+  }, []);
+
+  useEffect(() => {
+    if (exportOpen) setEstSize(estimatePngBytes(exportScale));
+  }, [exportOpen, exportScale, estimatePngBytes]);
+
   const saveDesign = useCallback((): void => {
     const url = mainRef.current?.toDataURL('image/png');
     if (!url) return;
@@ -738,7 +761,7 @@ export default function CanvasEditor(): JSX.Element {
             </MenuItem>
           ))}
         </TextField>
-        <IconButton onClick={() => exportPng(exportScale)} aria-label="导出 PNG">
+        <IconButton onClick={() => setExportOpen(true)} aria-label="导出 PNG">
           <DownloadIcon />
         </IconButton>
         <Button variant="contained" startIcon={<SaveIcon />} onClick={saveDesign} disabled={busy}>
@@ -977,6 +1000,49 @@ export default function CanvasEditor(): JSX.Element {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setLoadOpen(false)}>关闭</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={exportOpen} onClose={() => setExportOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>导出 PNG</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            <Box>
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+                导出倍率
+              </Typography>
+              <ToggleButtonGroup
+                value={exportScale}
+                exclusive
+                onChange={(_e: React.MouseEvent<HTMLElement>, v: number | null) => {
+                  if (v != null) setExportScale(v);
+                }}
+                size="small"
+              >
+                {[1, 2, 3].map((s) => (
+                  <ToggleButton key={s} value={s}>
+                    {s}x
+                  </ToggleButton>
+                ))}
+              </ToggleButtonGroup>
+            </Box>
+            <Typography variant="body2">
+              预估大小：<strong>{formatBytes(estSize)}</strong>
+            </Typography>
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setExportOpen(false)}>取消</Button>
+          <Button
+            variant="contained"
+            startIcon={<DownloadIcon />}
+            onClick={() => {
+              exportPng(exportScale);
+              setExportOpen(false);
+            }}
+          >
+            下载
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>

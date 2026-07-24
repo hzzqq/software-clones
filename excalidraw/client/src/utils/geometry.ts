@@ -136,3 +136,35 @@ export function translateElement(el: CanvasElement, dx: number, dy: number): Can
   }
   return moved;
 }
+
+/** 将单点绕 center 缩放 factor（factor>1 放大，<1 缩小，=1 恒等）。 */
+function scalePoint(p: Point, factor: number, center: Point): Point {
+  return {
+    x: center.x + (p.x - center.x) * factor,
+    y: center.y + (p.y - center.y) * factor,
+  };
+}
+
+/** 返回绕 center 缩放 factor 后的「新」元素（不修改入参）。
+ *  factor>1 放大、<1 缩小、=1 恒等。
+ *  钢笔：缩放全部 points（x/y 同步更新为首个点）；
+ *  矩形/椭圆/箭头/文字：缩放包围盒后重新计算左上角与正尺寸（w/h 保持几何正确）。 */
+export function scaleElement(el: CanvasElement, factor: number, center: Point): CanvasElement {
+  if (el.type === 'pen' && el.points) {
+    const pts = el.points.map((p) => scalePoint(p, factor, center));
+    const first = pts[0];
+    return { ...el, x: first.x, y: first.y, points: pts };
+  }
+  const b = elementBounds(el);
+  const minX = center.x + (b.minX - center.x) * factor;
+  const minY = center.y + (b.minY - center.y) * factor;
+  const maxX = center.x + (b.maxX - center.x) * factor;
+  const maxY = center.y + (b.maxY - center.y) * factor;
+  return {
+    ...el,
+    x: Math.min(minX, maxX),
+    y: Math.min(minY, maxY),
+    w: Math.abs(maxX - minX),
+    h: Math.abs(maxY - minY),
+  };
+}

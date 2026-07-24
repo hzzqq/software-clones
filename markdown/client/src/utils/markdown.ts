@@ -167,6 +167,19 @@ export interface NotesSummary {
   tagTotal: number;
 }
 
+/**
+ * 智能截断文本：不超过 max 个字符（按 code unit 计，对 CJK 友好），超出则追加省略号。
+ * 纯函数，不修改入参。
+ * - 文本长度 <= max 时原样返回；
+ * - 否则保留 max - ellipsis.length 个字符并追加省略号；
+ * - 当 max 小于省略号长度时直接截取前 max 个字符（避免负长度 slice）。
+ */
+export function truncateText(text: string, max: number, ellipsis = '…'): string {
+  if (text.length <= max) return text;
+  if (max < ellipsis.length) return text.slice(0, max);
+  return text.slice(0, max - ellipsis.length) + ellipsis;
+}
+
 /** 汇总笔记列表：总篇数、总字数、标签总数（去重，小写归一）。不修改入参。 */
 export function summarizeNotes(notes: Note[]): NotesSummary {
   const tagSet = new Set<string>();

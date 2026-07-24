@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { filterTools, sortTools, groupToolsByCategory, levenshtein, fuzzyMatchTools, summarizeTools, normalizeQuery, toolCategoryLabel } from '../src/utils/search';
+import { filterTools, sortTools, groupToolsByCategory, levenshtein, fuzzyMatchTools, summarizeTools, normalizeQuery, toolCategoryLabel, isFavoriteTool } from '../src/utils/search';
 import type { ToolModule } from '../src/tools/types';
 
 const noop = (() => null) as unknown as ToolModule['Component'];
@@ -159,5 +159,32 @@ describe('fuzzyMatchTools', () => {
     const before = [...mock];
     fuzzyMatchTools(mock, 'json');
     expect(mock).toEqual(before);
+  });
+});
+
+describe('isFavoriteTool', () => {
+  it('数组中存在时返回 true', () => {
+    expect(isFavoriteTool(['hash', 'json'], 'json')).toBe(true);
+  });
+  it('数组中不存在时返回 false', () => {
+    expect(isFavoriteTool(['hash', 'json'], 'cron')).toBe(false);
+  });
+  it('空数组返回 false', () => {
+    expect(isFavoriteTool([], 'hash')).toBe(false);
+  });
+  it('Set 输入正确判定（存在/不存在/空）', () => {
+    const set = new Set(['hash', 'json']);
+    expect(isFavoriteTool(set, 'hash')).toBe(true);
+    expect(isFavoriteTool(set, 'cron')).toBe(false);
+    expect(isFavoriteTool(new Set<string>(), 'hash')).toBe(false);
+  });
+  it('不修改入参（数组与 Set 均保持原样）', () => {
+    const ids = ['hash', 'json'];
+    isFavoriteTool(ids, 'hash');
+    expect(ids).toEqual(['hash', 'json']);
+    const set = new Set(['hash', 'json']);
+    isFavoriteTool(set, 'hash');
+    expect(set.has('hash')).toBe(true);
+    expect(set.size).toBe(2);
   });
 });

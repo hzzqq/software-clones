@@ -74,6 +74,22 @@ export function filterStationsByLikes(stations: Station[], minLikes = 0): Statio
   return stations.filter((s) => s.likes >= minLikes);
 }
 
+/**
+ * 将数字格式化为紧凑可读字符串（不修改入参）：
+ * - NaN → '0'
+ * - 负数 → '-' + formatCount(-n)
+ * - < 1000 → 原数字字符串
+ * - 1000..999999 → "x.xk"（保留 1 位小数）
+ * - ≥ 1000000 → "x.xM"
+ */
+export function formatCount(n: number): string {
+  if (Number.isNaN(n)) return '0';
+  if (n < 0) return '-' + formatCount(-n);
+  if (n < 1000) return String(n);
+  if (n < 1000000) return (n / 1000).toFixed(1) + 'k';
+  return (n / 1000000).toFixed(1) + 'M';
+}
+
 /** 电台统计概览。 */
 export interface StationsSummary {
   total: number;

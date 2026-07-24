@@ -105,3 +105,22 @@ export function getFilterLabel(kind: FilterKind): string {
 export function formatPercent(value: number): string {
   return `${Math.round(clamp(value, 0, 1) * 100)}%`;
 }
+
+/** 去掉 1 位小数末尾无意义的 .0（如 2.0 → "2"，1.5 → "1.5"）。 */
+function trimZero(v: number): string {
+  const s = v.toFixed(1);
+  return s.endsWith('.0') ? s.slice(0, -2) : s;
+}
+
+/**
+ * 将字节数格式化为可读文本：<1024 → "x B"；<1024² → "x.x KB"；
+ * <1024³ → "x.x MB"；否则 "x.x GB"。保留 1 位小数并去掉末尾 .0。
+ * 负数 / 非有限值（NaN、Infinity）统一视为 0，不修改入参。
+ */
+export function formatBytes(bytes: number): string {
+  if (!Number.isFinite(bytes) || bytes < 0) return '0 B';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${trimZero(bytes / 1024)} KB`;
+  if (bytes < 1024 * 1024 * 1024) return `${trimZero(bytes / (1024 * 1024))} MB`;
+  return `${trimZero(bytes / (1024 * 1024 * 1024))} GB`;
+}
