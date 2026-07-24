@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatDuration, incidentDurationSeconds, uptimePercentage, countByStatus, incidentSeverityLabel } from './format';
+import { formatDuration, incidentDurationSeconds, uptimePercentage, countByStatus, incidentSeverityLabel, uptimeColor } from './format';
 import type { Incident } from '../types';
 
 describe('formatDuration', () => {
@@ -50,6 +50,29 @@ describe('incidentDurationSeconds', () => {
   it('终点早于起点时夹为 0', () => {
     const now = new Date('2025-12-31T23:00:00Z').getTime();
     expect(incidentDurationSeconds(base, now)).toBe(0);
+  });
+  it('非法 createdAt/resolvedAt 返回 0（不再产生 NaN 时长）', () => {
+    const now = new Date('2026-01-01T10:00:00Z').getTime();
+    expect(incidentDurationSeconds({ ...base, createdAt: 'not-a-date' }, now)).toBe(0);
+    expect(incidentDurationSeconds({ ...base, resolvedAt: 'bad' }, now)).toBe(0);
+  });
+});
+
+describe('uptimeColor', () => {
+  it('≥99 为 success', () => {
+    expect(uptimeColor(100)).toBe('success');
+    expect(uptimeColor(99)).toBe('success');
+  });
+  it('90–99 为 warning', () => {
+    expect(uptimeColor(95)).toBe('warning');
+    expect(uptimeColor(90)).toBe('warning');
+  });
+  it('低于 90 为 error', () => {
+    expect(uptimeColor(89)).toBe('error');
+    expect(uptimeColor(0)).toBe('error');
+  });
+  it('非法值按 error 处理', () => {
+    expect(uptimeColor(Number.NaN)).toBe('error');
   });
 });
 

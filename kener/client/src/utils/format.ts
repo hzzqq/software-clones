@@ -25,6 +25,7 @@ export function formatDuration(totalSeconds: number): string {
 export function incidentDurationSeconds(incident: Incident, nowMs: number): number {
   const start = new Date(incident.createdAt).getTime();
   const end = incident.resolvedAt ? new Date(incident.resolvedAt).getTime() : nowMs;
+  if (Number.isNaN(start) || Number.isNaN(end)) return 0;
   return Math.max(0, Math.floor((end - start) / 1000));
 }
 
@@ -50,6 +51,17 @@ export function uptimePercentage(items: { lastStatus?: ServiceStatus }[]): numbe
   const score = (s?: ServiceStatus): number => (s === 'up' ? 100 : s === 'degraded' ? 50 : 0);
   const sum = items.reduce((acc, it) => acc + score(it.lastStatus), 0);
   return Math.max(0, Math.min(100, Math.round(sum / items.length)));
+}
+
+/**
+ * 将可用率百分比映射为 MUI 颜色名，供状态横幅/可用率 Chip 统一配色。
+ * ≥99→success，≥90→warning，其余(含非法值)→error。提取自 DashboardPage 中重复的内联配色逻辑。
+ */
+export function uptimeColor(uptime: number): 'success' | 'warning' | 'error' {
+  if (!Number.isFinite(uptime)) return 'error';
+  if (uptime >= 99) return 'success';
+  if (uptime >= 90) return 'warning';
+  return 'error';
 }
 
 /**

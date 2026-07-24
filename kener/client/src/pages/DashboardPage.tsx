@@ -21,7 +21,7 @@ import { useServices } from '../hooks/useServices';
 import ServiceCard from '../components/ServiceCard';
 import { servicesApi } from '../api/services';
 import { incidentsApi } from '../api/incidents';
-import { formatDuration, incidentDurationSeconds, uptimePercentage, serviceHealthLabel, countByStatus, incidentSeverityLabel } from '../utils/format';
+import { formatDuration, incidentDurationSeconds, uptimePercentage, uptimeColor, serviceHealthLabel, countByStatus, incidentSeverityLabel } from '../utils/format';
 import { overallStatus, statusLabel, ServiceStatus } from '../utils/status';
 import type { Incident } from '../types';
 
@@ -123,13 +123,13 @@ export default function DashboardPage() {
           <Chip
             size="small"
             sx={{ mt: 1 }}
-            color={uptimePercentage(services) >= 99 ? 'success' : uptimePercentage(services) >= 90 ? 'warning' : 'error'}
+            color={uptimeColor(uptimePercentage(services))}
             label={`综合可用率 ${uptimePercentage(services)}%`}
           />
           <Chip
             size="small"
             sx={{ mt: 1, ml: 1 }}
-            color={uptimePercentage(services) >= 99 ? 'success' : uptimePercentage(services) >= 90 ? 'warning' : 'error'}
+            color={uptimeColor(uptimePercentage(services))}
             label={`健康度 ${serviceHealthLabel(uptimePercentage(services))}`}
           />
           <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
