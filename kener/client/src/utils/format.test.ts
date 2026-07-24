@@ -51,10 +51,13 @@ describe('incidentDurationSeconds', () => {
     const now = new Date('2025-12-31T23:00:00Z').getTime();
     expect(incidentDurationSeconds(base, now)).toBe(0);
   });
-  it('非法 createdAt/resolvedAt 返回 0（不再产生 NaN 时长）', () => {
+  it('非法 createdAt 返回 0（不再产生 NaN 时长）', () => {
     const now = new Date('2026-01-01T10:00:00Z').getTime();
     expect(incidentDurationSeconds({ ...base, createdAt: 'not-a-date' }, now)).toBe(0);
-    expect(incidentDurationSeconds({ ...base, resolvedAt: 'bad' }, now)).toBe(0);
+  });
+  it('非法 resolvedAt 按进行中处理（用 nowMs 为终点，不再产生 NaN天NaN小时）', () => {
+    const now = new Date('2026-01-01T10:00:00Z').getTime();
+    expect(incidentDurationSeconds({ ...base, resolvedAt: 'bad' }, now)).toBe(36000);
   });
 });
 

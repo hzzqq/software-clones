@@ -24,8 +24,10 @@ export function formatDuration(totalSeconds: number): string {
  */
 export function incidentDurationSeconds(incident: Incident, nowMs: number): number {
   const start = new Date(incident.createdAt).getTime();
-  const end = incident.resolvedAt ? new Date(incident.resolvedAt).getTime() : nowMs;
-  if (Number.isNaN(start) || Number.isNaN(end)) return 0;
+  if (Number.isNaN(start)) return 0;
+  const rawEnd = incident.resolvedAt ? new Date(incident.resolvedAt).getTime() : nowMs;
+  // 非法 resolvedAt（非 null 但无法解析）按「仍在进行」处理，避免 formatDuration 输出 NaN天NaN小时
+  const end = Number.isNaN(rawEnd) ? nowMs : rawEnd;
   return Math.max(0, Math.floor((end - start) / 1000));
 }
 

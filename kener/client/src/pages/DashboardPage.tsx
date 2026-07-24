@@ -22,6 +22,7 @@ import ServiceCard from '../components/ServiceCard';
 import { servicesApi } from '../api/services';
 import { incidentsApi } from '../api/incidents';
 import { formatDuration, incidentDurationSeconds, uptimePercentage, uptimeColor, serviceHealthLabel, countByStatus, incidentSeverityLabel, summarizeIncidents } from '../utils/format';
+import { formatRelativeTime } from '../utils/time';
 import { overallStatus, statusLabel, ServiceStatus } from '../utils/status';
 import type { Incident } from '../types';
 
@@ -175,7 +176,7 @@ export default function DashboardPage() {
                   />
                 </Stack>
                 <Typography variant="caption" color="text.secondary">
-                  {inc.status} · 已持续{' '}
+                  {inc.status} · 开始于 {formatRelativeTime(inc.createdAt) || '—'} · 已持续{' '}
                   {formatDuration(incidentDurationSeconds(inc, Date.now()))}
                 </Typography>
               </Box>

@@ -1,5 +1,5 @@
 {
-  "cycle": 167,
+  "cycle": 168,
   "max_cycles": 171,
   "phase": "polish",
   "paused": false,
@@ -2111,6 +2111,23 @@
       "verify": "kanban client 53 passed + typecheck pass",
       "score": 85,
       "ts": 1784956401.0
+    },
+    {
+      "cycle": 168,
+      "app": "kener",
+      "task_id": "incident_relative_time_and_duration_guard",
+      "new_requirement": "formatRelativeTime 相对时间纯函数(原生Date实现,注入now,非法输入回退空串)+测试；事件面板展示「开始于 X」",
+      "implicit": "incidentDurationSeconds 遇非法 resolvedAt(非null)产生 NaN天NaN小时,改为按进行中(nowMs 终点)处理",
+      "files": [
+        "kener/client/src/utils/time.ts",
+        "kener/client/src/utils/time.test.ts",
+        "kener/client/src/utils/format.ts",
+        "kener/client/src/utils/format.test.ts",
+        "kener/client/src/pages/DashboardPage.tsx"
+      ],
+      "verify": "kener client 59 passed + typecheck pass",
+      "score": 85,
+      "ts": 1784956820.0
     }
   ],
   "last_task_id": "shuffle_stations_and_createdat_nanfix",
@@ -2141,7 +2158,7 @@
       "markdown": "r162",
       "nonio": "r163",
       "memos": "r164",
-      "kener": "r165",
+      "kener": "r168",
       "lofi": "r166",
       "glance": "r156",
       "apiclient": "r157",
