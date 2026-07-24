@@ -55,3 +55,19 @@ jobs:
           name: e2e-report-${{ matrix.app }}
           path: playwright-report/
           retention-days: 7
+
+  # 文档/结构一致性闸门：不依赖任何 app 的 npm install，仅用 Node 内置模块运行校验器，
+  # 在 PR 阶段即可拦截「新增 App 却忘了写文档 / 漏登 CI 矩阵」之类的漂移。
+  consistency:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run consistency checker
+        run: node scripts/check-consistency.mjs
+      - name: Ensure catalog is up to date
+        run: |
+          node scripts/gen-catalog.mjs
+          git diff --exit-code docs/APP_CATALOG.md || (echo "docs/APP_CATALOG.md 过期，请运行 node scripts/gen-catalog.mjs 后重新提交" && exit 1)

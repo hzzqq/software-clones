@@ -1,5 +1,5 @@
 {
-  "cycle": 169,
+  "cycle": 170,
   "max_cycles": 176,
   "phase": "polish",
   "paused": false,
@@ -2143,11 +2143,23 @@
       "result": "checker 通过（0 错，覆盖 12 App 的 readme/e2e/env/ci/pw 维度）",
       "score": 78,
       "ts": "2026-07-25T01:12:58+0800"
+    },
+    {
+      "cycle": 170,
+      "task": "wire_consistency_checker_into_ci",
+      "new_requirement": "在 .github/workflows/e2e.yml 新增 consistency 作业：用纯 Node 运行 check-consistency.mjs 并在 PR 阶段校验 docs/APP_CATALOG.md 是否过期（无需任何 app 的 npm install）",
+      "implicit_fix": "隐性：仓库缺乏文档/结构漂移的自动拦截，新增 App 易漏写 README 或 CI 矩阵；CI 闸门补齐该防护",
+      "files": [
+        ".github/workflows/e2e.yml"
+      ],
+      "result": "checker 仍通过(0 错)；CI 新增 consistency 作业",
+      "score": 72,
+      "ts": "2026-07-25T01:14:35+0800"
     }
   ],
-  "last_task_id": "add_consistency_checker_and_fix_readme_drift",
+  "last_task_id": "wire_consistency_checker_into_ci",
   "repeat_count": 0,
-  "last_score": 78,
+  "last_score": 72,
   "coverage": {
     "B1": {
       "it-tools": "optimized",
@@ -2190,6 +2202,9 @@
     "docs": [
       "README.md",
       "docs/APP_CATALOG.md"
+    ],
+    "ci": [
+      ".github/workflows/e2e.yml"
     ]
   }
 }
