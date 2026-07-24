@@ -1,7 +1,7 @@
 import { List, ListItemButton, ListItemText, Typography, Box, Chip } from '@mui/material';
 import PushPinIcon from '@mui/icons-material/PushPin';
 import type { Note } from '../types';
-import { truncateText } from '../utils/markdown';
+import { truncateText, formatRelativeTime } from '../utils/markdown';
 
 interface Props {
   notes: Note[];
@@ -34,7 +34,16 @@ export default function NoteList({ notes, activeId, onSelect }: Props): JSX.Elem
                 </Typography>
               </Box>
             }
-            secondary={n.folder || '未分类'}
+            secondary={
+              <Box component="span" sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
+                <span>{n.folder || '未分类'}</span>
+                {n.updatedAt && (
+                  <Typography component="span" variant="caption" color="text.secondary">
+                    · {formatRelativeTime(n.updatedAt)}
+                  </Typography>
+                )}
+              </Box>
+            }
           />
           {n.tags.length > 0 && (
             <Chip size="small" label={`#${n.tags[0]}`} sx={{ ml: 1 }} />

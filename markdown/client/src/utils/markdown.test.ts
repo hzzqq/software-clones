@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseTags, countWords, deriveTitle, countCodeBlocks, estimateReadingTime, extractHeadings, extractLinks, sortNotes, filterNotesByFolder, summarizeNotes } from './markdown';
+import { parseTags, countWords, deriveTitle, countCodeBlocks, estimateReadingTime, extractHeadings, extractLinks, sortNotes, filterNotesByFolder, summarizeNotes, formatRelativeTime } from './markdown';
 import type { Note } from '../types';
 
 describe('parseTags', () => {
@@ -49,6 +49,42 @@ describe('deriveTitle', () => {
 describe('countCodeBlocks', () => {
   it('成对计数', () => {
     expect(countCodeBlocks('```js\nx\n```\n```py\ny\n```')).toBe(2);
+  });
+  it('未闭合围栏向下取整（不再出现 0.5 个）', () => {
+    expect(countCodeBlocks('```js\n只有开头')).toBe(0);
+  });
+  it('三个反引号视为 1 个', () => {
+    expect(countCodeBlocks('```\n代码\n```\n多余```')).toBe(1);
+  });
+});
+
+describe('formatRelativeTime', () => {
+  const now = new Date('2026-03-01T12:00:00Z');
+  it('1 分钟内显示「刚刚」', () => {
+    expect(formatRelativeTime(new Date('2026-03-01T11:59:30Z'), now)).toBe('刚刚');
+  });
+  it('分钟级', () => {
+    expect(formatRelativeTime(new Date('2026-03-01T11:30:00Z'), now)).toBe('30 分钟前');
+  });
+  it('小时级', () => {
+    expect(formatRelativeTime(new Date('2026-03-01T09:00:00Z'), now)).toBe('3 小时前');
+  });
+  it('天级', () => {
+    expect(formatRelativeTime(new Date('2026-02-27T12:00:00Z'), now)).toBe('2 天前');
+  });
+  it('周级', () => {
+    expect(formatRelativeTime(new Date('2026-02-15T12:00:00Z'), now)).toBe('2 周前');
+  });
+  it('超过约 5 周退化为绝对日期', () => {
+    expect(formatRelativeTime(new Date('2026-01-01T12:00:00Z'), now)).toBe('1 月 1 日');
+  });
+  it('接受字符串与数字时间戳', () => {
+    expect(formatRelativeTime('2026-03-01T11:00:00Z', now)).toBe('1 小时前');
+    expect(formatRelativeTime(now.getTime() - 120000, now)).toBe('2 分钟前');
+  });
+  it('非法输入或未来时间返回空串', () => {
+    expect(formatRelativeTime('not-a-date', now)).toBe('');
+    expect(formatRelativeTime(new Date('2026-03-02T00:00:00Z'), now)).toBe('');
   });
 });
 
