@@ -132,11 +132,31 @@ export function extractHeadings(content: string): Heading[] {
   return out;
 }
 
-/** 侧栏笔记排序：置顶优先，其次按更新时间倒序。 */
+/** 将日期安全转为时间戳：非法 / 空值回退为 0（最早），避免排序出现 NaN。 */
+function safeTime(value: string | undefined): number {
+  const t = +new Date(value ?? '');
+  return Number.isNaN(t) ? 0 : t;
+}
+
+/** 侧栏笔记排序：置顶优先，其次按更新时间倒序。非法 / 空更新时间视为最早，排序稳定。 */
 export function sortNotes(notes: Note[]): Note[] {
   return [...notes].sort((a, b) => {
     if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
-    return +new Date(b.updatedAt) - +new Date(a.updatedAt);
+    return safeTime(b.updatedAt) - safeTime(a.updatedAt);
+  });
+}
+
+/**
+ * 本地多词搜索：对「标题 + 正文 + 标签」做大小写不敏感匹配，
+ * 所有词（按空白切分）都必须命中才视为匹配。纯函数，不修改入参。
+ * 用于侧栏即时筛选，避免每次按键都向后端发起请求。
+ */
+export function searchNotes(notes: Note[], query: string): Note[] {
+  const terms = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  if (terms.length === 0) return notes;
+  return notes.filter((n) => {
+    const hay = `${n.title ?? ''} ${n.content ?? ''} ${(n.tags ?? []).join(' ')}`.toLowerCase();
+    return terms.every((t) => hay.includes(t));
   });
 }
 

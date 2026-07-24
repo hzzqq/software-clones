@@ -27,7 +27,7 @@ import { noteApi } from '../api/notes';
 import type { Note } from '../types';
 import NoteList from '../components/NoteList';
 import MarkdownPreview from '../components/MarkdownPreview';
-import { parseTags, countWords, countCodeBlocks, estimateReadingTime, extractHeadings, extractLinks, sortNotes, filterNotesByFolder, summarizeNotes } from '../utils/markdown';
+import { parseTags, countWords, countCodeBlocks, estimateReadingTime, extractHeadings, extractLinks, sortNotes, filterNotesByFolder, summarizeNotes, searchNotes } from '../utils/markdown';
 
 type ViewMode = 'edit' | 'split' | 'preview';
 
@@ -56,8 +56,11 @@ export default function NotesPage(): JSX.Element {
     return Array.from(set).sort();
   }, [sortedNotes]);
   const visibleNotes = useMemo(
-    () => (folderOptions.length ? filterNotesByFolder(sortedNotes, folderFilter) : sortedNotes),
-    [sortedNotes, folderOptions, folderFilter],
+    () => {
+      const byFolder = folderOptions.length ? filterNotesByFolder(sortedNotes, folderFilter) : sortedNotes;
+      return searchNotes(byFolder, query);
+    },
+    [sortedNotes, folderOptions, folderFilter, query],
   );
   const summary = useMemo(() => summarizeNotes(visibleNotes), [visibleNotes]);
 
@@ -70,14 +73,14 @@ export default function NotesPage(): JSX.Element {
     setLoading(true);
     setError(null);
     try {
-      const list = await noteApi.list({ q: query || undefined });
+      const list = await noteApi.list();
       setNotes(list);
     } catch (e) {
       setError((e as Error).message);
     } finally {
       setLoading(false);
     }
-  }, [query]);
+  }, []);
 
   useEffect(() => {
     void loadList();

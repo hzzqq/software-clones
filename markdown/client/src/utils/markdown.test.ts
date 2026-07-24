@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseTags, countWords, deriveTitle, countCodeBlocks, estimateReadingTime, extractHeadings, extractLinks, sortNotes, filterNotesByFolder, summarizeNotes, formatRelativeTime } from './markdown';
+import { parseTags, countWords, deriveTitle, countCodeBlocks, estimateReadingTime, extractHeadings, extractLinks, sortNotes, filterNotesByFolder, summarizeNotes, formatRelativeTime, searchNotes } from './markdown';
 import type { Note } from '../types';
 
 describe('parseTags', () => {
@@ -116,6 +116,39 @@ describe('sortNotes', () => {
     expect(sorted.map((n) => n.id)).toEqual([2, 3, 1]);
   });
   it('不修改原数组', () => {
+    expect(notes).toHaveLength(3);
+  });
+  it('非法/空更新时间视为最早且排序稳定', () => {
+    const bad = [mk(1, false, 'not-a-date'), mk(2, false, ''), mk(3, false, '2026-02-01'), mk(4, false, '2026-01-01')];
+    // 不应出现 NaN，合法日期按倒序排在前，非法/空排最后
+    expect(sortNotes(bad).map((n) => n.id)).toEqual([3, 4, 1, 2]);
+  });
+});
+
+describe('searchNotes', () => {
+  const notes: Note[] = [
+    { id: 1, title: '部署笔记', content: '# 生产环境 nginx 配置', folder: '', tags: ['ops'], pinned: false, createdAt: '', updatedAt: '' },
+    { id: 2, title: '读书记录', content: '今天读完了《三体》', folder: '', tags: ['阅读'], pinned: false, createdAt: '', updatedAt: '' },
+    { id: 3, title: 'TODO', content: '修复登录 bug', folder: '', tags: ['bug', 'todo'], pinned: false, createdAt: '', updatedAt: '' },
+  ];
+  it('空查询返回原列表', () => {
+    expect(searchNotes(notes, '   ')).toBe(notes);
+  });
+  it('标题命中', () => {
+    expect(searchNotes(notes, '部署').map((n) => n.id)).toEqual([1]);
+  });
+  it('正文命中（大小写不敏感）', () => {
+    expect(searchNotes(notes, 'NGINX').map((n) => n.id)).toEqual([1]);
+  });
+  it('标签命中', () => {
+    expect(searchNotes(notes, 'bug').map((n) => n.id)).toEqual([3]);
+  });
+  it('多词需全部命中', () => {
+    expect(searchNotes(notes, '修复 登录').map((n) => n.id)).toEqual([3]);
+    expect(searchNotes(notes, '修复 不存在').map((n) => n.id)).toEqual([]);
+  });
+  it('不修改原数组', () => {
+    searchNotes(notes, '部署');
     expect(notes).toHaveLength(3);
   });
 });

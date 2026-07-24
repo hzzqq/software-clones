@@ -1,6 +1,6 @@
 {
-  "cycle": 161,
-  "max_cycles": 165,
+  "cycle": 162,
+  "max_cycles": 166,
   "phase": "polish",
   "paused": false,
   "log": [
@@ -2019,9 +2019,24 @@
       "verify": "client 84 passed + typecheck pass",
       "score": 85,
       "ts": 1784887778.62012
+    },
+    {
+      "cycle": 162,
+      "app": "markdown",
+      "task_id": "instant_search_and_sort_stability",
+      "new_requirement": "searchNotes 本地多词即时搜索纯函数+测试；NotesPage 改用本地过滤(去掉每次按键后端请求)",
+      "implicit": "sortNotes 对非法/空 updatedAt 产生 NaN 导致排序不稳定,改为安全时间映射",
+      "files": [
+        "markdown/client/src/utils/markdown.ts",
+        "markdown/client/src/utils/markdown.test.ts",
+        "markdown/client/src/pages/NotesPage.tsx"
+      ],
+      "verify": "client 63 passed + typecheck pass",
+      "score": 85,
+      "ts": 1784894840.9300442
     }
   ],
-  "last_task_id": "json_live_validation",
+  "last_task_id": "instant_search_and_sort_stability",
   "repeat_count": 0,
   "last_score": 85,
   "coverage": {
@@ -2046,7 +2061,7 @@
       "photopea": "optimized"
     },
     "polish": {
-      "markdown": "r151",
+      "markdown": "r162",
       "nonio": "r152",
       "memos": "r153",
       "kener": "r154",
