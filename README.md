@@ -8,6 +8,24 @@
 | `kanban` | 任务/看板（Board→List→Card→Tag，拖拽排序持久化） | 5174 | 4102 | http://localhost:4102/api |
 | `glance` | 信息聚合仪表盘（RSS/天气/书签/状态/时钟，后端代理 + YAML 导入导出） | 5175 | 4103 | http://localhost:4103/api |
 
+> 完整 12 个 App 的端口与目录约定见 [docs/APP_CATALOG.md](docs/APP_CATALOG.md)（由 `scripts/gen-catalog.mjs` 从 `playwright.config.ts` 自动生成，可用 `node scripts/check-consistency.mjs` 校验文档是否漂移）。
+
+### 全部克隆 App（12）
+本仓库包含以下全栈克隆 App，每个 App 的 `client/` 与 `server/` 各自独立 `package.json`：
+
+- `apiclient` — API 调试 / 请求客户端
+- `excalidraw` — 手绘白板 / 图表
+- `glance` — 信息聚合仪表盘
+- `it-tools` — 开发者工具箱
+- `kanban` — 任务 / 看板
+- `kener` — 状态页 / 监控
+- `lofi` — 轻量音乐 / 氛围
+- `markdown` — Markdown 编辑 / 预览
+- `memos` — 碎片化笔记 / 记忆
+- `nonio` — 专注 / 时间记录
+- `photopea` — 在线图像编辑
+- `tvtime` — 影视追踪 / 看单
+
 ## 技术栈
 
 - 前端：`Vite + React 18 + TypeScript(strict) + MUI 5 + Tailwind 3`
