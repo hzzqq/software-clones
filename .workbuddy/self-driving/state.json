@@ -1,7 +1,7 @@
 {
-  "cycle": 155,
-  "max_cycles": 155,
-  "phase": "done",
+  "cycle": 160,
+  "max_cycles": 160,
+  "phase": "polish",
   "paused": false,
   "log": [
     {
@@ -1927,11 +1927,88 @@
       "verify": "client 48 passed + typecheck pass",
       "score": 82,
       "ts": 1784878915.7341485
+    },
+    {
+      "cycle": 156,
+      "app": "glance",
+      "task_id": "rss_relative_time",
+      "new_requirement": "formatRelativeTime 相对时间纯函数(中文分段,可注入 now 做确定性测试)+ 测试；RssWidget 改用相对时间展示",
+      "implicit": "RssWidget 原 dayjs(it.pubDate).format 遇非法/损坏日期串会向用户渲染 \"Invalid Date\"，改为安全纯函数返回空串兜底",
+      "files": [
+        "client/src/utils/time.ts",
+        "client/src/utils/time.test.ts",
+        "client/src/components/widgets/RssWidget.tsx"
+      ],
+      "verify": "client 40 passed + typecheck pass",
+      "score": 84,
+      "ts": 1784885947.8567274
+    },
+    {
+      "cycle": 157,
+      "app": "apiclient",
+      "task_id": "response_byte_size",
+      "new_requirement": "byteLengthOf(UTF-8 真实字节数)+ formatBytes(友好单位) 纯函数 + 测试",
+      "implicit": "ResponseViewer 用 response.body.length(UTF-16 码元数) 当作「字节」展示，中文等多字节内容字节数严重偏小，改为 TextEncoder 计算真实字节数并格式化",
+      "files": [
+        "client/src/utils/http.ts",
+        "client/src/utils/http.test.ts",
+        "client/src/components/ResponseViewer.tsx"
+      ],
+      "verify": "client 64 passed + typecheck pass",
+      "score": 85,
+      "ts": 1784886162.9016075
+    },
+    {
+      "cycle": 158,
+      "app": "tvtime",
+      "task_id": "relative_update_time",
+      "new_requirement": "formatRelativeTime 相对时间纯函数(原生 Date,可注入 now)+ 测试；ShowCard 展示「更新于 X」",
+      "implicit": "sortShows 按 updatedAt 排序用 +new Date(...) 相减，遇非法/空日期得到 NaN，导致排序结果不确定；改为安全映射(非法→0,最旧)",
+      "files": [
+        "client/src/utils/time.ts",
+        "client/src/utils/time.test.ts",
+        "client/src/utils/show.ts",
+        "client/src/utils/show.test.ts",
+        "client/src/components/ShowCard.tsx"
+      ],
+      "verify": "client 51 passed + typecheck pass",
+      "score": 84,
+      "ts": 1784886424.975241
+    },
+    {
+      "cycle": 159,
+      "app": "excalidraw",
+      "task_id": "scene_relative_time",
+      "new_requirement": "formatRelativeTime 相对时间纯函数(原生 Date,可注入 now)+ 测试",
+      "implicit": "打开白板对话框用 new Date(s.updatedAt).toLocaleString() 展示，遇非法/缺失时间渲染 \"Invalid Date\"，改为安全相对时间(非法回退「时间未知」)",
+      "files": [
+        "client/src/utils/time.ts",
+        "client/src/utils/time.test.ts",
+        "client/src/components/Whiteboard.tsx"
+      ],
+      "verify": "client 38 passed + typecheck pass",
+      "score": 84,
+      "ts": 1784886609.377945
+    },
+    {
+      "cycle": 160,
+      "app": "photopea",
+      "task_id": "design_relative_time",
+      "new_requirement": "formatRelativeTime 相对时间纯函数(原生 Date,可注入 now)+ 测试",
+      "implicit": "打开设计对话框此前只显示 #id 而忽略后端返回的 updated_at；若直接 new Date(d.updated_at) 渲染遇非法/空时间会暴露 \"Invalid Date\"，改为安全相对时间(非法回退「时间未知」)并在列表中展示「更新于 X」",
+      "files": [
+        "client/src/utils/time.ts",
+        "client/src/utils/time.test.ts",
+        "client/src/components/CanvasEditor.tsx"
+      ],
+      "verify": "client 41 passed + typecheck pass",
+      "score": 84,
+      "ts": 1784886829.016352
     }
   ],
-  "last_task_id": "playing_clock",
+  "last_task_id": "design_relative_time",
   "repeat_count": 0,
-  "last_score": 82,
+  "last_score": 84,
   "coverage": {
     "B1": {
       "it-tools": "optimized",
@@ -1958,7 +2035,12 @@
       "nonio": "r152",
       "memos": "r153",
       "kener": "r154",
-      "lofi": "r155"
+      "lofi": "r155",
+      "glance": "r156",
+      "apiclient": "r157",
+      "tvtime": "r158",
+      "excalidraw": "r159",
+      "photopea": "r160"
     }
   }
 }
