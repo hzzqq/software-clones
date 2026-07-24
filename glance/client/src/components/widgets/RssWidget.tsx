@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Alert, Box, CircularProgress, Link, List, ListItem, Typography } from '@mui/material';
-import dayjs from 'dayjs';
 import WidgetFrame from '../WidgetFrame';
 import { proxyApi, RssFeed } from '../../api/proxy';
 import { RssConfig, Widget } from '../../types';
+import { formatRelativeTime } from '../../utils/time';
 
 interface RssWidgetProps {
   widget: Widget;
@@ -60,18 +60,21 @@ export default function RssWidget({
       )}
       {feed && (
         <List dense>
-          {feed.items.map((it, i) => (
-            <ListItem key={i} sx={{ display: 'block', py: 0.5 }}>
-              <Link href={it.link} target="_blank" rel="noreferrer" underline="hover" color="inherit">
-                {it.title}
-              </Link>
-              {it.pubDate && (
-                <Typography variant="caption" color="text.secondary" display="block">
-                  {dayjs(it.pubDate).format('YYYY-MM-DD')}
-                </Typography>
-              )}
-            </ListItem>
-          ))}
+          {feed.items.map((it, i) => {
+            const relTime = formatRelativeTime(it.pubDate);
+            return (
+              <ListItem key={i} sx={{ display: 'block', py: 0.5 }}>
+                <Link href={it.link} target="_blank" rel="noreferrer" underline="hover" color="inherit">
+                  {it.title}
+                </Link>
+                {relTime && (
+                  <Typography variant="caption" color="text.secondary" display="block">
+                    {relTime}
+                  </Typography>
+                )}
+              </ListItem>
+            );
+          })}
           {feed.items.length === 0 && (
             <Typography color="text.secondary">暂无条目</Typography>
           )}
