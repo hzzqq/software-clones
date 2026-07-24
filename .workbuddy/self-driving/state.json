@@ -1,5 +1,5 @@
 {
-  "cycle": 164,
+  "cycle": 165,
   "max_cycles": 166,
   "phase": "polish",
   "paused": false,
@@ -2064,9 +2064,24 @@
       "verify": "client 45 passed + typecheck pass",
       "score": 85,
       "ts": 1784895303.7470748
+    },
+    {
+      "cycle": 165,
+      "app": "kener",
+      "task_id": "incident_summary_and_latency_nan_fix",
+      "new_requirement": "summarizeIncidents 事件统计纯函数(进行中/已解决/总数)+测试；状态横幅展示事件概览",
+      "implicit": "DashboardPage 延迟排序 (a.latencyMs ?? Infinity)-(b.latencyMs ?? Infinity) 双缺失时产生 NaN 不稳定,改哨兵值",
+      "files": [
+        "kener/client/src/utils/format.ts",
+        "kener/client/src/utils/format.test.ts",
+        "kener/client/src/pages/DashboardPage.tsx"
+      ],
+      "verify": "client 49 passed + typecheck pass",
+      "score": 85,
+      "ts": 1784895485.7466853
     }
   ],
-  "last_task_id": "sort_notes_util_and_nan_fix",
+  "last_task_id": "incident_summary_and_latency_nan_fix",
   "repeat_count": 0,
   "last_score": 85,
   "coverage": {
@@ -2094,7 +2109,7 @@
       "markdown": "r162",
       "nonio": "r163",
       "memos": "r164",
-      "kener": "r154",
+      "kener": "r165",
       "lofi": "r155",
       "glance": "r156",
       "apiclient": "r157",

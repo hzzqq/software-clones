@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatDuration, incidentDurationSeconds, uptimePercentage, countByStatus, incidentSeverityLabel, uptimeColor } from './format';
+import { formatDuration, incidentDurationSeconds, uptimePercentage, countByStatus, incidentSeverityLabel, uptimeColor, summarizeIncidents } from './format';
 import type { Incident } from '../types';
 
 describe('formatDuration', () => {
@@ -115,6 +115,29 @@ describe('countByStatus', () => {
     const before = JSON.stringify(items);
     countByStatus(items);
     expect(JSON.stringify(items)).toBe(before);
+  });
+});
+
+describe('summarizeIncidents', () => {
+  const incidents = [
+    { id: 1, title: 'a', severity: 'high', status: 'open', resolvedAt: null },
+    { id: 2, title: 'b', severity: 'low', status: 'open', resolvedAt: null },
+    { id: 3, title: 'c', severity: 'medium', status: 'resolved', resolvedAt: '2026-01-01' },
+  ] as any[];
+  it('统计进行中 / 已解决 / 总数', () => {
+    expect(summarizeIncidents(incidents)).toEqual({ open: 2, resolved: 1, total: 3 });
+  });
+  it('resolvedAt 为 undefined 视为进行中', () => {
+    const list = [{ id: 1, resolvedAt: undefined }] as any[];
+    expect(summarizeIncidents(list)).toEqual({ open: 1, resolved: 0, total: 1 });
+  });
+  it('空列表返回全 0', () => {
+    expect(summarizeIncidents([])).toEqual({ open: 0, resolved: 0, total: 0 });
+  });
+  it('不修改入参', () => {
+    const before = incidents.map((i) => i.id);
+    summarizeIncidents(incidents);
+    expect(incidents.map((i) => i.id)).toEqual(before);
   });
 });
 

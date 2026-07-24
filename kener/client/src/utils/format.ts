@@ -95,3 +95,23 @@ export function countByStatus(items: { lastStatus?: ServiceStatus }[]): StatusCo
   }
   return counts;
 }
+
+/** 事件统计概览。 */
+export interface IncidentSummary {
+  open: number;
+  resolved: number;
+  total: number;
+}
+
+/**
+ * 汇总事件：进行中(resolvedAt 为 null/undefined)与已解决数量，以及总数。不修改入参。
+ */
+export function summarizeIncidents(incidents: Incident[]): IncidentSummary {
+  let open = 0;
+  let resolved = 0;
+  for (const i of incidents) {
+    if (i.resolvedAt == null) open++;
+    else resolved++;
+  }
+  return { open, resolved, total: incidents.length };
+}

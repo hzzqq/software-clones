@@ -21,7 +21,7 @@ import { useServices } from '../hooks/useServices';
 import ServiceCard from '../components/ServiceCard';
 import { servicesApi } from '../api/services';
 import { incidentsApi } from '../api/incidents';
-import { formatDuration, incidentDurationSeconds, uptimePercentage, uptimeColor, serviceHealthLabel, countByStatus, incidentSeverityLabel } from '../utils/format';
+import { formatDuration, incidentDurationSeconds, uptimePercentage, uptimeColor, serviceHealthLabel, countByStatus, incidentSeverityLabel, summarizeIncidents } from '../utils/format';
 import { overallStatus, statusLabel, ServiceStatus } from '../utils/status';
 import type { Incident } from '../types';
 
@@ -75,12 +75,14 @@ export default function DashboardPage() {
     const sorted = [...filtered];
     if (sort === 'name') sorted.sort((a, b) => a.name.localeCompare(b.name));
     else if (sort === 'latency')
-      sorted.sort((a, b) => (a.latencyMs ?? Infinity) - (b.latencyMs ?? Infinity));
+      // 缺失延迟视为最慢（最大哨兵值），两个缺失值相减为 0（稳定），避免出现 NaN
+      sorted.sort((a, b) => (a.latencyMs ?? Number.MAX_SAFE_INTEGER) - (b.latencyMs ?? Number.MAX_SAFE_INTEGER));
     else sorted.sort((a, b) => STATUS_RANK[a.lastStatus ?? 'down'] - STATUS_RANK[b.lastStatus ?? 'down']);
     return sorted;
   }, [services, filter, sort]);
 
   const openIncidents = incidents.filter((i) => i.resolvedAt === null);
+  const incidentSummary = useMemo(() => summarizeIncidents(incidents), [incidents]);
 
   return (
     <Box>
@@ -136,6 +138,12 @@ export default function DashboardPage() {
             <Chip size="small" variant="outlined" color="success" label={`正常 ${statusCounts.up}`} />
             <Chip size="small" variant="outlined" color="warning" label={`降级 ${statusCounts.degraded}`} />
             <Chip size="small" variant="outlined" color="error" label={`故障 ${statusCounts.down}`} />
+            <Chip
+              size="small"
+              variant="outlined"
+              color={incidentSummary.open > 0 ? 'error' : 'default'}
+              label={`事件 进行中 ${incidentSummary.open} · 已解决 ${incidentSummary.resolved}`}
+            />
           </Stack>
         </Paper>
       )}
