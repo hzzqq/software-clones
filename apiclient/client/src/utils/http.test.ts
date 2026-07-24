@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseHeadersText, headersToText, parseKeyValueText, statusKind, tryPrettyJson, matchRequest, matchHistory, buildCurlCommand, sortRequests, groupByMethod, buildUrlWithQuery, statusText } from './http';
+import { parseHeadersText, headersToText, parseKeyValueText, statusKind, tryPrettyJson, matchRequest, matchHistory, buildCurlCommand, sortRequests, groupByMethod, buildUrlWithQuery, statusText, byteLengthOf, formatBytes } from './http';
 
 describe('parseHeadersText', () => {
   it('解析多行 header', () => {
@@ -206,5 +206,38 @@ describe('statusText', () => {
   });
   it('未知码回退', () => {
     expect(statusText(418)).toBe('状态码 418');
+  });
+});
+
+describe('byteLengthOf', () => {
+  it('returns 0 for empty input', () => {
+    expect(byteLengthOf('')).toBe(0);
+  });
+  it('counts ASCII as 1 byte each', () => {
+    expect(byteLengthOf('hello')).toBe(5);
+  });
+  it('counts Chinese (3 bytes each) correctly', () => {
+    expect(byteLengthOf('你好')).toBe(6);
+  });
+  it('counts mixed content correctly', () => {
+    expect(byteLengthOf('a你b好')).toBe(8);
+  });
+});
+
+describe('formatBytes', () => {
+  it('formats bytes under 1 KB', () => {
+    expect(formatBytes(0)).toBe('0 B');
+    expect(formatBytes(512)).toBe('512 B');
+  });
+  it('formats KB', () => {
+    expect(formatBytes(1024)).toBe('1 KB');
+    expect(formatBytes(1536)).toBe('1.5 KB');
+  });
+  it('formats MB', () => {
+    expect(formatBytes(1048576)).toBe('1 MB');
+  });
+  it('falls back on negative / non-finite', () => {
+    expect(formatBytes(-1)).toBe('0 B');
+    expect(formatBytes(NaN)).toBe('0 B');
   });
 });

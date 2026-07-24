@@ -3,7 +3,7 @@ import { Box, Chip, Typography, Tabs, Tab, Stack, IconButton, Tooltip } from '@m
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CheckIcon from '@mui/icons-material/Check';
 import type { ProxyResponse } from '../types';
-import { statusKind, statusFamily, tryPrettyJson, headersToText } from '../utils/http';
+import { statusKind, statusFamily, tryPrettyJson, headersToText, byteLengthOf, formatBytes } from '../utils/http';
 
 interface Props {
   response: ProxyResponse | null;
@@ -58,7 +58,7 @@ export default function ResponseViewer({ response, loading }: Props): JSX.Elemen
           variant="outlined"
         />
         <Typography variant="caption" color="text.secondary">
-          {response.timeMs} ms · {response.body.length} 字节
+          {response.timeMs} ms · {formatBytes(byteLengthOf(response.body))}
         </Typography>
         <Box sx={{ flexGrow: 1 }} />
         <Tooltip title={copied ? '已复制' : '复制内容'}>

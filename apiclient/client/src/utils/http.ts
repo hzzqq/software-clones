@@ -236,3 +236,35 @@ export function statusFamily(code: number): '成功' | '重定向' | '客户端�
       return '未知';
   }
 }
+
+/**
+ * 计算字符串的 UTF-8 字节长度。
+ *
+ * 注意：JS 字符串的 `.length` 返回的是 UTF-16 码元数，对多字节字符（如中文）
+ * 会显著小于真实字节数。直接用 `.length` 当作「字节数」展示是隐性 bug，
+ * 这里改用 TextEncoder 计算真实字节数。
+ */
+export function byteLengthOf(str: string): number {
+  if (!str) return 0;
+  return new TextEncoder().encode(str).length;
+}
+
+/**
+ * 将字节数格式化为易读文本：B / KB / MB / GB。
+ * - 负数 / NaN 回退到 '0 B'。
+ * - 不足 1 KB 显示整数 B；其余保留两位小数（去尾随 .00）。
+ */
+export function formatBytes(bytes: number): string {
+  if (!Number.isFinite(bytes) || bytes < 0) return '0 B';
+  if (bytes < 1024) return `${bytes} B`;
+  const units = ['KB', 'MB', 'GB'];
+  let value = bytes / 1024;
+  let unit = 0;
+  while (value >= 1024 && unit < units.length - 1) {
+    value /= 1024;
+    unit += 1;
+  }
+  const rounded = Math.round(value * 100) / 100;
+  const text = String(parseFloat(rounded.toFixed(2)));
+  return `${text} ${units[unit]}`;
+}
