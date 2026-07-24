@@ -16,6 +16,8 @@ export function visibilityLabel(v: Visibility): string {
       return '受限';
     case 'private':
       return '私有';
+    default:
+      return '未知';
   }
 }
 
@@ -43,6 +45,21 @@ export function formatRelativeTime(iso: string): string {
 /** Count of non-whitespace characters (works for both CJK and Latin text). */
 export function countChars(content: string): number {
   return content.replace(/\s/g, '').length;
+}
+
+/**
+ * 将字数格式化为紧凑可读形式：<1000 原样；>=1000 用「k」（保留 1 位小数，去 .0）；
+ * >=1,000,000 用「M」。纯函数。用于字数较多的汇总场景，避免「12345 字」这类冗长展示。
+ */
+export function formatCharCount(n: number): string {
+  if (!Number.isFinite(n) || n < 0) return '0';
+  if (n < 1000) return String(n);
+  if (n < 1_000_000) {
+    const k = n / 1000;
+    return `${k >= 10 ? Math.round(k) : Math.round(k * 10) / 10}k`;
+  }
+  const m = n / 1_000_000;
+  return `${m >= 10 ? Math.round(m) : Math.round(m * 10) / 10}M`;
 }
 
 /** Rough reading time in minutes (~200 chars/min, min 1 for non-empty content). */

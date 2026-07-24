@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseTags, formatRelativeTime, visibilityLabel, groupNotesByTag, filterNotesByTag, pinnedNotes, sortNotesByPinned, summarizeNotes, groupNotesByMonth } from './notes';
+import { parseTags, formatRelativeTime, visibilityLabel, groupNotesByTag, filterNotesByTag, pinnedNotes, sortNotesByPinned, summarizeNotes, groupNotesByMonth, formatCharCount } from './notes';
 import { Visibility, Note } from '../types';
 
 describe('parseTags', () => {
@@ -20,6 +20,29 @@ describe('visibilityLabel', () => {
     expect(visibilityLabel('public' as Visibility)).toBe('公开');
     expect(visibilityLabel('protected' as Visibility)).toBe('受限');
     expect(visibilityLabel('private' as Visibility)).toBe('私有');
+  });
+  it('未知可见性回退为「未知」而非 undefined', () => {
+    expect(visibilityLabel('weird' as unknown as Visibility)).toBe('未知');
+  });
+});
+
+describe('formatCharCount', () => {
+  it('千以下原样', () => {
+    expect(formatCharCount(0)).toBe('0');
+    expect(formatCharCount(999)).toBe('999');
+  });
+  it('千位用 k，去 .0', () => {
+    expect(formatCharCount(1000)).toBe('1k');
+    expect(formatCharCount(1500)).toBe('1.5k');
+    expect(formatCharCount(12345)).toBe('12k');
+  });
+  it('百万位用 M', () => {
+    expect(formatCharCount(1_000_000)).toBe('1M');
+    expect(formatCharCount(2_500_000)).toBe('2.5M');
+  });
+  it('非法/负值回退 0', () => {
+    expect(formatCharCount(-5)).toBe('0');
+    expect(formatCharCount(Number.NaN)).toBe('0');
   });
 });
 

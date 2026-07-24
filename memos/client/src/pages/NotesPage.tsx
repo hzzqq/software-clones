@@ -25,7 +25,7 @@ import { Note, Visibility } from '../types';
 import { noteApi } from '../api/notes';
 import { tagApi } from '../api/tags';
 import { useNotes } from '../hooks/useNotes';
-import { pinnedNotes, sortNotesByPinned, summarizeNotes, filterNotesByTag, groupNotesByMonth } from '../utils/notes';
+import { pinnedNotes, sortNotesByPinned, summarizeNotes, filterNotesByTag, groupNotesByMonth, formatCharCount } from '../utils/notes';
 
 export default function NotesPage(): JSX.Element {
   const navigate = useNavigate();
@@ -142,7 +142,7 @@ export default function NotesPage(): JSX.Element {
       {!archived && <Composer onSubmit={handleCreate} />}
 
       <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
-        共 {summary.total} 篇 · {summary.totalChars} 字 · {summary.tagTotal} 个标签
+        共 {summary.total} 篇 · {formatCharCount(summary.totalChars)} 字 · {summary.tagTotal} 个标签
       </Typography>
 
       <Box sx={{ mt: 2 }}>
