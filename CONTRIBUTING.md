@@ -1,0 +1,48 @@
+# 贡献指南（software-clones）
+
+本仓库是多个全栈克隆 App 的单体仓库（monorepo）。每个 App 形如 `app/<name>/`，含独立的
+`client/`（Vite + React + TS）与 `server/`（Express + better-sqlite3）。
+
+## 本地验收
+
+无需 `npm install` 任何 App 依赖即可运行仓库级校验（纯 Node 内置模块）：
+
+```bash
+node scripts/check-consistency.mjs   # 或 npm run verify
+```
+
+该命令会校验：
+
+- 每个全栈 App 都在 `README.md` 中被提及（文档漂移防护）；
+- 每个 App 在 `e2e/<app>/` 下拥有冒烟目录；
+- 每个 App 的 `server` 存在 `.env.example`；
+- 每个 App 都登记在 `.github/workflows/e2e.yml` 的 CI 矩阵与 `playwright.config.ts` 的 `APPS`；
+- `docs/APP_CATALOG.md` 与事实来源严格一致（新鲜度）。
+
+CI 的 `consistency` 作业会自动运行上述校验，PR 阶段即可拦截漂移。
+
+## 重新生成 App 目录
+
+`docs/APP_CATALOG.md` 是**自动生成**的，事实来源为 `playwright.config.ts` 的 `APPS`
+与每个 App 的 `server/.env.example` 的 `PORT`。改动事实来源后请重新生成：
+
+```bash
+node scripts/gen-catalog.mjs   # 或 npm run catalog
+```
+
+## 新增一个 App
+
+1. 创建 `app/<name>/client` 与 `app/<name>/server`，各自带 `package.json`。
+2. `server` 下提供 `.env.example`（含 `PORT` / `CORS_ORIGIN` / `DB_PATH`）。
+3. 在 `playwright.config.ts` 的 `APPS` 增加一项（含唯一 `port`）。
+4. 在 `.github/workflows/e2e.yml` 的 `matrix.app` 增加该 App。
+5. 在 `e2e/<name>/` 放置至少一个 `*.spec.ts` 冒烟用例（断言应用成功挂载）。
+6. 在 `README.md` 的「全部克隆 App」列表与 `docs/APP_CATALOG.md`（重新生成）补充该 App。
+7. 运行 `node scripts/check-consistency.mjs` 确认全绿后再提交。
+
+## 代码约定
+
+- 前端：Vite + React 18 + TypeScript(strict) + MUI 5 + Tailwind 3。
+- 后端：Express 4 + TypeScript(strict) + better-sqlite3 + dotenv + cors。
+- 统一响应信封 `{ code, message, data }`（`code:0` 成功）；JSON `camelCase` ↔ DB `snake_case`；`/api` 前缀。
+- 根目录 `.editorconfig` 锁定 LF 换行与 2 空格缩进，请保持。

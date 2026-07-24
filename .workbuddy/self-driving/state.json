@@ -1,5 +1,5 @@
 {
-  "cycle": 172,
+  "cycle": 173,
   "max_cycles": 176,
   "phase": "polish",
   "paused": false,
@@ -2183,11 +2183,25 @@
       "result": "checker 绿；负向测试证明新鲜度规则能在目录过期时 fail(exit1)",
       "score": 76,
       "ts": "2026-07-25T01:17:25+0800"
+    },
+    {
+      "cycle": 173,
+      "task": "add_contributing_doc_and_enforce_it",
+      "new_requirement": "新增 CONTRIBUTING.md 贡献者入口（仓库布局 / 验收 / 新增 App 流程），并让校验器强制其存在且指引运行 check-consistency.mjs",
+      "implicit_fix": "隐性：仓库缺少贡献者上手文档，且 README 未指向 CONTRIBUTING；校验器此前不约束 onboarding 文档",
+      "files": [
+        "CONTRIBUTING.md",
+        "scripts/check-consistency.mjs",
+        "README.md"
+      ],
+      "result": "checker 绿（含 CONTRIBUTING 规则）；README 已链接贡献指南",
+      "score": 71,
+      "ts": "2026-07-25T01:18:31+0800"
     }
   ],
-  "last_task_id": "extract_lib_catalog_and_add_freshness_check",
+  "last_task_id": "add_contributing_doc_and_enforce_it",
   "repeat_count": 0,
-  "last_score": 76,
+  "last_score": 71,
   "coverage": {
     "B1": {
       "it-tools": "optimized",
@@ -2233,7 +2247,8 @@
     ],
     "docs": [
       "README.md",
-      "docs/APP_CATALOG.md"
+      "docs/APP_CATALOG.md",
+      "CONTRIBUTING.md"
     ],
     "ci": [
       ".github/workflows/e2e.yml"

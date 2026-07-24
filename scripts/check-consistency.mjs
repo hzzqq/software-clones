@@ -86,6 +86,14 @@ function main() {
     errors.push('docs/APP_CATALOG.md 与生成结果不一致，请运行 node scripts/gen-catalog.mjs 重新生成');
   }
 
+  // 贡献者入口：CONTRIBUTING.md 必须存在且指引贡献者运行一致性校验器
+  const contributing = readText('CONTRIBUTING.md');
+  if (!contributing) {
+    errors.push('缺少 CONTRIBUTING.md（贡献者入口）');
+  } else if (!contributing.includes('check-consistency.mjs')) {
+    errors.push('CONTRIBUTING.md 未指引贡献者运行 scripts/check-consistency.mjs');
+  }
+
   // 打印报告
   console.log(`\n软件克隆单体仓库一致性校验 — 共发现 ${apps.length} 个全栈 App\n`);
   for (const row of perApp) {
