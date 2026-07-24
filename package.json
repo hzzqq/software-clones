@@ -1,0 +1,16 @@
+{
+  "name": "software-clones-e2e",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "E2E 冒烟测试骨架 —— 12 个克隆 App 的 Playwright 套件（沙箱内 better-sqlite3 无法编译，仅产出脚手架，需在真实/CI 环境安装依赖后运行）",
+  "scripts": {
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.0",
+    "typescript": "^5.6.3"
+  }
+}

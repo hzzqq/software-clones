@@ -1,0 +1,57 @@
+name: E2E Smoke (software-clones)
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app:
+          - markdown
+          - apiclient
+          - tvtime
+          - excalidraw
+          - photopea
+          - it-tools
+          - kanban
+          - glance
+          - kener
+          - memos
+          - lofi
+          - nonio
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            ${{ matrix.app }}/client/package-lock.json
+
+      - name: Install E2E deps
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Install app client deps
+        run: npm --prefix ${{ matrix.app }}/client ci
+
+      - name: Run E2E for ${{ matrix.app }}
+        run: npx playwright test --project=${{ matrix.app }}
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-report-${{ matrix.app }}
+          path: playwright-report/
+          retention-days: 7
