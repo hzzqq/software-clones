@@ -201,3 +201,27 @@ export function summarizePosts(posts: Post[]): PostsSummary {
   }
   return { total: posts.length, totalLikes, totalComments, channels: chans.size };
 }
+
+/**
+ * 将时间格式化为中文相对时间（"刚刚 / N 分钟前 / N 小时前 / N 天前 / N 周前"），
+ * 超过约 5 周则退化为「M 月 D 日」。纯函数，不修改入参。
+ * - `now` 可注入以便测试；默认取当前时间。
+ * - 非法输入（无法解析为日期）或未来时间返回空串，避免展示 "Invalid Date" 之类无效文案。
+ */
+export function formatRelativeTime(input: Date | string | number, now: Date = new Date()): string {
+  const d = input instanceof Date ? input : new Date(input);
+  const t = d.getTime();
+  if (Number.isNaN(t)) return '';
+  const diff = now.getTime() - t;
+  if (diff < 0) return '';
+  const min = Math.floor(diff / 60000);
+  if (min < 1) return '刚刚';
+  if (min < 60) return `${min} 分钟前`;
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return `${hr} 小时前`;
+  const day = Math.floor(hr / 24);
+  if (day < 7) return `${day} 天前`;
+  const wk = Math.floor(day / 7);
+  if (wk < 5) return `${wk} 周前`;
+  return `${d.getMonth() + 1} 月 ${d.getDate()} 日`;
+}

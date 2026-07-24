@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseTags, slugify, buildCommentTree, countComments, searchPosts, excerpt, topPosts, summarizePosts, filterPostsByChannel } from './forum';
+import { parseTags, slugify, buildCommentTree, countComments, searchPosts, excerpt, topPosts, summarizePosts, filterPostsByChannel, formatRelativeTime } from './forum';
 import type { Comment, Post } from '../types';
 
 function mkComment(id: number, parentId: number | null): Comment {
@@ -199,5 +199,35 @@ describe('summarizePosts', () => {
     const before = posts.map((p) => p.id);
     summarizePosts(posts);
     expect(posts.map((p) => p.id)).toEqual(before);
+  });
+});
+
+describe('formatRelativeTime', () => {
+  const now = new Date('2026-03-01T12:00:00Z');
+  it('1 分钟内显示「刚刚」', () => {
+    expect(formatRelativeTime(new Date('2026-03-01T11:59:30Z'), now)).toBe('刚刚');
+  });
+  it('分钟级', () => {
+    expect(formatRelativeTime(new Date('2026-03-01T11:30:00Z'), now)).toBe('30 分钟前');
+  });
+  it('小时级', () => {
+    expect(formatRelativeTime(new Date('2026-03-01T09:00:00Z'), now)).toBe('3 小时前');
+  });
+  it('天级', () => {
+    expect(formatRelativeTime(new Date('2026-02-27T12:00:00Z'), now)).toBe('2 天前');
+  });
+  it('周级', () => {
+    expect(formatRelativeTime(new Date('2026-02-15T12:00:00Z'), now)).toBe('2 周前');
+  });
+  it('超过约 5 周退化为绝对日期', () => {
+    expect(formatRelativeTime(new Date('2026-01-01T12:00:00Z'), now)).toBe('1 月 1 日');
+  });
+  it('接受字符串与时间戳', () => {
+    expect(formatRelativeTime('2026-03-01T11:00:00Z', now)).toBe('1 小时前');
+    expect(formatRelativeTime(now.getTime() - 120000, now)).toBe('2 分钟前');
+  });
+  it('非法输入或未来时间返回空串（避免展示 Invalid Date）', () => {
+    expect(formatRelativeTime('not-a-date', now)).toBe('');
+    expect(formatRelativeTime(new Date('2026-03-02T00:00:00Z'), now)).toBe('');
   });
 });
