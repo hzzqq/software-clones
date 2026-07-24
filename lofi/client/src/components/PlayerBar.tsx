@@ -5,7 +5,7 @@ import PauseIcon from '@mui/icons-material/Pause';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import { Station } from '../types';
 import Visualizer from './Visualizer';
-import { categoryLabel } from '../utils/station';
+import { categoryLabel, formatClock } from '../utils/station';
 
 interface Props {
   station: Station | null;
@@ -26,6 +26,7 @@ export default function PlayerBar({
 }: Props): JSX.Element {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [errored, setErrored] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
 
   // Reload the stream source only when the station actually changes.
   useEffect(() => {
@@ -35,6 +36,16 @@ export default function PlayerBar({
     a.src = station.streamUrl;
     a.load();
   }, [station]);
+
+  // 切换电台时重置收听计时；播放中每秒自增（直播流 currentTime 多为 0，故手动计时更可靠）。
+  useEffect(() => {
+    setElapsed(0);
+  }, [station]);
+  useEffect(() => {
+    if (!playing || !station) return;
+    const t = setInterval(() => setElapsed((e) => e + 1), 1000);
+    return () => clearInterval(t);
+  }, [playing, station]);
 
   // Play / pause independently so toggling does not restart the stream.
   useEffect(() => {
@@ -73,7 +84,7 @@ export default function PlayerBar({
             {errored
               ? '播放失败，请检查电台流地址'
               : station
-              ? categoryLabel(station.category)
+              ? `${categoryLabel(station.category)} · 已播放 ${formatClock(elapsed)}`
               : '从列表中选择一个电台开始播放'}
           </Typography>
         </Box>

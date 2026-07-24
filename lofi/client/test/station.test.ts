@@ -59,9 +59,9 @@ describe('formatCount', () => {
     expect(formatCount(42)).toBe('42');
   });
 
-  it('1000..999999 显示 k（保留 1 位小数）', () => {
+  it('1000..999999 显示 k（去 .0，保留 1 位有效小数）', () => {
     expect(formatCount(1500)).toBe('1.5k');
-    expect(formatCount(1000)).toBe('1.0k');
+    expect(formatCount(1000)).toBe('1k');
   });
 
   it('≥ 1000000 显示 M（保留 1 位小数）', () => {

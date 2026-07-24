@@ -86,8 +86,27 @@ export function formatCount(n: number): string {
   if (Number.isNaN(n)) return '0';
   if (n < 0) return '-' + formatCount(-n);
   if (n < 1000) return String(n);
-  if (n < 1000000) return (n / 1000).toFixed(1) + 'k';
-  return (n / 1000000).toFixed(1) + 'M';
+  if (n < 1000000) {
+    const k = n / 1000;
+    // 去掉 .0，呈现 1k / 1.5k，而非 1.0k
+    return `${k >= 10 ? Math.round(k) : Math.round(k * 10) / 10}k`;
+  }
+  const m = n / 1000000;
+  return `${m >= 10 ? Math.round(m) : Math.round(m * 10) / 10}M`;
+}
+
+/**
+ * 将秒数格式化为播放时钟："m:ss"；≥1 小时为 "h:mm:ss"。
+ * 非法 / 负数按 0 处理（显示 0:00）。用于播放条展示当前电台已收听时长。
+ */
+export function formatClock(totalSeconds: number): string {
+  if (!Number.isFinite(totalSeconds) || totalSeconds < 0) return '0:00';
+  const s = Math.floor(totalSeconds);
+  const sec = s % 60;
+  const min = Math.floor(s / 60) % 60;
+  const hr = Math.floor(s / 3600);
+  const pad = (v: number) => String(v).padStart(2, '0');
+  return hr > 0 ? `${hr}:${pad(min)}:${pad(sec)}` : `${min}:${pad(sec)}`;
 }
 
 /** 电台统计概览。 */

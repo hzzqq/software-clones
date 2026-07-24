@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { categoryLabel, truncate, filterStations, sortStations, groupStationsByCategory, filterStationsByLikes, summarizeStations } from './station';
+import { categoryLabel, truncate, filterStations, sortStations, groupStationsByCategory, filterStationsByLikes, summarizeStations, formatCount, formatClock } from './station';
 import { Station } from '../types';
 
 const sample: Station[] = [
@@ -138,5 +138,43 @@ describe('summarizeStations', () => {
     const before = stations.map((s) => s.id);
     summarizeStations(stations);
     expect(stations.map((s) => s.id)).toEqual(before);
+  });
+});
+
+describe('formatCount', () => {
+  it('千以下原样', () => {
+    expect(formatCount(0)).toBe('0');
+    expect(formatCount(999)).toBe('999');
+  });
+  it('千位用 k，去掉 .0', () => {
+    expect(formatCount(1000)).toBe('1k');
+    expect(formatCount(1500)).toBe('1.5k');
+    expect(formatCount(12345)).toBe('12k');
+  });
+  it('百万位用 M，去掉 .0', () => {
+    expect(formatCount(1_000_000)).toBe('1M');
+    expect(formatCount(2_500_000)).toBe('2.5M');
+  });
+  it('负数与非法值', () => {
+    expect(formatCount(-5)).toBe('-5');
+    expect(formatCount(Number.NaN)).toBe('0');
+  });
+});
+
+describe('formatClock', () => {
+  it('不足一分钟显示 m:ss', () => {
+    expect(formatClock(0)).toBe('0:00');
+    expect(formatClock(45)).toBe('0:45');
+  });
+  it('分钟级', () => {
+    expect(formatClock(90)).toBe('1:30');
+    expect(formatClock(600)).toBe('10:00');
+  });
+  it('小时级', () => {
+    expect(formatClock(3661)).toBe('1:01:01');
+  });
+  it('非法 / 负数按 0:00', () => {
+    expect(formatClock(-3)).toBe('0:00');
+    expect(formatClock(Number.NaN)).toBe('0:00');
   });
 });
