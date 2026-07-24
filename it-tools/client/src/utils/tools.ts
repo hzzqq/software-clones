@@ -47,6 +47,64 @@ export function minifyJson(text: string): string {
 }
 
 // ---------------------------------------------------------------------------
+// JSON validation (live, position-aware)
+// ---------------------------------------------------------------------------
+/** Returns true iff `text` is syntactically valid JSON. */
+export function isValidJson(text: string): boolean {
+  try {
+    JSON.parse(text);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Result of a position-aware JSON parse. */
+export interface JsonParseResult {
+  ok: boolean;
+  value?: unknown;
+  error?: string;
+  /** 1-based line of the error, when the engine reports a position. */
+  line?: number;
+  /** 1-based column of the error, when the engine reports a position. */
+  column?: number;
+}
+
+/**
+ * Parse JSON and, on failure, attempt to surface the 1-based line/column of
+ * the offending character. V8/SpiderMonkey report `... at position N`, where N
+ * is a UTF-16 code-unit offset — the same unit JS string indexing uses, so the
+ * derived coordinates line up with what the user sees in the editor.
+ */
+export function parseJson(text: string): JsonParseResult {
+  try {
+    return { ok: true, value: JSON.parse(text) };
+  } catch (e) {
+    const message: string = e instanceof Error ? e.message : String(e);
+    const posMatch: RegExpMatchArray | null = /position (\d+)/.exec(message);
+    let line: number | undefined;
+    let column: number | undefined;
+    if (posMatch) {
+      const pos: number = Number(posMatch[1]);
+      let ln = 1;
+      let col = 1;
+      const len = Math.min(pos, text.length);
+      for (let i = 0; i < len; i++) {
+        if (text[i] === '\n') {
+          ln++;
+          col = 1;
+        } else {
+          col++;
+        }
+      }
+      line = ln;
+      column = col;
+    }
+    return { ok: false, error: message, line, column };
+  }
+}
+
+// ---------------------------------------------------------------------------
 // YAML <-> JSON
 // ---------------------------------------------------------------------------
 export function jsonToYaml(jsonText: string): string {

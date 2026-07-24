@@ -14,6 +14,8 @@ import {
   isoToTimestampSeconds,
   jsonToCsv,
   csvToJson,
+  isValidJson,
+  parseJson,
 } from './tools';
 
 describe('base64', () => {
@@ -34,6 +36,41 @@ describe('json format', () => {
   });
   it('throws on invalid json', () => {
     expect(() => formatJson('{bad')).toThrow();
+  });
+});
+
+describe('json validation', () => {
+  it('isValidJson accepts valid JSON (incl. primitives) and rejects invalid', () => {
+    expect(isValidJson('{"a":1}')).toBe(true);
+    expect(isValidJson('[1,2,3]')).toBe(true);
+    expect(isValidJson('42')).toBe(true);
+    expect(isValidJson('"hello"')).toBe(true);
+    expect(isValidJson('')).toBe(false);
+    expect(isValidJson('{bad')).toBe(false);
+    expect(isValidJson('{"a":}')).toBe(false);
+  });
+
+  it('parseJson returns the value on success', () => {
+    const r = parseJson('{"a":1}');
+    expect(r.ok).toBe(true);
+    expect(r.value).toEqual({ a: 1 });
+    expect(r.line).toBeUndefined();
+  });
+
+  it('parseJson reports 1-based line/column for a positioned error', () => {
+    // The stray "}" is on line 3, column 3 (after the leading spaces).
+    const bad = '{\n  "a": 1,\n  }\n}';
+    const r = parseJson(bad);
+    expect(r.ok).toBe(false);
+    expect(r.line).toBe(3);
+    expect(r.column).toBe(3);
+  });
+
+  it('parseJson leaves line/column undefined when no position is given', () => {
+    const r = parseJson('');
+    expect(r.ok).toBe(false);
+    expect(r.line).toBeUndefined();
+    expect(r.column).toBeUndefined();
   });
 });
 

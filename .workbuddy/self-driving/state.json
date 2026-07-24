@@ -1,6 +1,6 @@
 {
-  "cycle": 160,
-  "max_cycles": 160,
+  "cycle": 161,
+  "max_cycles": 165,
   "phase": "polish",
   "paused": false,
   "log": [
@@ -2004,11 +2004,26 @@
       "verify": "client 41 passed + typecheck pass",
       "score": 84,
       "ts": 1784886829.016352
+    },
+    {
+      "cycle": 161,
+      "app": "it-tools",
+      "task_id": "json_live_validation",
+      "new_requirement": "isValidJson + parseJson(带行/列定位) 纯函数+测试；JSON 工具实时校验徽标",
+      "implicit": "原 JSON 工具仅在点击后抛通用错误，无法定位语法错误位置；现实时显示「第 N 行第 M 列」",
+      "files": [
+        "it-tools/client/src/utils/tools.ts",
+        "it-tools/client/src/utils/tools.test.ts",
+        "it-tools/client/src/tools/json/JsonTool.tsx"
+      ],
+      "verify": "client 84 passed + typecheck pass",
+      "score": 85,
+      "ts": 1784887778.62012
     }
   ],
-  "last_task_id": "design_relative_time",
+  "last_task_id": "json_live_validation",
   "repeat_count": 0,
-  "last_score": 84,
+  "last_score": 85,
   "coverage": {
     "B1": {
       "it-tools": "optimized",
@@ -2040,7 +2055,8 @@
       "apiclient": "r157",
       "tvtime": "r158",
       "excalidraw": "r159",
-      "photopea": "r160"
+      "photopea": "r160",
+      "it-tools": "r161"
     }
   }
 }
