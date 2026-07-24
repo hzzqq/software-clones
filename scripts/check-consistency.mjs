@@ -16,6 +16,7 @@
 import { readdirSync, readFileSync, existsSync, statSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { buildCatalogText } from './lib-catalog.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -73,6 +74,18 @@ function main() {
     perApp.push({ app, ...checks });
   }
 
+  // 生成物新鲜度：docs/APP_CATALOG.md 必须与事实来源严格一致（防止手改后失真）
+  let catalogFresh = false;
+  const catalogPath = join(ROOT, 'docs', 'APP_CATALOG.md');
+  if (existsSync(catalogPath)) {
+    const expected = buildCatalogText();
+    const actual = readFileSync(catalogPath, 'utf8');
+    catalogFresh = expected.trim() === actual.trim();
+  }
+  if (!catalogFresh) {
+    errors.push('docs/APP_CATALOG.md 与生成结果不一致，请运行 node scripts/gen-catalog.mjs 重新生成');
+  }
+
   // 打印报告
   console.log(`\n软件克隆单体仓库一致性校验 — 共发现 ${apps.length} 个全栈 App\n`);
   for (const row of perApp) {
@@ -84,6 +97,9 @@ function main() {
         `ci:${row.ciMatrix ? '✓' : '✗'} pw:${row.playwrightApps ? '✓' : '✗'}`
     );
   }
+  console.log(
+    `  [${catalogFresh ? 'OK ' : 'FAIL'}] docs/APP_CATALOG.md 新鲜度: ${catalogFresh ? '✓' : '✗'}`
+  );
 
   const summary = {
     ts: new Date().toISOString(),

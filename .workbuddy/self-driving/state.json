@@ -1,5 +1,5 @@
 {
-  "cycle": 171,
+  "cycle": 172,
   "max_cycles": 176,
   "phase": "polish",
   "paused": false,
@@ -2169,11 +2169,25 @@
       "result": "npm run verify 通过；checker 绿；临时产物已被忽略",
       "score": 70,
       "ts": "2026-07-25T01:15:37+0800"
+    },
+    {
+      "cycle": 172,
+      "task": "extract_lib_catalog_and_add_freshness_check",
+      "new_requirement": "抽取 scripts/lib-catalog.mjs 供 gen-catalog 与 checker 共用（DRY）；校验器新增 docs/APP_CATALOG.md 新鲜度规则，防止生成物被手改失真",
+      "implicit_fix": "隐性：生成器与校验器各自解析 playwright.config.ts，逻辑分叉风险；目录文档一旦手改便静默失真",
+      "files": [
+        "scripts/lib-catalog.mjs",
+        "scripts/gen-catalog.mjs",
+        "scripts/check-consistency.mjs"
+      ],
+      "result": "checker 绿；负向测试证明新鲜度规则能在目录过期时 fail(exit1)",
+      "score": 76,
+      "ts": "2026-07-25T01:17:25+0800"
     }
   ],
-  "last_task_id": "add_dev_entrypoints_and_root_editorconfig",
+  "last_task_id": "extract_lib_catalog_and_add_freshness_check",
   "repeat_count": 0,
-  "last_score": 70,
+  "last_score": 76,
   "coverage": {
     "B1": {
       "it-tools": "optimized",
@@ -2214,7 +2228,8 @@
       "scripts/gen-catalog.mjs",
       "package.json",
       ".editorconfig",
-      ".gitignore"
+      ".gitignore",
+      "scripts/lib-catalog.mjs"
     ],
     "docs": [
       "README.md",
