@@ -22,29 +22,44 @@ export function filterStations(query: string, list: Station[]): Station[] {
   );
 }
 
-export type StationSort = 'name' | 'category' | 'likes' | 'createdAt';
+export type StationSort = 'name' | 'category' | 'likes' | 'createdAt' | 'shuffle';
 
 /**
  * 返回按指定字段排序的新数组（不修改入参）。
  * - name：按名称字典序
  * - category：按分类字典序
  * - likes：点赞数降序
- * - createdAt：最新在前
+ * - createdAt：最新在前（缺失值视为空串，避免 localeCompare 抛错）
+ * - shuffle：Fisher-Yates 随机洗牌（见 shuffleStations）
  */
 export function sortStations(stations: Station[], by: StationSort = 'name'): Station[] {
   return [...stations].sort((a, b) => {
     switch (by) {
       case 'category':
-        return a.category.localeCompare(b.category, 'zh');
+        return (a.category ?? '').localeCompare(b.category ?? '', 'zh');
       case 'likes':
         return b.likes - a.likes;
       case 'createdAt':
-        return b.createdAt.localeCompare(a.createdAt);
+        return (b.createdAt ?? '').localeCompare(a.createdAt ?? '');
       case 'name':
       default:
-        return a.name.localeCompare(b.name, 'zh');
+        return (a.name ?? '').localeCompare(b.name ?? '', 'zh');
     }
   });
+}
+
+/**
+ * Fisher-Yates 洗牌，返回新数组（不修改入参）。
+ * rng 可注入以便确定性测试；默认 Math.random。
+ */
+export function shuffleStations(stations: Station[], rng: () => number = Math.random): Station[] {
+  const arr = [...stations];
+  for (let i = 0; i < arr.length - 1; i++) {
+    const span = arr.length - i;
+    const j = Math.min(arr.length - 1, i + Math.floor(rng() * span));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
 }
 
 export function truncate(text: string, max = 80): string {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { categoryLabel, truncate, filterStations, sortStations, groupStationsByCategory, filterStationsByLikes, summarizeStations, formatCount, formatClock } from './station';
+import { categoryLabel, truncate, filterStations, sortStations, shuffleStations, groupStationsByCategory, filterStationsByLikes, summarizeStations, formatCount, formatClock } from './station';
 import { Station } from '../types';
 
 const sample: Station[] = [
@@ -65,6 +65,38 @@ describe('sortStations', () => {
   it('不修改原数组', () => {
     const before = stations.map((s) => s.id);
     sortStations(stations, 'name');
+    expect(stations.map((s) => s.id)).toEqual(before);
+  });
+  it('createdAt 缺失/非法不抛错并稳定排序', () => {
+    const messy: Station[] = [
+      { id: 1, name: 'a', category: 'lofi', likes: 0, createdAt: null as any, streamUrl: '', description: '' },
+      { id: 2, name: 'b', category: 'lofi', likes: 0, createdAt: undefined as any, streamUrl: '', description: '' },
+      { id: 3, name: 'c', category: 'lofi', likes: 0, createdAt: '2026-02-01', streamUrl: '', description: '' },
+    ];
+    expect(() => sortStations(messy, 'createdAt')).not.toThrow();
+    expect(sortStations(messy, 'createdAt').map((s) => s.id).slice(0, 1)).toEqual([3]);
+  });
+});
+
+describe('shuffleStations', () => {
+  const stations: Station[] = [
+    { id: 1, name: 'a', category: 'lofi', likes: 0, createdAt: '', streamUrl: '', description: '' },
+    { id: 2, name: 'b', category: 'lofi', likes: 0, createdAt: '', streamUrl: '', description: '' },
+    { id: 3, name: 'c', category: 'lofi', likes: 0, createdAt: '', streamUrl: '', description: '' },
+  ];
+  it('rng=0 时保持原顺序且为新数组', () => {
+    const out = shuffleStations(stations, () => 0);
+    expect(out.map((s) => s.id)).toEqual([1, 2, 3]);
+    expect(out).not.toBe(stations);
+  });
+  it('结果是原集合的一个排列（元素与长度不变）', () => {
+    const out = shuffleStations(stations, () => 0.42);
+    expect(out).toHaveLength(stations.length);
+    expect(new Set(out.map((s) => s.id))).toEqual(new Set(stations.map((s) => s.id)));
+  });
+  it('不修改原数组', () => {
+    const before = stations.map((s) => s.id);
+    shuffleStations(stations, () => 0.5);
     expect(stations.map((s) => s.id)).toEqual(before);
   });
 });

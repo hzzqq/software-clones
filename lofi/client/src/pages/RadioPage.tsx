@@ -25,7 +25,7 @@ import StationCard from '../components/StationCard';
 import CategoryFilter from '../components/CategoryFilter';
 import { Station } from '../types';
 import { stationApi } from '../api/stations';
-import { filterStations, sortStations, groupStationsByCategory, categoryLabel, filterStationsByLikes, filterStationsByCategory, summarizeStations, formatCount, type StationSort } from '../utils/station';
+import { filterStations, sortStations, shuffleStations, groupStationsByCategory, categoryLabel, filterStationsByLikes, filterStationsByCategory, summarizeStations, formatCount, type StationSort } from '../utils/station';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
 export default function RadioPage(): JSX.Element {
@@ -60,14 +60,13 @@ export default function RadioPage(): JSX.Element {
 
   const categories = useMemo(() => Array.from(new Set(stations.map((s) => s.category))), [stations]);
 
-  const filtered = useMemo(
-    () =>
-      sortStations(
-        filterStationsByLikes(filterStationsByCategory(filterStations(q, stations), categoryFilter), minLikes),
-        sortBy,
-      ),
-    [stations, q, categoryFilter, sortBy, minLikes]
-  );
+  const filtered = useMemo(() => {
+    const base = filterStationsByLikes(
+      filterStationsByCategory(filterStations(q, stations), categoryFilter),
+      minLikes,
+    );
+    return sortBy === 'shuffle' ? shuffleStations(base) : sortStations(base, sortBy);
+  }, [stations, q, categoryFilter, sortBy, minLikes]);
 
   const recentStations = useMemo(
     () => recentIds.map((id) => stations.find((s) => s.id === id)).filter((s): s is Station => !!s),
@@ -151,6 +150,7 @@ export default function RadioPage(): JSX.Element {
             <MenuItem value="category">按分类</MenuItem>
             <MenuItem value="likes">按点赞数</MenuItem>
             <MenuItem value="createdAt">按添加时间</MenuItem>
+            <MenuItem value="shuffle">随机排序</MenuItem>
           </Select>
         </FormControl>
         <FormControl size="small" sx={{ minWidth: 140 }}>
