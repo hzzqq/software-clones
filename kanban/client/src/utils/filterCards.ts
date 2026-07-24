@@ -118,6 +118,9 @@ export interface DueLabel {
 export function formatDueLabel(dueDate: string | null, now: Date = new Date()): DueLabel {
   if (dueDate === null) return { text: '无截止', tone: 'none' };
 
+  const parsed = new Date(dueDate);
+  if (Number.isNaN(parsed.getTime())) return { text: '日期无效', tone: 'none' };
+
   const msPerDay = 24 * 60 * 60 * 1000;
   const startOfDay = (d: Date): Date => new Date(d.getFullYear(), d.getMonth(), d.getDate());
   const diffDays = Math.round(

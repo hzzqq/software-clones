@@ -1,6 +1,6 @@
 {
-  "cycle": 166,
-  "max_cycles": 166,
+  "cycle": 167,
+  "max_cycles": 171,
   "phase": "polish",
   "paused": false,
   "log": [
@@ -2094,6 +2094,23 @@
       "verify": "client 52 passed + typecheck pass",
       "score": 85,
       "ts": 1784895733.1498327
+    },
+    {
+      "cycle": 167,
+      "app": "kanban",
+      "task_id": "relative_time_and_duedate_guard",
+      "new_requirement": "formatRelativeTime 相对时间纯函数(中文分段,可注入 now,非法输入回退空串)+测试；CardModal 展示「创建于/更新于 X」",
+      "implicit": "formatDueLabel 对非法 dueDate 字符串 new Date() 得 Invalid Date→NaN天后,已加有效性守卫回退「日期无效」",
+      "files": [
+        "kanban/client/src/utils/time.ts",
+        "kanban/client/test/time.test.ts",
+        "kanban/client/src/components/CardModal.tsx",
+        "kanban/client/src/utils/filterCards.ts",
+        "kanban/client/test/filterCards.test.ts"
+      ],
+      "verify": "kanban client 53 passed + typecheck pass",
+      "score": 85,
+      "ts": 1784956401.0
     }
   ],
   "last_task_id": "shuffle_stations_and_createdat_nanfix",
@@ -2131,7 +2148,8 @@
       "tvtime": "r158",
       "excalidraw": "r159",
       "photopea": "r160",
-      "it-tools": "r161"
+      "it-tools": "r161",
+      "kanban": "r167"
     }
   }
 }

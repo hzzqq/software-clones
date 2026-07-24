@@ -205,4 +205,7 @@ describe('formatDueLabel', () => {
     const due = new Date(2026, 7, 2, 8, 0, 0); // 7/23 + 10 天 = 8/2
     expect(formatDueLabel(iso(due), now)).toEqual({ text: '10天后', tone: 'none' });
   });
+  it('非法日期字符串 → 日期无效 / none（不渲染 NaN天后）', () => {
+    expect(formatDueLabel('not-a-date', now)).toEqual({ text: '日期无效', tone: 'none' });
+  });
 });

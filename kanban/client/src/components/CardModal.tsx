@@ -19,6 +19,7 @@ import dayjs, { Dayjs } from 'dayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { Card, Tag, PRIORITY_LABELS } from '../types';
 import { CardPatch } from '../api/cards';
+import { formatRelativeTime } from '../utils/time';
 import TagChip from './TagChip';
 
 interface CardModalProps {
@@ -73,6 +74,15 @@ export default function CardModal({
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>编辑卡片</DialogTitle>
+      {card && (
+        <Box sx={{ px: 3, pt: 1 }}>
+          <Typography variant="caption" color="text.secondary">
+            {formatRelativeTime(card.createdAt) ? `创建于 ${formatRelativeTime(card.createdAt)}` : '创建于 —'}
+            {' · '}
+            {formatRelativeTime(card.updatedAt) ? `更新于 ${formatRelativeTime(card.updatedAt)}` : '更新于 —'}
+          </Typography>
+        </Box>
+      )}
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <TextField
