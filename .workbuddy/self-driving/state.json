@@ -1,5 +1,5 @@
 {
-  "cycle": 162,
+  "cycle": 163,
   "max_cycles": 166,
   "phase": "polish",
   "paused": false,
@@ -2034,9 +2034,24 @@
       "verify": "client 63 passed + typecheck pass",
       "score": 85,
       "ts": 1784894840.9300442
+    },
+    {
+      "cycle": 163,
+      "app": "nonio",
+      "task_id": "feed_sort_util_and_nan_fix",
+      "new_requirement": "sortPosts 帖子排序纯函数(最新/最多赞/最多评论)+测试；HomePage 改用共享排序",
+      "implicit": "buildCommentTree 与首页 newest 排序对非法/空 createdAt 产生 NaN 不稳定,改为安全时间映射",
+      "files": [
+        "nonio/client/src/utils/forum.ts",
+        "nonio/client/src/utils/forum.test.ts",
+        "nonio/client/src/pages/HomePage.tsx"
+      ],
+      "verify": "client 46 passed + typecheck pass",
+      "score": 85,
+      "ts": 1784895059.0884187
     }
   ],
-  "last_task_id": "instant_search_and_sort_stability",
+  "last_task_id": "feed_sort_util_and_nan_fix",
   "repeat_count": 0,
   "last_score": 85,
   "coverage": {
@@ -2062,7 +2077,7 @@
     },
     "polish": {
       "markdown": "r162",
-      "nonio": "r152",
+      "nonio": "r163",
       "memos": "r153",
       "kener": "r154",
       "lofi": "r155",

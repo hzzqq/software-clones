@@ -21,6 +21,12 @@ export function parseTags(text: string): string[] {
 }
 
 /** 将字符串转为 URL 友好的 slug。 */
+/** 将日期安全转为时间戳：非法 / 空值回退为 0（最早），避免排序出现 NaN。 */
+function safeTime(value: string | undefined): number {
+  const t = +new Date(value ?? '');
+  return Number.isNaN(t) ? 0 : t;
+}
+
 export function slugify(name: string): string {
   const base = name
     .trim()
@@ -69,7 +75,7 @@ export function buildCommentTree(comments: Comment[]): CommentNode[] {
   }
 
   const sortByTime = (list: CommentNode[]) => {
-    list.sort((a, b) => +new Date(a.createdAt) - +new Date(b.createdAt));
+    list.sort((a, b) => safeTime(a.createdAt) - safeTime(b.createdAt));
     for (const n of list) sortByTime(n.children);
   };
   sortByTime(roots);
@@ -187,6 +193,21 @@ export function postReadingTime(content: string): number {
 
   const minutes = cjkCount / 300 + words.length / 200;
   return Math.max(1, Math.round(minutes));
+}
+
+/** 帖子排序方式。 */
+export type PostSortMode = 'newest' | 'likes' | 'comments';
+
+/**
+ * 帖子排序：'newest' 按发布时间倒序，'likes' 按点赞数倒序，'comments' 按评论数倒序。
+ * 非法 / 空 createdAt 视为最早，排序稳定。不修改入参（返回新数组）。
+ */
+export function sortPosts(posts: Post[], mode: PostSortMode = 'newest'): Post[] {
+  const arr = [...posts];
+  if (mode === 'likes') arr.sort((a, b) => (b.likes ?? 0) - (a.likes ?? 0));
+  else if (mode === 'comments') arr.sort((a, b) => (b.commentCount ?? 0) - (a.commentCount ?? 0));
+  else arr.sort((a, b) => safeTime(b.createdAt) - safeTime(a.createdAt));
+  return arr;
 }
 
 /** 汇总帖子：总数、总点赞、总评论、涉及频道数（不修改入参）。 */

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseTags, slugify, buildCommentTree, countComments, searchPosts, excerpt, topPosts, summarizePosts, filterPostsByChannel, formatRelativeTime } from './forum';
+import { parseTags, slugify, buildCommentTree, countComments, searchPosts, excerpt, topPosts, summarizePosts, filterPostsByChannel, formatRelativeTime, sortPosts } from './forum';
 import type { Comment, Post } from '../types';
 
 function mkComment(id: number, parentId: number | null): Comment {
@@ -198,6 +198,37 @@ describe('summarizePosts', () => {
   it('不修改入参', () => {
     const before = posts.map((p) => p.id);
     summarizePosts(posts);
+    expect(posts.map((p) => p.id)).toEqual(before);
+  });
+});
+
+describe('sortPosts', () => {
+  const posts: Post[] = [
+    { id: 1, channelId: 1, channelName: 'a', title: 'A', body: '', authorName: '', tags: [], likes: 5, commentCount: 2, createdAt: '2026-01-01', updatedAt: '' },
+    { id: 2, channelId: 1, channelName: 'a', title: 'B', body: '', authorName: '', tags: [], likes: 20, commentCount: 8, createdAt: '2026-03-01', updatedAt: '' },
+    { id: 3, channelId: 1, channelName: 'a', title: 'C', body: '', authorName: '', tags: [], likes: 12, commentCount: 1, createdAt: '2026-02-01', updatedAt: '' },
+  ];
+  it('newest 按发布时间倒序', () => {
+    expect(sortPosts(posts, 'newest').map((p) => p.id)).toEqual([2, 3, 1]);
+  });
+  it('likes 按点赞数倒序', () => {
+    expect(sortPosts(posts, 'likes').map((p) => p.id)).toEqual([2, 3, 1]);
+  });
+  it('comments 按评论数倒序', () => {
+    expect(sortPosts(posts, 'comments').map((p) => p.id)).toEqual([2, 1, 3]);
+  });
+  it('非法/空 createdAt 视为最早且排序稳定', () => {
+    const messy: Post[] = [
+      { id: 1, channelId: 1, channelName: 'a', title: 'A', body: '', authorName: '', tags: [], likes: 0, commentCount: 0, createdAt: 'not-a-date', updatedAt: '' },
+      { id: 2, channelId: 1, channelName: 'a', title: 'B', body: '', authorName: '', tags: [], likes: 0, commentCount: 0, createdAt: '', updatedAt: '' },
+      { id: 3, channelId: 1, channelName: 'a', title: 'C', body: '', authorName: '', tags: [], likes: 0, commentCount: 0, createdAt: '2026-02-01', updatedAt: '' },
+    ];
+    // 不应出现 NaN：合法日期排在前，非法/空排最后
+    expect(sortPosts(messy, 'newest').map((p) => p.id)).toEqual([3, 1, 2]);
+  });
+  it('不修改入参', () => {
+    const before = posts.map((p) => p.id);
+    sortPosts(posts, 'likes');
     expect(posts.map((p) => p.id)).toEqual(before);
   });
 });

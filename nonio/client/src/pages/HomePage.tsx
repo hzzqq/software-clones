@@ -25,7 +25,7 @@ import { channelApi } from '../api/channels';
 import { postApi } from '../api/posts';
 import type { Channel, Post } from '../types';
 import PostCard from '../components/PostCard';
-import { parseTags, searchPosts, topPosts, summarizePosts, filterPostsByChannel } from '../utils/forum';
+import { parseTags, searchPosts, topPosts, summarizePosts, filterPostsByChannel, sortPosts } from '../utils/forum';
 
 export default function HomePage(): JSX.Element {
   const [channels, setChannels] = useState<Channel[]>([]);
@@ -64,13 +64,7 @@ export default function HomePage(): JSX.Element {
 
   const summary = useMemo(() => summarizePosts(filtered), [filtered]);
 
-  const sorted = useMemo(() => {
-    const arr = [...filtered];
-    if (sort === 'likes') arr.sort((a, b) => b.likes - a.likes);
-    else if (sort === 'comments') arr.sort((a, b) => b.commentCount - a.commentCount);
-    else arr.sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
-    return arr;
-  }, [filtered, sort]);
+  const sorted = useMemo(() => sortPosts(filtered, sort), [filtered, sort]);
 
   const hotPosts = useMemo(() => topPosts(posts, 3, 'likes'), [posts]);
 
