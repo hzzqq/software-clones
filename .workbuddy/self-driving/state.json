@@ -1,5 +1,5 @@
 {
-  "cycle": 163,
+  "cycle": 164,
   "max_cycles": 166,
   "phase": "polish",
   "paused": false,
@@ -2049,9 +2049,24 @@
       "verify": "client 46 passed + typecheck pass",
       "score": 85,
       "ts": 1784895059.0884187
+    },
+    {
+      "cycle": 164,
+      "app": "memos",
+      "task_id": "sort_notes_util_and_nan_fix",
+      "new_requirement": "sortNotes 笔记排序纯函数(最新/最早/最近更新)+测试；NotesPage 改用共享排序",
+      "implicit": "NotesPage 内联排序对非法/空 createdAt/updatedAt 产生 NaN 不稳定,改为安全时间映射",
+      "files": [
+        "memos/client/src/utils/notes.ts",
+        "memos/client/src/utils/notes.test.ts",
+        "memos/client/src/pages/NotesPage.tsx"
+      ],
+      "verify": "client 45 passed + typecheck pass",
+      "score": 85,
+      "ts": 1784895303.7470748
     }
   ],
-  "last_task_id": "feed_sort_util_and_nan_fix",
+  "last_task_id": "sort_notes_util_and_nan_fix",
   "repeat_count": 0,
   "last_score": 85,
   "coverage": {
@@ -2078,7 +2093,7 @@
     "polish": {
       "markdown": "r162",
       "nonio": "r163",
-      "memos": "r153",
+      "memos": "r164",
       "kener": "r154",
       "lofi": "r155",
       "glance": "r156",

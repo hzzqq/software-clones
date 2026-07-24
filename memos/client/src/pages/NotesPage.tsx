@@ -25,7 +25,7 @@ import { Note, Visibility } from '../types';
 import { noteApi } from '../api/notes';
 import { tagApi } from '../api/tags';
 import { useNotes } from '../hooks/useNotes';
-import { pinnedNotes, sortNotesByPinned, summarizeNotes, filterNotesByTag, groupNotesByMonth, formatCharCount } from '../utils/notes';
+import { pinnedNotes, sortNotesByPinned, summarizeNotes, filterNotesByTag, groupNotesByMonth, formatCharCount, sortNotes } from '../utils/notes';
 
 export default function NotesPage(): JSX.Element {
   const navigate = useNavigate();
@@ -39,13 +39,7 @@ export default function NotesPage(): JSX.Element {
   const [tags, setTags] = useState<{ id: number; name: string; count: number }[]>([]);
   const { notes, loading, error, reload } = useNotes({ archived, tag: activeTag, q });
 
-  const sorted = useMemo(() => {
-    const arr = [...notes];
-    if (sort === 'newest') arr.sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
-    else if (sort === 'oldest') arr.sort((a, b) => +new Date(a.createdAt) - +new Date(b.createdAt));
-    else arr.sort((a, b) => +new Date(b.updatedAt) - +new Date(a.updatedAt));
-    return arr;
-  }, [notes, sort]);
+  const sorted = useMemo(() => sortNotes(notes, sort), [notes, sort]);
 
   const summary = useMemo(() => summarizeNotes(notes), [notes]);
 

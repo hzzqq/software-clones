@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseTags, formatRelativeTime, visibilityLabel, groupNotesByTag, filterNotesByTag, pinnedNotes, sortNotesByPinned, summarizeNotes, groupNotesByMonth, formatCharCount } from './notes';
+import { parseTags, formatRelativeTime, visibilityLabel, groupNotesByTag, filterNotesByTag, pinnedNotes, sortNotesByPinned, summarizeNotes, groupNotesByMonth, formatCharCount, sortNotes } from './notes';
 import { Visibility, Note } from '../types';
 
 describe('parseTags', () => {
@@ -220,6 +220,37 @@ describe('summarizeNotes', () => {
   it('不修改入参', () => {
     const before = notes.map((n) => n.id);
     summarizeNotes(notes);
+    expect(notes.map((n) => n.id)).toEqual(before);
+  });
+});
+
+describe('sortNotes', () => {
+  const notes: Note[] = [
+    { id: 1, content: '', visibility: 'private', pinned: false, archived: false, createdAt: '2026-01-01', updatedAt: '2026-01-10', tags: [] },
+    { id: 2, content: '', visibility: 'private', pinned: false, archived: false, createdAt: '2026-03-01', updatedAt: '2026-01-01', tags: [] },
+    { id: 3, content: '', visibility: 'private', pinned: false, archived: false, createdAt: '2026-02-01', updatedAt: '2026-03-01', tags: [] },
+  ];
+  it('newest 按创建时间倒序', () => {
+    expect(sortNotes(notes, 'newest').map((n) => n.id)).toEqual([2, 3, 1]);
+  });
+  it('oldest 按创建时间正序', () => {
+    expect(sortNotes(notes, 'oldest').map((n) => n.id)).toEqual([1, 3, 2]);
+  });
+  it('updated 按更新时间倒序', () => {
+    expect(sortNotes(notes, 'updated').map((n) => n.id)).toEqual([3, 1, 2]);
+  });
+  it('非法/空日期视为最早且排序稳定', () => {
+    const messy: Note[] = [
+      { id: 1, content: '', visibility: 'private', pinned: false, archived: false, createdAt: 'not-a-date', updatedAt: '', tags: [] },
+      { id: 2, content: '', visibility: 'private', pinned: false, archived: false, createdAt: '', updatedAt: 'bad', tags: [] },
+      { id: 3, content: '', visibility: 'private', pinned: false, archived: false, createdAt: '2026-02-01', updatedAt: '2026-03-01', tags: [] },
+    ];
+    expect(sortNotes(messy, 'newest').map((n) => n.id)).toEqual([3, 1, 2]);
+    expect(sortNotes(messy, 'updated').map((n) => n.id)).toEqual([3, 1, 2]);
+  });
+  it('不修改入参', () => {
+    const before = notes.map((n) => n.id);
+    sortNotes(notes, 'newest');
     expect(notes.map((n) => n.id)).toEqual(before);
   });
 });

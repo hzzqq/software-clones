@@ -101,6 +101,27 @@ export function pinnedNotes(notes: Note[]): Note[] {
   return notes.filter((n) => n.pinned);
 }
 
+/** 将日期安全转为时间戳：非法 / 空值回退为 0（最早），避免排序出现 NaN。 */
+function safeTime(value: string | undefined): number {
+  const t = +new Date(value ?? '');
+  return Number.isNaN(t) ? 0 : t;
+}
+
+/** 笔记排序方式。 */
+export type NoteSortMode = 'newest' | 'oldest' | 'updated';
+
+/**
+ * 笔记排序：'newest' 按创建时间倒序，'oldest' 按创建时间正序，'updated' 按更新时间倒序。
+ * 非法 / 空 createdAt / updatedAt 视为最早，排序稳定。不修改入参（返回新数组）。
+ */
+export function sortNotes(notes: Note[], mode: NoteSortMode = 'newest'): Note[] {
+  const arr = [...notes];
+  if (mode === 'oldest') arr.sort((a, b) => safeTime(a.createdAt) - safeTime(b.createdAt));
+  else if (mode === 'updated') arr.sort((a, b) => safeTime(b.updatedAt) - safeTime(a.updatedAt));
+  else arr.sort((a, b) => safeTime(b.createdAt) - safeTime(a.createdAt));
+  return arr;
+}
+
 /**
  * 置顶笔记排在前面（稳定排序，组内保持原相对顺序），不修改入参。
  * 配合「仅看置顶」开关使用，确保置顶项始终优先可见。
