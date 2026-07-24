@@ -3,6 +3,7 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { Link as RouterLink } from 'react-router-dom';
 import type { Show } from '../types';
 import { progressPercent, isComplete } from '../utils/show';
+import { formatRelativeTime } from '../utils/time';
 
 interface Props {
   show: Show;
@@ -11,6 +12,7 @@ interface Props {
 
 export default function ShowCard({ show, onDelete }: Props): JSX.Element {
   const pct = progressPercent(show.watchedCount, show.totalEpisodes);
+  const updatedLabel = formatRelativeTime(show.updatedAt);
   return (
     <Card variant="outlined" sx={{ mb: 2 }}>
       <CardContent>
@@ -31,6 +33,11 @@ export default function ShowCard({ show, onDelete }: Props): JSX.Element {
         <Stack direction="row" spacing={1} alignItems="center">
           <Chip size="small" label={`${show.watchedCount}/${show.totalEpisodes}`} />
           <Chip size="small" label={`${pct}%`} color={isComplete(show.watchedCount, show.totalEpisodes) ? 'success' : 'default'} />
+          {updatedLabel && (
+            <Typography variant="caption" color="text.secondary">
+              更新于 {updatedLabel}
+            </Typography>
+          )}
         </Stack>
       </CardContent>
     </Card>

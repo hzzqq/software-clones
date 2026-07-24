@@ -76,8 +76,14 @@ export function sortShows(shows: Show[], by: ShowSort): Show[] {
         progressPercent(b.watchedCount, b.totalEpisodes) -
         progressPercent(a.watchedCount, a.totalEpisodes),
     );
-  else arr.sort((a, b) => +new Date(b.updatedAt) - +new Date(a.updatedAt));
+  else arr.sort((a, b) => dateValue(b.updatedAt) - dateValue(a.updatedAt));
   return arr;
+}
+
+/** 将时间字符串安全转为时间戳；非法/空值回退为 0（最旧），避免 NaN 导致排序结果不确定。 */
+function dateValue(s: string): number {
+  const t = +new Date(s);
+  return Number.isFinite(t) ? t : 0;
 }
 
 /** 剧集观看状态筛选维度。 */

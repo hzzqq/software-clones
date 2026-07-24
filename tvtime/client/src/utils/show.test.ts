@@ -97,6 +97,15 @@ describe('sortShows', () => {
   it('按更新时间（新到旧）', () => {
     expect(sortShows(shows, 'updated').map((s) => s.id)).toEqual([2, 3, 1]);
   });
+  it('非法/空 updatedAt 不破坏排序（视为最旧排末位）', () => {
+    const mixed = [
+      mkShow(1, 'A', 1, 10, 'not-a-date'),
+      mkShow(2, 'B', 1, 10, ''),
+      mkShow(3, 'C', 1, 10, '2026-03-01'),
+      mkShow(4, 'D', 1, 10, '2026-02-01'),
+    ];
+    expect(sortShows(mixed, 'updated').map((s) => s.id)).toEqual([3, 4, 1, 2]);
+  });
 });
 
 describe('remainingWatchTime', () => {
