@@ -42,6 +42,7 @@ import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { uid, applyFilter, getFilterLabel, formatPercent, clampOpacity, formatBytes } from '../utils/image';
+import { formatRelativeTime } from '../utils/time';
 import { duplicateLayerName } from '../utils/layers';
 import { designApi } from '../api/designs';
 import type { Layer, Tool, FilterKind, Design } from '../types';
@@ -992,7 +993,10 @@ export default function CanvasEditor(): JSX.Element {
               {designList.map((d) => (
                 <ListItemButton key={d.id} onClick={() => loadDesign(d)}>
                   <Avatar variant="rounded" src={d.thumbnail} sx={{ mr: 1, width: 40, height: 28 }} />
-                  <ListItemText primary={d.name} secondary={`#${d.id}`} />
+                  <ListItemText
+                    primary={d.name}
+                    secondary={`#${d.id} · 更新于 ${formatRelativeTime(d.updated_at) || '时间未知'}`}
+                  />
                 </ListItemButton>
               ))}
             </List>
