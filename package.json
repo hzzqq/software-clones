@@ -7,7 +7,9 @@
   "scripts": {
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "test:e2e:report": "playwright show-report"
+    "test:e2e:report": "playwright show-report",
+    "verify": "node scripts/check-consistency.mjs",
+    "catalog": "node scripts/gen-catalog.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.48.0",

@@ -12,3 +12,6 @@ node_modules/.cache
 playwright-report/
 test-results/
 playwright/.cache/
+
+# Generated temp artifacts (vitest / vite caches)
+*.timestamp-*.mjs

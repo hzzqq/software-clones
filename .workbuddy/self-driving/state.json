@@ -1,5 +1,5 @@
 {
-  "cycle": 170,
+  "cycle": 171,
   "max_cycles": 176,
   "phase": "polish",
   "paused": false,
@@ -2155,11 +2155,25 @@
       "result": "checker 仍通过(0 错)；CI 新增 consistency 作业",
       "score": 72,
       "ts": "2026-07-25T01:14:35+0800"
+    },
+    {
+      "cycle": 171,
+      "task": "add_dev_entrypoints_and_root_editorconfig",
+      "new_requirement": "在根 package.json 增加 verify/catalog 脚本作为统一入口；新增根 .editorconfig 锁定跨平台换行与缩进",
+      "implicit_fix": "隐性：根目录缺失 .editorconfig 易致跨平台换行漂移；.gitignore 未忽略 vitest/vite 生成的 *.timestamp-*.mjs 临时产物",
+      "files": [
+        "package.json",
+        ".editorconfig",
+        ".gitignore"
+      ],
+      "result": "npm run verify 通过；checker 绿；临时产物已被忽略",
+      "score": 70,
+      "ts": "2026-07-25T01:15:37+0800"
     }
   ],
-  "last_task_id": "wire_consistency_checker_into_ci",
+  "last_task_id": "add_dev_entrypoints_and_root_editorconfig",
   "repeat_count": 0,
-  "last_score": 72,
+  "last_score": 70,
   "coverage": {
     "B1": {
       "it-tools": "optimized",
@@ -2197,7 +2211,10 @@
     },
     "tooling": [
       "scripts/check-consistency.mjs",
-      "scripts/gen-catalog.mjs"
+      "scripts/gen-catalog.mjs",
+      "package.json",
+      ".editorconfig",
+      ".gitignore"
     ],
     "docs": [
       "README.md",
