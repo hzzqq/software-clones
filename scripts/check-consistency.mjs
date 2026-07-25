@@ -18,7 +18,7 @@ import { readdirSync, readFileSync, existsSync, writeFileSync, mkdirSync } from 
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildCatalogText } from './lib-catalog.mjs';
-import { isAppDir, findE2ESpecs } from './consistency-rules.mjs';
+import { isAppDir, findE2ESpecs, parsePlaywrightApps, parseYamlMatrixApps } from './consistency-rules.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -46,6 +46,11 @@ function main() {
   const warnings = [];
   const perApp = [];
 
+  // 精确解析注册清单（替代脆弱的整文件 includes），用于双向一致性比对
+  const registeredPw = parsePlaywrightApps(playwright);
+  const registeredYml = parseYamlMatrixApps(e2eYml);
+  const appSet = new Set(apps);
+
   for (const app of apps) {
     const e2eSpecs = findE2ESpecs(ROOT, app);
     const checks = {
@@ -53,8 +58,8 @@ function main() {
       e2eDir: existsSync(join(ROOT, 'e2e', app)),
       e2eSpec: e2eSpecs.length > 0,
       envExample: existsSync(join(ROOT, app, 'server', '.env.example')),
-      ciMatrix: e2eYml.includes(app),
-      playwrightApps: playwright.includes(app),
+      ciMatrix: registeredYml.includes(app),
+      playwrightApps: registeredPw.includes(app),
     };
     if (!checks.readme) errors.push(`[${app}] README.md 未提及该 App（文档漂移）`);
     if (!checks.e2eDir) errors.push(`[${app}] 缺少 e2e/${app}/ 冒烟目录`);
@@ -63,6 +68,14 @@ function main() {
     if (!checks.ciMatrix) warnings.push(`[${app}] e2e.yml CI 矩阵未登记`);
     if (!checks.playwrightApps) warnings.push(`[${app}] playwright.config.ts APPS 未登记`);
     perApp.push({ app, ...checks });
+  }
+
+  // 反向防护：配置里登记了但仓库里没有对应 App 目录（幽灵注册），会导致 CI/编排失败
+  for (const name of registeredPw) {
+    if (!appSet.has(name)) errors.push(`[ghost] playwright.config.ts APPS 登记了不存在的 App "${name}"`);
+  }
+  for (const name of registeredYml) {
+    if (!appSet.has(name)) errors.push(`[ghost] e2e.yml CI 矩阵登记了不存在的 App "${name}"`);
   }
 
   // 生成物新鲜度：docs/APP_CATALOG.md 必须与事实来源严格一致（防止手改后失真）

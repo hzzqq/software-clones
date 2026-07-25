@@ -39,3 +39,37 @@ export function findE2ESpecs(root, app) {
   }
   return entries.filter((f) => f.endsWith('.spec.ts'));
 }
+
+/**
+ * 从 playwright.config.ts 文本精确提取 APPS 数组里登记的应用名（取 `name: '...'` 字面量）。
+ * 用精确解析替代脆弱的「整文件 includes」——避免应用名作为子串出现在注释/路径中时误判。
+ * @returns {string[]} 应用名列表（去重、保留出现顺序）
+ */
+export function parsePlaywrightApps(text) {
+  const block = text.match(/export\s+const\s+APPS[\s\S]*?=\s*\[([\s\S]*?)\]/);
+  if (!block) return [];
+  const names = block[1].match(/name\s*:\s*['"]([^'"]+)['"]/g) || [];
+  const out = [];
+  for (const n of names) {
+    const m = n.match(/name\s*:\s*['"]([^'"]+)['"]/);
+    const name = m ? m[1] : null;
+    if (name && !out.includes(name)) out.push(name);
+  }
+  return out;
+}
+
+/**
+ * 从 GitHub Actions 的 e2e.yml 文本精确提取 matrix.app 列表（取 `app:` 键下连续的 `- <slug>` 行）。
+ * 同样用精确解析替代整文件 includes，避免子串误判。
+ * @returns {string[]} 应用名列表（去重、保留出现顺序）
+ */
+export function parseYamlMatrixApps(text) {
+  const m = text.match(/matrix\s*:[\s\S]*?app\s*:\s*\n((?:\s*-\s*\S+\s*\n)+)/);
+  if (!m) return [];
+  const out = [];
+  for (const line of m[1].match(/-\s*\S+/g) || []) {
+    const name = line.replace(/-\s*/, '').trim();
+    if (name && !out.includes(name)) out.push(name);
+  }
+  return out;
+}

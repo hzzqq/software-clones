@@ -11,7 +11,7 @@
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { findE2ESpecs, isAppDir } from './consistency-rules.mjs';
+import { findE2ESpecs, isAppDir, parsePlaywrightApps, parseYamlMatrixApps } from './consistency-rules.mjs';
 
 let passed = 0;
 let failed = 0;
@@ -52,6 +52,38 @@ assert('findE2ESpecs 忽略非 .spec.ts', findE2ESpecs(sandbox, 'demo').length =
 assert('findE2ESpecs 缺失目录返回 []', findE2ESpecs(sandbox, 'nope').length === 0);
 
 rmSync(sandbox, { recursive: true, force: true });
+
+// parsePlaywrightApps：从 APPS 数组精确提取 name
+const pwText = `
+export const APPS: AppSpec[] = [
+  { name: 'markdown', dir: 'markdown/client', port: 5180 },
+  { name: 'it-tools', dir: 'it-tools/client', port: 5185 },
+];
+// 注释里的 name: 'ghost' 不应被误取（需位于 APPS 数组块内）
+`;
+const pwApps = parsePlaywrightApps(pwText);
+assert('parsePlaywrightApps 提取 2 个应用', pwApps.length === 2);
+assert('parsePlaywrightApps 含 markdown', pwApps.includes('markdown'));
+assert('parsePlaywrightApps 忽略块外注释', !pwApps.includes('ghost'));
+assert('parsePlaywrightApps 无 APPS 块返回 []', parsePlaywrightApps('const x = 1;').length === 0);
+
+// parseYamlMatrixApps：从 matrix.app 列表精确提取
+const ymlText = `
+jobs:
+  e2e:
+    strategy:
+      matrix:
+        app:
+          - markdown
+          - it-tools
+        node:
+          - '22'
+`;
+const ymlApps = parseYamlMatrixApps(ymlText);
+assert('parseYamlMatrixApps 提取 2 个应用', ymlApps.length === 2);
+assert('parseYamlMatrixApps 含 it-tools', ymlApps.includes('it-tools'));
+assert('parseYamlMatrixApps 不含 node 列表', !ymlApps.includes('22'));
+assert('parseYamlMatrixApps 无 matrix 返回 []', parseYamlMatrixApps('app: []').length === 0);
 
 console.log(`\n通过: ${passed}  失败: ${failed}`);
 if (failed > 0) {
