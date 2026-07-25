@@ -10,8 +10,10 @@
 ```bash
 npm run verify          # 运行 scripts/verify-all.mjs（一致性校验 + 规则单元测试 + 目录新鲜度）
 npm run test:rules      # 仅运行 scripts/check-consistency.test.mjs（规则纯函数单测）
+npm run fix             # 自动修复可自愈项（当前：重新生成过期的 docs/APP_CATALOG.md）
 node scripts/verify-all.mjs   # 直接运行统一验收入口
 node scripts/check-consistency.mjs   # 单独运行一致性校验器本身
+node scripts/check-consistency.mjs --fix   # 校验并尝试自动修复
 ```
 
 该命令会校验：
@@ -21,10 +23,12 @@ node scripts/check-consistency.mjs   # 单独运行一致性校验器本身
 - 每个 App 的 `server` 存在 `.env.example`，且含必需配置项 `PORT` 与 `CORS_ORIGIN`；
 - 每个 App 的 `client/package.json` 都声明了 `test` 脚本**且真正包含单元测试用例文件**（杜绝空心回归网）；
 - 每个 App 具备可构建的脚手架（client 需 `tsconfig.json` + vite 配置，server 需 `tsconfig.json`）；
+- 每个 App 的 `client` 都将其 `ErrorBoundary` 真正接入渲染树（仅存在文件未接线无效）；
+- 每个 App 都自带 `<app>/README.md` 上手说明；
 - 每个 App 都登记在 `.github/workflows/e2e.yml` 的 CI 矩阵与 `playwright.config.ts` 的 `APPS`（精确匹配、无重复端口/名称，禁止幽灵注册）；
 - `shared/` 下的脚手架模板（`backend-template` / `frontend-template`）关键文件完整；
 - 仓库内**全部** Markdown 的内部相对链接均有效（链接腐化防护，递归扫描）；
-- `docs/APP_CATALOG.md` 与事实来源严格一致（新鲜度）。
+- `docs/APP_CATALOG.md` 与事实来源严格一致（新鲜度，可用 `--fix` 自动修复）。
 
 CI 的 `consistency` 作业会自动运行 `node scripts/verify-all.mjs`，PR 阶段即可拦截漂移与规则回归。
 
@@ -35,6 +39,7 @@ CI 的 `consistency` 作业会自动运行 `node scripts/verify-all.mjs`，PR �
 
 ```bash
 node scripts/gen-catalog.mjs   # 或 npm run catalog
+node scripts/check-consistency.mjs --fix   # 等价：校验并自动重新生成过期目录
 ```
 
 ## 新增一个 App

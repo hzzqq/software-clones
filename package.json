@@ -10,7 +10,8 @@
     "test:e2e:report": "playwright show-report",
     "verify": "node scripts/verify-all.mjs",
     "test:rules": "node scripts/check-consistency.test.mjs",
-    "catalog": "node scripts/gen-catalog.mjs"
+    "catalog": "node scripts/gen-catalog.mjs",
+    "fix": "node scripts/check-consistency.mjs --fix"
   },
   "devDependencies": {
     "@playwright/test": "^1.48.0",

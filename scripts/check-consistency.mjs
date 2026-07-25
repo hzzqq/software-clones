@@ -139,9 +139,19 @@ function main() {
     const expected = buildCatalogText();
     const actual = readFileSync(catalogPath, 'utf8');
     catalogFresh = expected.trim() === actual.trim();
+    // --fix 模式：目录过期时自动重新生成，免去手动步骤并让 CI 自修复
+    if (!catalogFresh && process.argv.includes('--fix')) {
+      try {
+        writeFileSync(catalogPath, expected);
+        catalogFresh = true;
+        if (!jsonMode) console.log('  ↻ 已自动重新生成 docs/APP_CATALOG.md（--fix）');
+      } catch {
+        /* 写入失败则在下方照常报错 */
+      }
+    }
   }
   if (!catalogFresh) {
-    errors.push('docs/APP_CATALOG.md 与生成结果不一致，请运行 node scripts/gen-catalog.mjs 重新生成');
+    errors.push('docs/APP_CATALOG.md 与生成结果不一致，请运行 node scripts/gen-catalog.mjs 重新生成（或 node scripts/check-consistency.mjs --fix 自动修复）');
   }
 
   // 贡献者入口：CONTRIBUTING.md 必须存在且指引贡献者运行一致性校验器

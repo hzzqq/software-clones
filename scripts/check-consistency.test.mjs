@@ -8,7 +8,7 @@
  * 运行：node scripts/check-consistency.test.mjs
  * 退出码：0 通过，1 失败（便于接到 CI）。
  */
-import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdirSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
 import { join, resolve, dirname } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
@@ -199,6 +199,20 @@ try {
   jsonOk = Array.isArray(jsonParsed.rules) && jsonParsed.rulesRun === jsonParsed.rules.length && jsonParsed.apps > 0;
 } catch { /* parse failure → jsonOk 保持 false */ }
 assert('--json 输出合法 JSON 且含 rules 清单', jsonOk);
+
+// --fix 模式：docs/APP_CATALOG.md 过期时自动重新生成，使校验通过（不改坏仓库）
+const catPath = join(TEST_ROOT, 'docs', 'APP_CATALOG.md');
+const catOrig = readFileSync(catPath, 'utf8');
+writeFileSync(catPath, '# STALE PLACEHOLDER\n');
+const fixRun = spawnSync('node', ['scripts/check-consistency.mjs', '--fix'], { cwd: TEST_ROOT, encoding: 'utf8' });
+const catRestored = readFileSync(catPath, 'utf8');
+assert('--fix 重新生成过期目录并使校验通过', fixRun.status === 0 && catRestored.trim() === catOrig.trim());
+writeFileSync(catPath, catOrig); // 还原（保险）
+// 无 --fix 时，过期目录仍应报错（exit 1）
+writeFileSync(catPath, '# STALE AGAIN\n');
+const noFixRun = spawnSync('node', ['scripts/check-consistency.mjs'], { cwd: TEST_ROOT, encoding: 'utf8' });
+assert('无 --fix 时过期目录仍报错', noFixRun.status === 1);
+writeFileSync(catPath, catOrig);
 
 // findAllMarkdownFiles：递归收集所有 .md（忽略 .git / node_modules）
 mkdirSync(join(sandbox, 'docs'), { recursive: true });

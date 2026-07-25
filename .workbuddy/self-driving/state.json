@@ -1,5 +1,5 @@
 {
-  "cycle": 188,
+  "cycle": 189,
   "max_cycles": 200,
   "phase": "polish",
   "paused": false,
@@ -2442,11 +2442,26 @@
       "verify": "checker 0 错；单元测试 62/62 通过",
       "score": 82,
       "ts": "2026-07-25T13:56:51.027Z"
+    },
+    {
+      "cycle": 189,
+      "task": "checker_fix_mode",
+      "new_requirement": "校验器 --fix 模式：docs/APP_CATALOG.md 过期时自动重新生成（自修复，免手动步骤）",
+      "implicit_fix": "此前目录过期只能报错让 CI 红灯，贡献者需手动跑 gen-catalog；新增 --fix 自动重写并自绿，CONTRIBUTING/根 package.json 同步暴露 npm run fix",
+      "files": [
+        "scripts/check-consistency.mjs",
+        "scripts/check-consistency.test.mjs",
+        "package.json",
+        "CONTRIBUTING.md"
+      ],
+      "verify": "checker 0 错；单元测试 64/64 通过；--fix 重新生成目录使校验通过",
+      "score": 80,
+      "ts": "2026-07-25T14:00:16.813Z"
     }
   ],
-  "last_task_id": "add_app_readmes",
+  "last_task_id": "checker_fix_mode",
   "repeat_count": 0,
-  "last_score": 82,
+  "last_score": 80,
   "coverage": {
     "B1": {
       "it-tools": "optimized",
