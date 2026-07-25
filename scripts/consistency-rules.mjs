@@ -251,3 +251,56 @@ export function findDuplicateNames(apps) {
   for (const a of apps) seen.set(a.name, (seen.get(a.name) || 0) + 1);
   return [...seen.entries()].filter(([, c]) => c > 1).map(([n]) => n);
 }
+
+/**
+ * 校验 playwright.config.ts 的 APPS 中登记的每个 `dir` 是否真实存在（相对仓库根）。
+ * `dir` 指向不存在的目录意味着 E2E 的 `webServer` 命令 `npm --prefix <dir> run dev`
+ * 会直接失败——属于「配置登记但目录被改名/移动/删除」的隐性漂移，此前无任何闸门拦截。
+ * @param {{name:string,dir:?string}[]} apps parseApps 的结果
+ * @returns {{name:string,dir:string}[]} dir 不存在的条目（空数组表示全部有效）
+ */
+export function missingAppDirs(root, apps) {
+  const out = [];
+  for (const a of apps) {
+    if (!a.dir) continue;
+    if (!existsSync(join(root, a.dir))) out.push({ name: a.name, dir: a.dir });
+  }
+  return out;
+}
+
+/**
+ * 校验某 App 是否具备可构建的脚手架：client 需 tsconfig + vite 配置，server 需 tsconfig。
+ * 缺失任意一项意味着该 App 无法在 CI 中编译/启动（「能 clone 但不能 build」的隐性缺口）。
+ * @returns {{clientTs:boolean, clientVite:boolean, serverTs:boolean, ok:boolean}}
+ */
+export function checkBuildConfig(root, app) {
+  const c = join(root, app, 'client');
+  const s = join(root, app, 'server');
+  const res = {
+    clientTs: existsSync(join(c, 'tsconfig.json')),
+    clientVite: existsSync(join(c, 'vite.config.ts')) || existsSync(join(c, 'vite.config.js')),
+    serverTs: existsSync(join(s, 'tsconfig.json')),
+  };
+  res.ok = res.clientTs && res.clientVite && res.serverTs;
+  return res;
+}
+
+/** 脚手架模板必需文件清单（用于校验 shared/*-template 未被破坏）。 */
+export const SHARED_TEMPLATE_FILES = {
+  'backend-template': ['package.json', 'tsconfig.json', 'src/index.ts'],
+  'frontend-template': ['package.json', 'vite.config.ts', 'tsconfig.json', 'src/main.tsx', 'src/App.tsx'],
+};
+
+/**
+ * 校验 shared/ 下的脚手架模板是否完整（缺文件会让新 App 脚手架失效）。
+ * @returns {string[]} 缺失的关键文件相对路径（空数组表示完整）
+ */
+export function missingSharedTemplateFiles(root) {
+  const out = [];
+  for (const [tpl, files] of Object.entries(SHARED_TEMPLATE_FILES)) {
+    for (const f of files) {
+      if (!existsSync(join(root, 'shared', tpl, f))) out.push(`shared/${tpl}/${f}`);
+    }
+  }
+  return out;
+}

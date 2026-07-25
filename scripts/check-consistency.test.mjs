@@ -11,7 +11,7 @@
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { findE2ESpecs, isAppDir, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, findClientTestFiles, missingEnvKeys, findAllMarkdownFiles, parseApps, findDuplicatePorts, findDuplicateNames } from './consistency-rules.mjs';
+import { findE2ESpecs, isAppDir, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, findClientTestFiles, missingEnvKeys, findAllMarkdownFiles, parseApps, findDuplicatePorts, findDuplicateNames, checkBuildConfig, missingSharedTemplateFiles, missingAppDirs } from './consistency-rules.mjs';
 
 let passed = 0;
 let failed = 0;
@@ -169,6 +169,18 @@ const dupN = findDuplicateNames([{ name: 'a' }, { name: 'a' }, { name: 'b' }]);
 assert('findDuplicateNames 命中重复名', dupN.includes('a') && dupN.length === 1);
 assert('findDuplicatePorts 无重复返回 []', findDuplicatePorts([{ name: 'a', port: 1 }, { name: 'b', port: 2 }]).length === 0);
 assert('findDuplicateNames 无重复返回 []', findDuplicateNames([{ name: 'a' }, { name: 'b' }]).length === 0);
+
+// missingAppDirs：APPS 登记的 dir 必须真实存在（防 E2E webServer 指向丢失/改名的目录）
+mkdirSync(join(sandbox, 'dirapp', 'client'), { recursive: true });
+const appsForDir = [
+  { name: 'dirapp', dir: 'dirapp/client' },
+  { name: 'gone', dir: 'ghost/client' },
+];
+const missingDirs = missingAppDirs(sandbox, appsForDir);
+assert('missingAppDirs 命中不存在的 dir', missingDirs.length === 1);
+assert('missingAppDirs 报告正确条目', missingDirs[0] && missingDirs[0].name === 'gone');
+assert('missingAppDirs 全部存在返回 []', missingAppDirs(sandbox, [{ name: 'dirapp', dir: 'dirapp/client' }]).length === 0);
+assert('missingAppDirs 忽略无 dir 的条目', missingAppDirs(sandbox, [{ name: 'x' }]).length === 0);
 
 console.log(`\n通过: ${passed}  失败: ${failed}`);
 if (failed > 0) {

@@ -18,7 +18,7 @@ import { readdirSync, readFileSync, existsSync, writeFileSync, mkdirSync } from 
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildCatalogText } from './lib-catalog.mjs';
-import { isAppDir, findE2ESpecs, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, missingEnvKeys, findAllMarkdownFiles, parseApps, findDuplicatePorts, findDuplicateNames } from './consistency-rules.mjs';
+import { isAppDir, findE2ESpecs, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, missingEnvKeys, findAllMarkdownFiles, parseApps, findDuplicatePorts, findDuplicateNames, checkBuildConfig, missingSharedTemplateFiles, missingAppDirs } from './consistency-rules.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -62,6 +62,7 @@ function main() {
       playwrightApps: registeredPw.includes(app),
       clientTest: hasClientTestScript(ROOT, app),
       clientTestFile: hasClientTestFile(ROOT, app),
+      build: checkBuildConfig(ROOT, app).ok,
     };
     if (!checks.readme) errors.push(`[${app}] README.md 未提及该 App（文档漂移）`);
     if (!checks.e2eDir) errors.push(`[${app}] 缺少 e2e/${app}/ 冒烟目录`);
@@ -71,6 +72,7 @@ function main() {
     if (checks.clientTest && !checks.clientTestFile) errors.push(`[${app}] client 声明了 test 脚本却没有单元测试用例文件（空心安全网）`);
     const missingKeys = missingEnvKeys(ROOT, app);
     if (missingKeys.length) errors.push(`[${app}] server/.env.example 缺少必需配置项: ${missingKeys.join(', ')}`);
+    if (!checks.build) errors.push(`[${app}] 构建脚手架不全（client 需 tsconfig+vite 配置，server 需 tsconfig）`);
     if (!checks.ciMatrix) warnings.push(`[${app}] e2e.yml CI 矩阵未登记`);
     if (!checks.playwrightApps) warnings.push(`[${app}] playwright.config.ts APPS 未登记`);
     perApp.push({ app, ...checks });
@@ -90,6 +92,18 @@ function main() {
   const dupNames = findDuplicateNames(pwApps);
   if (dupPorts.length) errors.push(`[playwright] APPS 存在重复 E2E 端口: ${dupPorts.join(', ')}`);
   if (dupNames.length) errors.push(`[playwright] APPS 存在重复应用名: ${dupNames.join(', ')}`);
+
+  // 配置内部一致性：APPS 登记的 dir 必须真实存在，否则 E2E webServer 命令会失败
+  const missingDirs = missingAppDirs(ROOT, pwApps);
+  for (const m of missingDirs) {
+    errors.push(`[playwright] APPS 登记的 dir "${m.dir}" 不存在（App "${m.name}" 的 E2E webServer 将失败）`);
+  }
+
+  // 脚手架完整性：shared/*-template 必需文件不可缺失，否则新 App 骨架会失效
+  const missingShared = missingSharedTemplateFiles(ROOT);
+  for (const f of missingShared) {
+    errors.push(`[shared] 脚手架模板关键文件缺失: ${f}`);
+  }
 
   // 文档内部链接腐化检测：递归扫描仓库内所有 Markdown，本地相对链接必须指向真实文件
   const allMd = findAllMarkdownFiles(ROOT);
@@ -125,18 +139,21 @@ function main() {
   // 打印报告
   console.log(`\n软件克隆单体仓库一致性校验 — 共发现 ${apps.length} 个全栈 App\n`);
   for (const row of perApp) {
-    const ok = row.readme && row.e2eDir && row.e2eSpec && row.envExample && row.clientTest && row.clientTestFile;
+    const ok = row.readme && row.e2eDir && row.e2eSpec && row.envExample && row.clientTest && row.clientTestFile && row.build;
     const tag = ok ? 'OK ' : 'FAIL';
     console.log(
       `  [${tag}] ${row.app.padEnd(12)} readme:${row.readme ? '✓' : '✗'} ` +
         `e2e:${row.e2eDir ? '✓' : '✗'} spec:${row.e2eSpec ? '✓' : '✗'} ` +
         `env:${row.envExample ? '✓' : '✗'} test:${row.clientTest ? '✓' : '✗'} ` +
-        `cases:${row.clientTestFile ? '✓' : '✗'} ` +
+        `cases:${row.clientTestFile ? '✓' : '✗'} build:${row.build ? '✓' : '✗'} ` +
         `ci:${row.ciMatrix ? '✓' : '✗'} pw:${row.playwrightApps ? '✓' : '✗'}`
     );
   }
   console.log(
     `  [${catalogFresh ? 'OK ' : 'FAIL'}] docs/APP_CATALOG.md 新鲜度: ${catalogFresh ? '✓' : '✗'}`
+  );
+  console.log(
+    `  [${missingShared.length === 0 ? 'OK ' : 'FAIL'}] shared 脚手架模板完整性: ${missingShared.length === 0 ? '✓' : '✗'}`
   );
 
   const summary = {

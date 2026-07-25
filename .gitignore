@@ -15,3 +15,7 @@ playwright/.cache/
 
 # Generated temp artifacts (vitest / vite caches)
 *.timestamp-*.mjs
+
+# 运行时产物（非源码）：并发锁 + 一致性校验报告的瞬时输出
+.workbuddy/self-driving/.drive_lock
+.workbuddy/self-driving/last-check.json

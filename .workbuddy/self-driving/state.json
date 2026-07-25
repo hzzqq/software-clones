@@ -1,5 +1,5 @@
 {
-  "cycle": 180,
+  "cycle": 182,
   "max_cycles": 200,
   "phase": "polish",
   "paused": false,
@@ -2297,9 +2297,42 @@
       "verify": "checker 0 错；单元测试 32/32 通过",
       "score": 82,
       "ts": "2026-07-25T15:01:39+0800"
+    },
+    {
+      "cycle": 181,
+      "task": "dup_port_name_guards",
+      "app": "tooling",
+      "new_requirement": "findDuplicatePorts/findDuplicateNames 规则：APPS 端口/名称不可重复",
+      "implicit_fix": "lib-catalog.mjs 的旧 parseApps 要求 name→dir→port 固定顺序，字段乱序会整条丢弃导致目录漂移；抽出顺序无关的共享 parseApps 并复用(DRY)",
+      "files": [
+        "scripts/consistency-rules.mjs",
+        "scripts/check-consistency.mjs",
+        "scripts/check-consistency.test.mjs",
+        "scripts/lib-catalog.mjs"
+      ],
+      "verify": "checker 0 错；单元测试 39/39 通过；目录仍新鲜",
+      "score": 84,
+      "ts": "2026-07-25T15:03:52+0800"
+    },
+    {
+      "cycle": 182,
+      "task": "apps_dir_integrity",
+      "app": "tooling",
+      "new_requirement": "missingAppDirs 规则：playwright APPS 登记的 dir 必须真实存在（防 E2E webServer 指向丢失/改名目录）",
+      "implicit_fix": "CONTRIBUTING.md 此前被改动不再包含 check-consistency.mjs 字面量，校验器成功捕获并修复该文档漂移回归；此前无任何闸门拦截「APPS dir 指向不存在目录」的隐性配置漂移",
+      "files": [
+        "scripts/consistency-rules.mjs",
+        "scripts/check-consistency.mjs",
+        "scripts/check-consistency.test.mjs",
+        "CONTRIBUTING.md",
+        ".gitignore"
+      ],
+      "verify": "checker 0 错；单元测试 43/43 通过",
+      "score": 82,
+      "ts": "2026-07-25T15:30:00+0800"
     }
   ],
-  "last_task_id": "env_required_keys_and_md_scan",
+  "last_task_id": "apps_dir_integrity",
   "repeat_count": 0,
   "last_score": 82,
   "coverage": {

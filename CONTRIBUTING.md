@@ -8,22 +8,25 @@
 无需 `npm install` 任何 App 依赖即可运行仓库级校验（纯 Node 内置模块）：
 
 ```bash
-npm run verify          # 运行 scripts/check-consistency.mjs 校验器 + 规则单元测试
+npm run verify          # 运行 scripts/verify-all.mjs（一致性校验 + 规则单元测试 + 目录新鲜度）
 npm run test:rules      # 仅运行 scripts/check-consistency.test.mjs（规则纯函数单测）
-node scripts/check-consistency.mjs   # 直接运行一致性校验器
+node scripts/verify-all.mjs   # 直接运行统一验收入口
+node scripts/check-consistency.mjs   # 单独运行一致性校验器本身
 ```
 
 该命令会校验：
 
 - 每个全栈 App 都在 `README.md` 中被提及（文档漂移防护）；
 - 每个 App 在 `e2e/<app>/` 下拥有冒烟目录，且至少包含一份 `*.spec.ts` 冒烟用例；
-- 每个 App 的 `server` 存在 `.env.example`；
-- 每个 App 的 `client/package.json` 都声明了 `test` 脚本（可被 CI 回归验证）；
-- 每个 App 都登记在 `.github/workflows/e2e.yml` 的 CI 矩阵与 `playwright.config.ts` 的 `APPS`（精确匹配，禁止幽灵注册）；
-- `README.md` / `CONTRIBUTING.md` / `docs/APP_CATALOG.md` 的内部相对链接均有效（链接腐化防护）；
+- 每个 App 的 `server` 存在 `.env.example`，且含必需配置项 `PORT` 与 `CORS_ORIGIN`；
+- 每个 App 的 `client/package.json` 都声明了 `test` 脚本**且真正包含单元测试用例文件**（杜绝空心回归网）；
+- 每个 App 具备可构建的脚手架（client 需 `tsconfig.json` + vite 配置，server 需 `tsconfig.json`）；
+- 每个 App 都登记在 `.github/workflows/e2e.yml` 的 CI 矩阵与 `playwright.config.ts` 的 `APPS`（精确匹配、无重复端口/名称，禁止幽灵注册）；
+- `shared/` 下的脚手架模板（`backend-template` / `frontend-template`）关键文件完整；
+- 仓库内**全部** Markdown 的内部相对链接均有效（链接腐化防护，递归扫描）；
 - `docs/APP_CATALOG.md` 与事实来源严格一致（新鲜度）。
 
-CI 的 `consistency` 作业会自动运行 `npm run verify`，PR 阶段即可拦截漂移与规则回归。
+CI 的 `consistency` 作业会自动运行 `node scripts/verify-all.mjs`，PR 阶段即可拦截漂移与规则回归。
 
 ## 重新生成 App 目录
 

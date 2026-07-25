@@ -65,10 +65,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Run consistency checker
-        run: node scripts/check-consistency.mjs
-      - name: Run consistency rules unit tests
-        run: node scripts/check-consistency.test.mjs
+      - name: Run full verification (checker + rules tests + catalog freshness)
+        run: node scripts/verify-all.mjs
       - name: Ensure catalog is up to date
         run: |
           node scripts/gen-catalog.mjs
