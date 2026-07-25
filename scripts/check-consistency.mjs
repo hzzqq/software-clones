@@ -18,7 +18,7 @@ import { readdirSync, readFileSync, existsSync, writeFileSync, mkdirSync } from 
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildCatalogText } from './lib-catalog.mjs';
-import { isAppDir, findE2ESpecs, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile } from './consistency-rules.mjs';
+import { isAppDir, findE2ESpecs, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, missingEnvKeys, findAllMarkdownFiles } from './consistency-rules.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -69,6 +69,8 @@ function main() {
     if (!checks.envExample) errors.push(`[${app}] server 缺少 .env.example`);
     if (!checks.clientTest) errors.push(`[${app}] client/package.json 未声明 test 脚本（无法回归验证）`);
     if (checks.clientTest && !checks.clientTestFile) errors.push(`[${app}] client 声明了 test 脚本却没有单元测试用例文件（空心安全网）`);
+    const missingKeys = missingEnvKeys(ROOT, app);
+    if (missingKeys.length) errors.push(`[${app}] server/.env.example 缺少必需配置项: ${missingKeys.join(', ')}`);
     if (!checks.ciMatrix) warnings.push(`[${app}] e2e.yml CI 矩阵未登记`);
     if (!checks.playwrightApps) warnings.push(`[${app}] playwright.config.ts APPS 未登记`);
     perApp.push({ app, ...checks });
@@ -82,14 +84,14 @@ function main() {
     if (!appSet.has(name)) errors.push(`[ghost] e2e.yml CI 矩阵登记了不存在的 App "${name}"`);
   }
 
-  // 文档内部链接腐化检测：README/CONTRIBUTING/APP_CATALOG 的本地相对链接必须指向真实文件
-  const docFiles = ['README.md', 'CONTRIBUTING.md', 'docs/APP_CATALOG.md'];
-  for (const rel of docFiles) {
-    const text = readText(rel);
+  // 文档内部链接腐化检测：递归扫描仓库内所有 Markdown，本地相对链接必须指向真实文件
+  const allMd = findAllMarkdownFiles(ROOT);
+  for (const abs of allMd) {
+    const text = readText(abs);
     if (!text) continue;
-    const broken = findBrokenDocLinks(text, dirname(join(ROOT, rel)));
+    const broken = findBrokenDocLinks(text, dirname(abs));
     for (const b of broken) {
-      errors.push(`[${rel}] 内部链接指向不存在的文件: ${b}`);
+      errors.push(`[${abs}] 内部链接指向不存在的文件: ${b}`);
     }
   }
 

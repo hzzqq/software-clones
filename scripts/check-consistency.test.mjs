@@ -11,7 +11,7 @@
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { findE2ESpecs, isAppDir, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, findClientTestFiles } from './consistency-rules.mjs';
+import { findE2ESpecs, isAppDir, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, findClientTestFiles, missingEnvKeys, findAllMarkdownFiles } from './consistency-rules.mjs';
 
 let passed = 0;
 let failed = 0;
@@ -127,6 +127,28 @@ assert('findBrokenDocLinks 忽略外链与锚点', findBrokenDocLinks(docExterna
 
 // 清理临时沙盒
 rmSync(sandbox, { recursive: true, force: true });
+
+// missingEnvKeys：server/.env.example 必须含 PORT / CORS_ORIGIN
+mkdirSync(join(sandbox, 'envapp', 'server'), { recursive: true });
+writeFileSync(join(sandbox, 'envapp', 'server', '.env.example'), 'PORT=4100\nCORS_ORIGIN=http://localhost:5173\nDB_PATH=./data/app.db\n');
+assert('missingEnvKeys 齐全返回 []', missingEnvKeys(sandbox, 'envapp').length === 0);
+// 缺 CORS_ORIGIN
+writeFileSync(join(sandbox, 'envapp', 'server', '.env.example'), 'PORT=4100\n');
+assert('missingEnvKeys 缺键返回缺失项', missingEnvKeys(sandbox, 'envapp').includes('CORS_ORIGIN'));
+// 文件不存在视为缺全部
+assert('missingEnvKeys 缺失文件返回全部', missingEnvKeys(sandbox, 'nope').length === 2);
+
+// findAllMarkdownFiles：递归收集所有 .md（忽略 .git / node_modules）
+mkdirSync(join(sandbox, 'docs'), { recursive: true });
+mkdirSync(join(sandbox, '.git'), { recursive: true });
+mkdirSync(join(sandbox, 'node_modules'), { recursive: true });
+writeFileSync(join(sandbox, 'README.md'), '# hi');
+writeFileSync(join(sandbox, 'docs', 'guide.md'), '# g');
+writeFileSync(join(sandbox, '.git', 'x.md'), '# ignore');
+writeFileSync(join(sandbox, 'node_modules', 'y.md'), '# ignore');
+const mdFiles = findAllMarkdownFiles(sandbox);
+assert('findAllMarkdownFiles 收集 2 个 .md', mdFiles.length === 2);
+assert('findAllMarkdownFiles 忽略 .git/node_modules', !mdFiles.some((f) => f.includes('.git') || f.includes('node_modules')));
 
 console.log(`\n通过: ${passed}  失败: ${failed}`);
 if (failed > 0) {

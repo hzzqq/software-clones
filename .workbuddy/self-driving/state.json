@@ -1,5 +1,5 @@
 {
-  "cycle": 178,
+  "cycle": 179,
   "max_cycles": 200,
   "phase": "polish",
   "paused": false,
@@ -2267,11 +2267,26 @@
       "result": "checker 0 错; 单元测试 22/22 通过; 校验器捕获并修复了 CONTRIBUTING 字符串回归",
       "score": 78,
       "ts": "2026-07-25T11:40:00+0800"
+    },
+    {
+      "cycle": 179,
+      "task": "add_hasClientTestFile_gate",
+      "app": "tooling",
+      "new_requirement": "hasClientTestFile 规则：client 声明 test 脚本必须真正含测试用例文件，杜绝空心回归网",
+      "implicit_fix": "校验报告 perApp 此前只展示 test 脚本维度，未呈现真实用例文件维度，已补 cases 维度",
+      "files": [
+        "scripts/consistency-rules.mjs",
+        "scripts/check-consistency.mjs",
+        "scripts/check-consistency.test.mjs"
+      ],
+      "verify": "checker 0 错；单元测试 27/27 通过",
+      "score": 82,
+      "ts": "2026-07-25T14:59:30+0800"
     }
   ],
-  "last_task_id": "ci_run_rules_tests_and_docs",
+  "last_task_id": "add_hasClientTestFile_gate",
   "repeat_count": 0,
-  "last_score": 78,
+  "last_score": 82,
   "coverage": {
     "B1": {
       "it-tools": "optimized",

@@ -161,3 +161,47 @@ export function findClientTestFiles(root, app) {
 export function hasClientTestFile(root, app) {
   return findClientTestFiles(root, app).length > 0;
 }
+
+/**
+ * 校验某 App 的 server/.env.example 是否包含运行所必需的关键配置项。
+ * 缺失 PORT / CORS_ORIGIN 会导致后端/跨域在真实或 CI 环境无法启动，属于「能 clone 但不能跑」的隐性缺口。
+ * @param {string[]} requiredKeys 必须存在的键（形如 `PORT`）
+ * @returns {string[]} 缺失的键（空数组表示齐全）
+ */
+export function missingEnvKeys(root, app, requiredKeys = ['PORT', 'CORS_ORIGIN']) {
+  const p = join(root, app, 'server', '.env.example');
+  if (!existsSync(p)) return [...requiredKeys];
+  let text = '';
+  try {
+    text = readFileSync(p, 'utf8');
+  } catch {
+    return [...requiredKeys];
+  }
+  const missing = [];
+  for (const key of requiredKeys) {
+    const re = new RegExp(`^\\s*${key}\\s*=`, 'm');
+    if (!re.test(text)) missing.push(key);
+  }
+  return missing;
+}
+
+/** 递归收集仓库内所有 Markdown 文档（用于统一做链接腐化检测，避免遗漏未登记文档）。 */
+export function findAllMarkdownFiles(root) {
+  const out = [];
+  let entries;
+  try {
+    entries = readdirSync(root, { withFileTypes: true });
+  } catch {
+    return out;
+  }
+  for (const e of entries) {
+    const full = join(root, e.name);
+    if (e.isDirectory()) {
+      if (e.name === 'node_modules' || e.name === '.git' || e.name.startsWith('.')) continue;
+      out.push(...findAllMarkdownFiles(full));
+    } else if (e.name.endsWith('.md')) {
+      out.push(full);
+    }
+  }
+  return out;
+}
