@@ -1,5 +1,5 @@
 {
-  "cycle": 189,
+  "cycle": 190,
   "max_cycles": 200,
   "phase": "polish",
   "paused": false,
@@ -2457,11 +2457,25 @@
       "verify": "checker 0 错；单元测试 64/64 通过；--fix 重新生成目录使校验通过",
       "score": 80,
       "ts": "2026-07-25T14:00:16.813Z"
+    },
+    {
+      "cycle": 190,
+      "task": "add_test_orchestrator",
+      "app": "tooling",
+      "new_requirement": "verify-apps.mjs 真实运行 12 个 App 的 client/server 单测并汇总（此前仅结构校验器检查测试文件存在，从不真正执行）",
+      "implicit_fix": "server 单测在沙箱内因 better-sqlite3 原生绑定未编译而无法加载，归类为 env 跳过而非误报失败；vitest 经管道输出含 ANSI 码导致汇总解析失败，已去码",
+      "files": [
+        "scripts/verify-apps.mjs",
+        "package.json"
+      ],
+      "verify": "verify-apps kanban → client 53 passed, server env-skipped; exit 0",
+      "score": 86,
+      "ts": "2026-07-25T17:25:56.902Z"
     }
   ],
-  "last_task_id": "checker_fix_mode",
+  "last_task_id": "add_test_orchestrator",
   "repeat_count": 0,
-  "last_score": 80,
+  "last_score": 86,
   "coverage": {
     "B1": {
       "it-tools": "optimized",
@@ -2503,7 +2517,8 @@
       "package.json",
       ".editorconfig",
       ".gitignore",
-      "scripts/lib-catalog.mjs"
+      "scripts/lib-catalog.mjs",
+      "scripts/verify-apps.mjs"
     ],
     "docs": [
       "README.md",
