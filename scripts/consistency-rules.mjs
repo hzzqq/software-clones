@@ -253,6 +253,19 @@ export function findDuplicateNames(apps) {
 }
 
 /**
+ * 找出 APPS 中出现次数 >1 的 dir（两个 App 共享同一 client 目录会让 E2E webServer/端口绑定冲突）。
+ * @returns {string[]} 重复的 dir
+ */
+export function findDuplicateDirs(apps) {
+  const seen = new Map();
+  for (const a of apps) {
+    if (!a.dir) continue;
+    seen.set(a.dir, (seen.get(a.dir) || 0) + 1);
+  }
+  return [...seen.entries()].filter(([, c]) => c > 1).map(([d]) => d);
+}
+
+/**
  * 校验 playwright.config.ts 的 APPS 中登记的每个 `dir` 是否真实存在（相对仓库根）。
  * `dir` 指向不存在的目录意味着 E2E 的 `webServer` 命令 `npm --prefix <dir> run dev`
  * 会直接失败——属于「配置登记但目录被改名/移动/删除」的隐性漂移，此前无任何闸门拦截。

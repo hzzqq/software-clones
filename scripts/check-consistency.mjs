@@ -18,7 +18,7 @@ import { readdirSync, readFileSync, existsSync, writeFileSync, mkdirSync } from 
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildCatalogText } from './lib-catalog.mjs';
-import { isAppDir, findE2ESpecs, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, missingEnvKeys, findAllMarkdownFiles, parseApps, findDuplicatePorts, findDuplicateNames, checkBuildConfig, missingSharedTemplateFiles, missingAppDirs, findUnregisteredApps, invalidEnvValues, hasClientIndexHtml, hasServerEntry } from './consistency-rules.mjs';
+import { isAppDir, findE2ESpecs, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, missingEnvKeys, findAllMarkdownFiles, parseApps, findDuplicatePorts, findDuplicateNames, findDuplicateDirs, checkBuildConfig, missingSharedTemplateFiles, missingAppDirs, findUnregisteredApps, invalidEnvValues, hasClientIndexHtml, hasServerEntry } from './consistency-rules.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -102,6 +102,8 @@ function main() {
   const dupNames = findDuplicateNames(pwApps);
   if (dupPorts.length) errors.push(`[playwright] APPS 存在重复 E2E 端口: ${dupPorts.join(', ')}`);
   if (dupNames.length) errors.push(`[playwright] APPS 存在重复应用名: ${dupNames.join(', ')}`);
+  const dupDirs = findDuplicateDirs(pwApps);
+  if (dupDirs.length) errors.push(`[playwright] APPS 存在重复 client 目录(dir): ${dupDirs.join(', ')}`);
 
   // 配置内部一致性：APPS 登记的 dir 必须真实存在，否则 E2E webServer 命令会失败
   const missingDirs = missingAppDirs(ROOT, pwApps);
@@ -146,32 +148,23 @@ function main() {
     errors.push('CONTRIBUTING.md 未指引贡献者运行 scripts/check-consistency.mjs');
   }
 
-  // 打印报告
-  console.log(`\n软件克隆单体仓库一致性校验 — 共发现 ${apps.length} 个全栈 App\n`);
-  for (const row of perApp) {
-    const ok = row.readme && row.e2eDir && row.e2eSpec && row.envExample && row.clientTest && row.clientTestFile && row.build && row.clientEntry && row.serverEntry;
-    const tag = ok ? 'OK ' : 'FAIL';
-    console.log(
-      `  [${tag}] ${row.app.padEnd(12)} readme:${row.readme ? '✓' : '✗'} ` +
-        `e2e:${row.e2eDir ? '✓' : '✗'} spec:${row.e2eSpec ? '✓' : '✗'} ` +
-        `env:${row.envExample ? '✓' : '✗'} test:${row.clientTest ? '✓' : '✗'} ` +
-        `cases:${row.clientTestFile ? '✓' : '✗'} build:${row.build ? '✓' : '✗'} ` +
-        `cidx:${row.clientEntry ? '✓' : '✗'} sidx:${row.serverEntry ? '✓' : '✗'} ` +
-        `ci:${row.ciMatrix ? '✓' : '✗'} pw:${row.playwrightApps ? '✓' : '✗'}`
-    );
-  }
-  console.log(
-    `  [${catalogFresh ? 'OK ' : 'FAIL'}] docs/APP_CATALOG.md 新鲜度: ${catalogFresh ? '✓' : '✗'}`
-  );
-  console.log(
-    `  [${missingShared.length === 0 ? 'OK ' : 'FAIL'}] shared 脚手架模板完整性: ${missingShared.length === 0 ? '✓' : '✗'}`
-  );
+  // 已执行的校验闸门清单（可观测性：JSON 报告里记录本次到底验了哪些不变量）
+  const RULES = [
+    'readme-mention', 'e2e-dir', 'e2e-spec', 'env-example', 'env-keys',
+    'env-values', 'client-test-script', 'client-test-file', 'build-config',
+    'client-entry', 'server-entry', 'apps-dir', 'no-dup-port', 'no-dup-name',
+    'no-dup-dir', 'ghost-reg', 'reverse-ghost', 'shared-template', 'doc-links',
+    'catalog-fresh', 'contributing',
+  ];
+  const jsonMode = process.argv.includes('--json');
 
   const summary = {
     ts: new Date().toISOString(),
     apps: apps.length,
     errors: errors.length,
     warnings: warnings.length,
+    rules: RULES,
+    rulesRun: RULES.length,
     perApp,
   };
   try {
@@ -182,10 +175,36 @@ function main() {
     /* 报告写入失败不应影响校验结果 */
   }
 
-  console.log(`\n错误: ${errors.length}  警告: ${warnings.length}`);
+  if (!jsonMode) {
+    console.log(`\n软件克隆单体仓库一致性校验 — 共发现 ${apps.length} 个全栈 App\n`);
+    for (const row of perApp) {
+      const ok = row.readme && row.e2eDir && row.e2eSpec && row.envExample && row.clientTest && row.clientTestFile && row.build && row.clientEntry && row.serverEntry;
+      const tag = ok ? 'OK ' : 'FAIL';
+      console.log(
+        `  [${tag}] ${row.app.padEnd(12)} readme:${row.readme ? '✓' : '✗'} ` +
+          `e2e:${row.e2eDir ? '✓' : '✗'} spec:${row.e2eSpec ? '✓' : '✗'} ` +
+          `env:${row.envExample ? '✓' : '✗'} test:${row.clientTest ? '✓' : '✗'} ` +
+          `cases:${row.clientTestFile ? '✓' : '✗'} build:${row.build ? '✓' : '✗'} ` +
+          `cidx:${row.clientEntry ? '✓' : '✗'} sidx:${row.serverEntry ? '✓' : '✗'} ` +
+          `ci:${row.ciMatrix ? '✓' : '✗'} pw:${row.playwrightApps ? '✓' : '✗'}`
+      );
+    }
+    console.log(
+      `  [${catalogFresh ? 'OK ' : 'FAIL'}] docs/APP_CATALOG.md 新鲜度: ${catalogFresh ? '✓' : '✗'}`
+    );
+    console.log(
+      `  [${missingShared.length === 0 ? 'OK ' : 'FAIL'}] shared 脚手架模板完整性: ${missingShared.length === 0 ? '✓' : '✗'}`
+    );
+  }
+
+  if (!jsonMode) console.log(`\n错误: ${errors.length}  警告: ${warnings.length}`);
   if (errors.length) {
-    console.log('\n需修复项:');
-    for (const e of errors) console.log('  - ' + e);
+    if (jsonMode) {
+      console.log(JSON.stringify(summary, null, 2));
+    } else {
+      console.log('\n需修复项:');
+      for (const e of errors) console.log('  - ' + e);
+    }
     console.log('\n校验未通过 (exit 1)');
     process.exit(1);
   }
@@ -193,7 +212,8 @@ function main() {
     console.log('\n告警项:');
     for (const w of warnings) console.log('  - ' + w);
   }
-  console.log('\n✅ 一致性校验通过 (exit 0)');
+  if (jsonMode) console.log(JSON.stringify(summary, null, 2));
+  else console.log('\n✅ 一致性校验通过 (exit 0)');
 }
 
 main();

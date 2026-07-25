@@ -1,5 +1,5 @@
 {
-  "cycle": 185,
+  "cycle": 186,
   "max_cycles": 200,
   "phase": "polish",
   "paused": false,
@@ -2375,11 +2375,26 @@
       "verify": "checker 0 错；单元测试 54/54 通过",
       "score": 80,
       "ts": "2026-07-25T16:15:00+0800"
+    },
+    {
+      "cycle": 186,
+      "task": "dup_dir_and_json_observability",
+      "app": "tooling",
+      "new_requirement": "findDuplicateDirs 规则（APPS dir 唯一）+ --json 输出模式（含 rules 清单，可观测性）",
+      "implicit_fix": "APPS 的 dir 重复会让两个 App 共享同一 client 目录导致 E2E webServer/端口冲突却无闸门拦截；校验器此前只有文本报告，CI/脚本难以机器消费，新增 --json 输出结构化 summary(rules/rulesRun)",
+      "files": [
+        "scripts/consistency-rules.mjs",
+        "scripts/check-consistency.mjs",
+        "scripts/check-consistency.test.mjs"
+      ],
+      "verify": "checker 0 错；单元测试 57/57 通过；--json 输出合法 JSON",
+      "score": 82,
+      "ts": "2026-07-25T16:30:00+0800"
     }
   ],
-  "last_task_id": "bootability_gates",
+  "last_task_id": "dup_dir_and_json_observability",
   "repeat_count": 0,
-  "last_score": 80,
+  "last_score": 82,
   "coverage": {
     "B1": {
       "it-tools": "optimized",

@@ -9,9 +9,13 @@
  * 退出码：0 通过，1 失败（便于接到 CI）。
  */
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, resolve, dirname } from 'node:path';
 import { tmpdir } from 'node:os';
-import { findE2ESpecs, isAppDir, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, findClientTestFiles, missingEnvKeys, findAllMarkdownFiles, parseApps, findDuplicatePorts, findDuplicateNames, checkBuildConfig, missingSharedTemplateFiles, missingAppDirs, findUnregisteredApps, invalidEnvValues, hasClientIndexHtml, hasServerEntry } from './consistency-rules.mjs';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+import { findE2ESpecs, isAppDir, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, findClientTestFiles, missingEnvKeys, findAllMarkdownFiles, parseApps, findDuplicatePorts, findDuplicateNames, findDuplicateDirs, checkBuildConfig, missingSharedTemplateFiles, missingAppDirs, findUnregisteredApps, invalidEnvValues, hasClientIndexHtml, hasServerEntry } from './consistency-rules.mjs';
+
+const TEST_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 let passed = 0;
 let failed = 0;
@@ -161,6 +165,23 @@ mkdirSync(join(sandbox, 'bootb', 'server', 'src'), { recursive: true });
 assert('hasClientIndexHtml 缺失返回 false', hasClientIndexHtml(sandbox, 'bootb') === false);
 assert('hasServerEntry 缺失返回 false', hasServerEntry(sandbox, 'bootb') === false);
 assert('hasClientIndexHtml 缺失目录返回 false', hasClientIndexHtml(sandbox, 'nope') === false);
+
+// findDuplicateDirs：APPS 的 dir 不可重复（两个 App 共享 client 目录会让 E2E 冲突）
+const dupApps = [
+  { name: 'a', dir: 'a/client', port: 1 },
+  { name: 'b', dir: 'a/client', port: 2 },
+];
+assert('findDuplicateDirs 命中重复 dir', findDuplicateDirs(dupApps).includes('a/client'));
+assert('findDuplicateDirs 无重复返回 []', findDuplicateDirs([{ name: 'a', dir: 'a/client' }, { name: 'b', dir: 'b/client' }]).length === 0);
+
+// --json 模式：输出合法 JSON 且含 rules 清单（可观测性，便于 CI 机器消费）
+const jsonRun = spawnSync('node', ['scripts/check-consistency.mjs', '--json'], { cwd: TEST_ROOT, encoding: 'utf8' });
+let jsonParsed = null, jsonOk = false;
+try {
+  jsonParsed = JSON.parse(jsonRun.stdout);
+  jsonOk = Array.isArray(jsonParsed.rules) && jsonParsed.rulesRun === jsonParsed.rules.length && jsonParsed.apps > 0;
+} catch { /* parse failure → jsonOk 保持 false */ }
+assert('--json 输出合法 JSON 且含 rules 清单', jsonOk);
 
 // findAllMarkdownFiles：递归收集所有 .md（忽略 .git / node_modules）
 mkdirSync(join(sandbox, 'docs'), { recursive: true });
