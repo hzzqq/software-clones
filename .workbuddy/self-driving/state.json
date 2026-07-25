@@ -1,5 +1,5 @@
 {
-  "cycle": 190,
+  "cycle": 192,
   "max_cycles": 200,
   "phase": "polish",
   "paused": false,
@@ -2471,11 +2471,25 @@
       "verify": "verify-apps kanban → client 53 passed, server env-skipped; exit 0",
       "score": 86,
       "ts": "2026-07-25T17:25:56.902Z"
+    },
+    {
+      "cycle": 192,
+      "task": "ci_unit_test_gate",
+      "app": "tooling",
+      "new_requirement": "CI 新增 unit-tests 作业，借助 verify-apps.mjs 真正运行每个 App 的 client 单测作为持续回归红线（此前 CI 从不执行 App 单测）",
+      "implicit_fix": "verify-apps.mjs 增加 --scope client|server|all 选择器，使 CI 可稳定只门禁已本地基线验证全绿的 client 单测（server 依赖原生绑定，沙箱不可验证，故不在 CI 强制）",
+      "files": [
+        ".github/workflows/e2e.yml",
+        "scripts/verify-apps.mjs"
+      ],
+      "verify": "client 基准 636 passed/0 failed；consistency 0 错",
+      "score": 85,
+      "ts": "2026-07-25T17:30:03.068Z"
     }
   ],
-  "last_task_id": "add_test_orchestrator",
+  "last_task_id": "ci_unit_test_gate",
   "repeat_count": 0,
-  "last_score": 86,
+  "last_score": 85,
   "coverage": {
     "B1": {
       "it-tools": "optimized",

@@ -7,10 +7,10 @@
  * 让 12 个 App 的 client / server 单测可被一次性跑通并汇总。
  *
  * 用法：
- *   node scripts/verify-apps.mjs            # 运行全部 12 个 App
- *   node scripts/verify-apps.mjs kanban    # 只运行某个 App
- *   node scripts/verify-apps.mjs --json    # 机器可读输出
- *   node scripts/verify-apps.mjs kanban --json
+ *   node scripts/verify-apps.mjs                  # 运行全部 12 个 App（client + server）
+ *   node scripts/verify-apps.mjs kanban          # 只运行某个 App
+ *   node scripts/verify-apps.mjs --scope client  # 仅运行所有 App 的 client 单测
+ *   node scripts/verify-apps.mjs kanban --scope server --json
  *
  * 退出码：任一 suite 失败则非 0；全部通过（或仅 skipped）则 0。
  */
@@ -81,7 +81,10 @@ function runSuite(appName, scope) {
 function main() {
   const args = process.argv.slice(2);
   const asJson = args.includes('--json');
-  const names = args.filter((a) => !a.startsWith('--'));
+  const scopeIdx = args.indexOf('--scope');
+  const scopeArg = scopeIdx >= 0 ? args[scopeIdx + 1] : 'all';
+  const scopeFilter = scopeArg === 'client' || scopeArg === 'server' ? scopeArg : 'all';
+  const names = args.filter((a) => !a.startsWith('--') && a !== 'client' && a !== 'server');
 
   const apps = parseApps();
   const targets = names.length ? apps.filter((a) => a.name === names[0] || a.dir === names[0]) : apps;
@@ -96,7 +99,7 @@ function main() {
   let totalPassedTests = 0;
 
   for (const app of targets) {
-    const scopes = ['client', 'server'];
+    const scopes = scopeFilter === 'all' ? ['client', 'server'] : [scopeFilter];
     const appResult = { app: app.name, suites: [] };
     for (const scope of scopes) {
       const r = runSuite(app.name, scope);

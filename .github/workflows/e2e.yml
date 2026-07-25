@@ -56,6 +56,40 @@ jobs:
           path: playwright-report/
           retention-days: 7
 
+  # 真实单测回归闸门：此前 CI 从不在 PR 阶段执行 12 个 App 的单元测试（仅结构校验器检查
+  # 测试文件“是否存在”）。本作业借助 scripts/verify-apps.mjs 真正运行每个 App 的 client
+  # 单测并汇总，把 636 个用例变成持续红线。server 单测依赖 better-sqlite3 原生绑定，需在
+  # 安装依赖后运行，此处仅门禁 client（已在本地基线验证全绿）。
+  unit-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app:
+          - markdown
+          - apiclient
+          - tvtime
+          - excalidraw
+          - photopea
+          - it-tools
+          - kanban
+          - glance
+          - kener
+          - memos
+          - lofi
+          - nonio
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ${{ matrix.app }}/client/package-lock.json
+      - name: Install app client deps
+        run: npm --prefix ${{ matrix.app }}/client ci
+      - name: Run unit tests for ${{ matrix.app }}
+        run: node scripts/verify-apps.mjs ${{ matrix.app }} --scope client
+
   # 文档/结构一致性闸门：不依赖任何 app 的 npm install，仅用 Node 内置模块运行校验器，
   # 在 PR 阶段即可拦截「新增 App 却忘了写文档 / 漏登 CI 矩阵」之类的漂移。
   consistency:
