@@ -8,18 +8,22 @@
 无需 `npm install` 任何 App 依赖即可运行仓库级校验（纯 Node 内置模块）：
 
 ```bash
-node scripts/check-consistency.mjs   # 或 npm run verify
+npm run verify          # 运行 scripts/check-consistency.mjs 校验器 + 规则单元测试
+npm run test:rules      # 仅运行 scripts/check-consistency.test.mjs（规则纯函数单测）
+node scripts/check-consistency.mjs   # 直接运行一致性校验器
 ```
 
 该命令会校验：
 
 - 每个全栈 App 都在 `README.md` 中被提及（文档漂移防护）；
-- 每个 App 在 `e2e/<app>/` 下拥有冒烟目录；
+- 每个 App 在 `e2e/<app>/` 下拥有冒烟目录，且至少包含一份 `*.spec.ts` 冒烟用例；
 - 每个 App 的 `server` 存在 `.env.example`；
-- 每个 App 都登记在 `.github/workflows/e2e.yml` 的 CI 矩阵与 `playwright.config.ts` 的 `APPS`；
+- 每个 App 的 `client/package.json` 都声明了 `test` 脚本（可被 CI 回归验证）；
+- 每个 App 都登记在 `.github/workflows/e2e.yml` 的 CI 矩阵与 `playwright.config.ts` 的 `APPS`（精确匹配，禁止幽灵注册）；
+- `README.md` / `CONTRIBUTING.md` / `docs/APP_CATALOG.md` 的内部相对链接均有效（链接腐化防护）；
 - `docs/APP_CATALOG.md` 与事实来源严格一致（新鲜度）。
 
-CI 的 `consistency` 作业会自动运行上述校验，PR 阶段即可拦截漂移。
+CI 的 `consistency` 作业会自动运行 `npm run verify`，PR 阶段即可拦截漂移与规则回归。
 
 ## 重新生成 App 目录
 
@@ -34,11 +38,12 @@ node scripts/gen-catalog.mjs   # 或 npm run catalog
 
 1. 创建 `app/<name>/client` 与 `app/<name>/server`，各自带 `package.json`。
 2. `server` 下提供 `.env.example`（含 `PORT` / `CORS_ORIGIN` / `DB_PATH`）。
-3. 在 `playwright.config.ts` 的 `APPS` 增加一项（含唯一 `port`）。
-4. 在 `.github/workflows/e2e.yml` 的 `matrix.app` 增加该 App。
-5. 在 `e2e/<name>/` 放置至少一个 `*.spec.ts` 冒烟用例（断言应用成功挂载）。
-6. 在 `README.md` 的「全部克隆 App」列表与 `docs/APP_CATALOG.md`（重新生成）补充该 App。
-7. 运行 `node scripts/check-consistency.mjs` 确认全绿后再提交。
+3. `client/package.json` 的 `scripts` 至少声明一个 `test` 命令（如 `vitest run`）。
+4. 在 `playwright.config.ts` 的 `APPS` 增加一项（含唯一 `port`）。
+5. 在 `.github/workflows/e2e.yml` 的 `matrix.app` 增加该 App。
+6. 在 `e2e/<name>/` 放置至少一个 `*.spec.ts` 冒烟用例（断言应用成功挂载）。
+7. 在 `README.md` 的「全部克隆 App」列表与 `docs/APP_CATALOG.md`（重新生成）补充该 App。
+8. 运行 `npm run verify` 确认全绿后再提交。
 
 ## 代码约定
 
