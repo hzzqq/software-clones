@@ -13,7 +13,7 @@ import { join, resolve, dirname } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { findE2ESpecs, isAppDir, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, findClientTestFiles, missingEnvKeys, findAllMarkdownFiles, parseApps, findDuplicatePorts, findDuplicateNames, findDuplicateDirs, checkBuildConfig, missingSharedTemplateFiles, missingAppDirs, findUnregisteredApps, invalidEnvValues, hasClientIndexHtml, hasServerEntry, errorBoundaryWired, hasAppReadme } from './consistency-rules.mjs';
+import { findE2ESpecs, isAppDir, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, findClientTestFiles, missingEnvKeys, findAllMarkdownFiles, parseApps, findDuplicatePorts, findDuplicateNames, findDuplicateDirs, checkBuildConfig, missingSharedTemplateFiles, missingAppDirs, findUnregisteredApps, invalidEnvValues, hasClientIndexHtml, hasServerEntry, errorBoundaryWired, hasAppReadme, ciRunsUnitTests } from './consistency-rules.mjs';
 
 const TEST_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -267,6 +267,22 @@ assert('missingAppDirs 忽略无 dir 的条目', missingAppDirs(sandbox, [{ name
 // findUnregisteredApps：真实 App 必须登记在注册清单（反向幽灵，目录 ↔ 注册 双向一致）
 assert('findUnregisteredApps 命中未注册', findUnregisteredApps(['a', 'b', 'c'], ['a', 'b']).includes('c'));
 assert('findUnregisteredApps 全部已注册返回 []', findUnregisteredApps(['a', 'b'], ['a', 'b', 'x']).length === 0);
+
+// ciRunsUnitTests：CI 必须真正执行 App 单测（防止 unit-tests 闸门被悄悄删除）
+const ghDir = join(sandbox, '.github', 'workflows');
+mkdirSync(ghDir, { recursive: true });
+assert('ciRunsUnitTests 缺失 e2e.yml 报错', ciRunsUnitTests(sandbox).length === 1 && /缺失/.test(ciRunsUnitTests(sandbox)[0]));
+// 无 unit-tests 作业、未引用编排器 → 两处问题
+writeFileSync(join(ghDir, 'e2e.yml'), 'jobs:\n  e2e:\n    run: echo hi\n');
+const noGate = ciRunsUnitTests(sandbox);
+assert('ciRunsUnitTests 缺失 unit-tests 作业报错', noGate.some((p) => /unit-tests/.test(p)));
+assert('ciRunsUnitTests 未引用 verify-apps 报错', noGate.some((p) => /verify-apps/.test(p)));
+// 含 unit-tests 作业且引用 verify-apps.mjs → 达标
+writeFileSync(
+  join(ghDir, 'e2e.yml'),
+  'jobs:\n  unit-tests:\n    run: node scripts/verify-apps.mjs\n  e2e:\n    run: echo hi\n'
+);
+assert('ciRunsUnitTests 闸门齐全时返回 []', ciRunsUnitTests(sandbox).length === 0);
 
 console.log(`\n通过: ${passed}  失败: ${failed}`);
 if (failed > 0) {

@@ -411,3 +411,29 @@ export function missingSharedTemplateFiles(root) {
   }
   return out;
 }
+
+/**
+ * 校验 CI 是否真正执行了 App 单测（防止「unit-tests 闸门被悄悄删掉」的隐性漂移）。
+ * 仓库此前只有结构一致性校验，CI 从不执行 12 个 App 的单测，真实回归会被放过。
+ * 本规则要求 e2e.yml 同时存在 `unit-tests:` 作业且引用真实单测编排器 `verify-apps.mjs`，
+ * 一旦该闸门被误删或改坏，校验器立即报错，避免「以为有门禁、其实没有」的假安全感。
+ * @returns {string[]} 问题列表（空数组表示达标）
+ */
+export function ciRunsUnitTests(root) {
+  const p = join(root, '.github', 'workflows', 'e2e.yml');
+  if (!existsSync(p)) return ['.github/workflows/e2e.yml 缺失'];
+  let text = '';
+  try {
+    text = readFileSync(p, 'utf8');
+  } catch {
+    return ['.github/workflows/e2e.yml 无法读取'];
+  }
+  const problems = [];
+  if (!/^\s{2}unit-tests\s*:/m.test(text)) {
+    problems.push('e2e.yml 缺少 unit-tests 作业（未门禁 App 单测）');
+  }
+  if (!/verify-apps\.mjs/.test(text)) {
+    problems.push('e2e.yml 未引用 scripts/verify-apps.mjs 单测编排器');
+  }
+  return problems;
+}

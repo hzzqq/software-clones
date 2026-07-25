@@ -18,7 +18,7 @@ import { readdirSync, readFileSync, existsSync, writeFileSync, mkdirSync } from 
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildCatalogText } from './lib-catalog.mjs';
-import { isAppDir, findE2ESpecs, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, missingEnvKeys, findAllMarkdownFiles, parseApps, findDuplicatePorts, findDuplicateNames, findDuplicateDirs, checkBuildConfig, missingSharedTemplateFiles, missingAppDirs, findUnregisteredApps, invalidEnvValues, hasClientIndexHtml, hasServerEntry, errorBoundaryWired, hasAppReadme } from './consistency-rules.mjs';
+import { isAppDir, findE2ESpecs, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, missingEnvKeys, findAllMarkdownFiles, parseApps, findDuplicatePorts, findDuplicateNames, findDuplicateDirs, checkBuildConfig, missingSharedTemplateFiles, missingAppDirs, findUnregisteredApps, invalidEnvValues, hasClientIndexHtml, hasServerEntry, errorBoundaryWired, hasAppReadme, ciRunsUnitTests } from './consistency-rules.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -50,6 +50,7 @@ function main() {
   const errors = [];
   const warnings = [];
   const perApp = [];
+  const jsonMode = process.argv.includes('--json'); // 提前声明，避免 --fix 分支在 TDZ 中引用
 
   if (appFilter && !allApps.includes(appFilter)) {
     errors.push(`[--app] 未知 App "${appFilter}"（可用： ${allApps.join(', ')}）`);
@@ -130,6 +131,11 @@ function main() {
     errors.push(`[shared] 脚手架模板关键文件缺失: ${f}`);
   }
 
+  // CI 必须真正执行 App 单测：防止 unit-tests 闸门被悄悄删除后出现「以为有门禁、其实没有」的假安全感
+  for (const pr of ciRunsUnitTests(ROOT)) {
+    errors.push(`[ci] ${pr}`);
+  }
+
   // 文档内部链接腐化检测：递归扫描仓库内所有 Markdown，本地相对链接必须指向真实文件
   const allMd = findAllMarkdownFiles(ROOT);
   for (const abs of allMd) {
@@ -177,9 +183,8 @@ function main() {
     'env-values', 'client-test-script', 'client-test-file', 'build-config',
     'client-entry', 'server-entry', 'error-boundary', 'app-readme', 'apps-dir', 'no-dup-port', 'no-dup-name',
     'no-dup-dir', 'ghost-reg', 'reverse-ghost', 'shared-template', 'doc-links',
-    'catalog-fresh', 'contributing',
+    'catalog-fresh', 'contributing', 'ci-runs-unit-tests',
   ];
-  const jsonMode = process.argv.includes('--json');
 
   const summary = {
     ts: new Date().toISOString(),

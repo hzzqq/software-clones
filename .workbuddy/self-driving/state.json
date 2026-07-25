@@ -1,5 +1,5 @@
 {
-  "cycle": 192,
+  "cycle": 193,
   "max_cycles": 200,
   "phase": "polish",
   "paused": false,
@@ -2485,11 +2485,26 @@
       "verify": "client 基准 636 passed/0 failed；consistency 0 错",
       "score": 85,
       "ts": "2026-07-25T17:30:03.068Z"
+    },
+    {
+      "cycle": 193,
+      "task": "ci_unit_test_gate_guard",
+      "app": "tooling",
+      "new_requirement": "新增 ciRunsUnitTests 一致性规则，确保 e2e.yml 始终存在 unit-tests 作业且引用 verify-apps.mjs（防止单测闸门被悄悄删除的假安全感）",
+      "implicit_fix": "修复 check-consistency.mjs 的 TDZ 缺陷：jsonMode 在 --fix 分支(第156行)被引用却在更靠后的第182行才 const 声明，catalog 过期时 npm run fix 会抛 ReferenceError 崩溃",
+      "files": [
+        "scripts/consistency-rules.mjs",
+        "scripts/check-consistency.mjs",
+        "scripts/check-consistency.test.mjs"
+      ],
+      "verify": "checker 0 错；规则单测 70/70 通过",
+      "score": 82,
+      "ts": "2026-07-25T17:33:03.736Z"
     }
   ],
-  "last_task_id": "ci_unit_test_gate",
+  "last_task_id": "ci_unit_test_gate_guard",
   "repeat_count": 0,
-  "last_score": 85,
+  "last_score": 82,
   "coverage": {
     "B1": {
       "it-tools": "optimized",
