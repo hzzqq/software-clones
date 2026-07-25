@@ -13,6 +13,7 @@ npm run test:rules      # 仅运行 scripts/check-consistency.test.mjs（规则�
 npm run fix             # 自动修复可自愈项（当前：重新生成过期的 docs/APP_CATALOG.md）
 node scripts/verify-all.mjs   # 直接运行统一验收入口
 node scripts/check-consistency.mjs   # 单独运行一致性校验器本身
+node scripts/check-consistency.mjs --app it-tools   # 只校验某个 App（聚焦模式，快速反馈）
 node scripts/check-consistency.mjs --fix   # 校验并尝试自动修复
 ```
 

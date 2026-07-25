@@ -37,7 +37,12 @@ function readText(relPath) {
 }
 
 function main() {
-  const apps = listApps();
+  // --app <name>：聚焦模式，只校验指定 App（贡献者改一个 App 时快速反馈，不必扫描全部 12 个）
+  const appIdx = process.argv.indexOf('--app');
+  const appFilter = appIdx !== -1 ? process.argv[appIdx + 1] : null;
+  const allApps = listApps();
+  const apps = appFilter ? allApps.filter((a) => a === appFilter) : allApps;
+
   const readme = readText('README.md') ?? '';
   const e2eYml = readText('.github/workflows/e2e.yml') ?? '';
   const playwright = readText('playwright.config.ts') ?? '';
@@ -46,10 +51,14 @@ function main() {
   const warnings = [];
   const perApp = [];
 
+  if (appFilter && !allApps.includes(appFilter)) {
+    errors.push(`[--app] 未知 App "${appFilter}"（可用： ${allApps.join(', ')}）`);
+  }
+
   // 精确解析注册清单（替代脆弱的整文件 includes），用于双向一致性比对
   const registeredPw = parsePlaywrightApps(playwright);
   const registeredYml = parseYamlMatrixApps(e2eYml);
-  const appSet = new Set(apps);
+  const appSet = new Set(allApps); // 跨 App 一致性校验始终基于全量 App 列表（聚焦模式不应误伤其它 App）
 
   for (const app of apps) {
     const e2eSpecs = findE2ESpecs(ROOT, app);
@@ -95,7 +104,7 @@ function main() {
   }
 
   // 反向幽灵检测：真实存在的 App 必须登记在 APPS 与 CI 矩阵（目录 ↔ 注册 双向一致）
-  for (const name of apps) {
+  for (const name of allApps) {
     if (!registeredPw.includes(name)) errors.push(`[ghost] 真实 App "${name}" 未登记在 playwright.config.ts APPS`);
     if (!registeredYml.includes(name)) errors.push(`[ghost] 真实 App "${name}" 未登记在 e2e.yml CI 矩阵`);
   }

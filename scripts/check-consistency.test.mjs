@@ -200,6 +200,12 @@ try {
 } catch { /* parse failure → jsonOk 保持 false */ }
 assert('--json 输出合法 JSON 且含 rules 清单', jsonOk);
 
+// --app <name> 聚焦模式：只校验指定 App，未知 App 报错（贡献者快速反馈）
+const appRun = spawnSync('node', ['scripts/check-consistency.mjs', '--app', 'it-tools'], { cwd: TEST_ROOT, encoding: 'utf8' });
+assert('--app 校验存在的 App 通过', appRun.status === 0);
+const appBad = spawnSync('node', ['scripts/check-consistency.mjs', '--app', 'nosuchapp'], { cwd: TEST_ROOT, encoding: 'utf8' });
+assert('--app 未知 App 报错', appBad.status === 1);
+
 // --fix 模式：docs/APP_CATALOG.md 过期时自动重新生成，使校验通过（不改坏仓库）
 const catPath = join(TEST_ROOT, 'docs', 'APP_CATALOG.md');
 const catOrig = readFileSync(catPath, 'utf8');
