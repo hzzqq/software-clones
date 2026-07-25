@@ -10,7 +10,7 @@
  *   - isAppDir(root, name)              判定某顶层目录是否为全栈 App（client+server 均有 package.json）
  *   - findE2ESpecs(root, app)           列出 e2e/<app>/ 下所有 *.spec.ts（冒烟用例必须存在）
  */
-import { existsSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, statSync, readFileSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 
 /** 判定某顶层目录是否为「全栈 App」：同时含 client/package.json 与 server/package.json。 */
@@ -104,4 +104,20 @@ export function findBrokenDocLinks(docText, docDir) {
     if (!existsSync(resolve(docDir, target))) broken.push(m[1].trim());
   }
   return broken;
+}
+
+/**
+ * 判定某 App 的 client/package.json 是否声明了 `test` 脚本（应用必须是可验证的，否则 CI 无法回归）。
+ * @returns {boolean}
+ */
+export function hasClientTestScript(root, app) {
+  const p = join(root, app, 'client', 'package.json');
+  if (!existsSync(p)) return false;
+  try {
+    const pkg = JSON.parse(readFileSync(p, 'utf8'));
+    const test = (pkg.scripts || {}).test;
+    return typeof test === 'string' && test.trim().length > 0;
+  } catch {
+    return false;
+  }
 }

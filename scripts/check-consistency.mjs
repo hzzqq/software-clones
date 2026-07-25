@@ -18,7 +18,7 @@ import { readdirSync, readFileSync, existsSync, writeFileSync, mkdirSync } from 
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildCatalogText } from './lib-catalog.mjs';
-import { isAppDir, findE2ESpecs, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks } from './consistency-rules.mjs';
+import { isAppDir, findE2ESpecs, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript } from './consistency-rules.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -60,11 +60,13 @@ function main() {
       envExample: existsSync(join(ROOT, app, 'server', '.env.example')),
       ciMatrix: registeredYml.includes(app),
       playwrightApps: registeredPw.includes(app),
+      clientTest: hasClientTestScript(ROOT, app),
     };
     if (!checks.readme) errors.push(`[${app}] README.md 未提及该 App（文档漂移）`);
     if (!checks.e2eDir) errors.push(`[${app}] 缺少 e2e/${app}/ 冒烟目录`);
     if (!checks.e2eSpec) errors.push(`[${app}] e2e/${app}/ 下没有任何 *.spec.ts 冒烟用例`);
     if (!checks.envExample) errors.push(`[${app}] server 缺少 .env.example`);
+    if (!checks.clientTest) errors.push(`[${app}] client/package.json 未声明 test 脚本（无法回归验证）`);
     if (!checks.ciMatrix) warnings.push(`[${app}] e2e.yml CI 矩阵未登记`);
     if (!checks.playwrightApps) warnings.push(`[${app}] playwright.config.ts APPS 未登记`);
     perApp.push({ app, ...checks });
@@ -112,12 +114,12 @@ function main() {
   // 打印报告
   console.log(`\n软件克隆单体仓库一致性校验 — 共发现 ${apps.length} 个全栈 App\n`);
   for (const row of perApp) {
-    const ok = row.readme && row.e2eDir && row.e2eSpec && row.envExample;
+    const ok = row.readme && row.e2eDir && row.e2eSpec && row.envExample && row.clientTest;
     const tag = ok ? 'OK ' : 'FAIL';
     console.log(
       `  [${tag}] ${row.app.padEnd(12)} readme:${row.readme ? '✓' : '✗'} ` +
         `e2e:${row.e2eDir ? '✓' : '✗'} spec:${row.e2eSpec ? '✓' : '✗'} ` +
-        `env:${row.envExample ? '✓' : '✗'} ` +
+        `env:${row.envExample ? '✓' : '✗'} test:${row.clientTest ? '✓' : '✗'} ` +
         `ci:${row.ciMatrix ? '✓' : '✗'} pw:${row.playwrightApps ? '✓' : '✗'}`
     );
   }

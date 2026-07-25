@@ -11,7 +11,7 @@
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { findE2ESpecs, isAppDir, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks } from './consistency-rules.mjs';
+import { findE2ESpecs, isAppDir, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript } from './consistency-rules.mjs';
 
 let passed = 0;
 let failed = 0;
@@ -50,6 +50,18 @@ writeFileSync(join(sandbox, 'e2e', 'demo', 'helper.ts'), '// not a spec');
 assert('findE2ESpecs 忽略非 .spec.ts', findE2ESpecs(sandbox, 'demo').length === 1);
 // 缺失目录返回 []
 assert('findE2ESpecs 缺失目录返回 []', findE2ESpecs(sandbox, 'nope').length === 0);
+
+// hasClientTestScript：client/package.json 必须声明 test 脚本（沙盒沿用已创建的 sandbox）
+mkdirSync(join(sandbox, 'app1', 'client'), { recursive: true });
+writeFileSync(join(sandbox, 'app1', 'client', 'package.json'), JSON.stringify({ scripts: { test: 'vitest' } }));
+mkdirSync(join(sandbox, 'app2', 'client'), { recursive: true });
+writeFileSync(join(sandbox, 'app2', 'client', 'package.json'), JSON.stringify({ scripts: { dev: 'vite' } })); // 无 test
+mkdirSync(join(sandbox, 'app3', 'client'), { recursive: true });
+writeFileSync(join(sandbox, 'app3', 'client', 'package.json'), 'not-json'); // 损坏
+assert('hasClientTestScript 命中 test 脚本', hasClientTestScript(sandbox, 'app1') === true);
+assert('hasClientTestScript 无 test 返回 false', hasClientTestScript(sandbox, 'app2') === false);
+assert('hasClientTestScript 损坏 package.json 返回 false', hasClientTestScript(sandbox, 'app3') === false);
+assert('hasClientTestScript 缺失目录返回 false', hasClientTestScript(sandbox, 'nope') === false);
 
 // parsePlaywrightApps：从 APPS 数组精确提取 name
 const pwText = `
