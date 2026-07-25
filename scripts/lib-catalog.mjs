@@ -9,19 +9,15 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parseApps as parseAppsRaw } from './consistency-rules.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const PW = join(ROOT, 'playwright.config.ts');
 
 export function parseApps() {
   const text = readFileSync(PW, 'utf8');
-  const re = /name:\s*'([^']+)'[\s\S]*?dir:\s*'([^']+)'[\s\S]*?port:\s*(\d+)/g;
-  const apps = [];
-  let m;
-  while ((m = re.exec(text)) !== null) {
-    apps.push({ name: m[1], dir: m[2], port: Number(m[3]) });
-  }
-  return apps.sort((a, b) => a.name.localeCompare(b.name));
+  // 复用 consistency-rules.mjs 的稳健解析器（字段顺序无关），按名称排序保持目录稳定
+  return parseAppsRaw(text).sort((a, b) => a.name.localeCompare(b.name));
 }
 
 export function serverPort(name) {

@@ -18,7 +18,7 @@ import { readdirSync, readFileSync, existsSync, writeFileSync, mkdirSync } from 
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildCatalogText } from './lib-catalog.mjs';
-import { isAppDir, findE2ESpecs, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, missingEnvKeys, findAllMarkdownFiles } from './consistency-rules.mjs';
+import { isAppDir, findE2ESpecs, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, missingEnvKeys, findAllMarkdownFiles, parseApps, findDuplicatePorts, findDuplicateNames } from './consistency-rules.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -83,6 +83,13 @@ function main() {
   for (const name of registeredYml) {
     if (!appSet.has(name)) errors.push(`[ghost] e2e.yml CI 矩阵登记了不存在的 App "${name}"`);
   }
+
+  // 配置内部一致性：APPS 的端口/名称不可重复（否则并行 Playwright 跑串或注册静默冲突）
+  const pwApps = parseApps(playwright);
+  const dupPorts = findDuplicatePorts(pwApps);
+  const dupNames = findDuplicateNames(pwApps);
+  if (dupPorts.length) errors.push(`[playwright] APPS 存在重复 E2E 端口: ${dupPorts.join(', ')}`);
+  if (dupNames.length) errors.push(`[playwright] APPS 存在重复应用名: ${dupNames.join(', ')}`);
 
   // 文档内部链接腐化检测：递归扫描仓库内所有 Markdown，本地相对链接必须指向真实文件
   const allMd = findAllMarkdownFiles(ROOT);

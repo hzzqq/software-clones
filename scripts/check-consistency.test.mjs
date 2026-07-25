@@ -11,7 +11,7 @@
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { findE2ESpecs, isAppDir, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, findClientTestFiles, missingEnvKeys, findAllMarkdownFiles } from './consistency-rules.mjs';
+import { findE2ESpecs, isAppDir, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, findClientTestFiles, missingEnvKeys, findAllMarkdownFiles, parseApps, findDuplicatePorts, findDuplicateNames } from './consistency-rules.mjs';
 
 let passed = 0;
 let failed = 0;
@@ -149,6 +149,26 @@ writeFileSync(join(sandbox, 'node_modules', 'y.md'), '# ignore');
 const mdFiles = findAllMarkdownFiles(sandbox);
 assert('findAllMarkdownFiles 收集 2 个 .md', mdFiles.length === 2);
 assert('findAllMarkdownFiles 忽略 .git/node_modules', !mdFiles.some((f) => f.includes('.git') || f.includes('node_modules')));
+
+// parseApps：字段顺序无关的稳健解析（旧实现要求 name→dir→port 固定顺序）
+const pwMixed = `
+export const APPS: AppSpec[] = [
+  { port: 5180, name: 'markdown', dir: 'markdown/client' },
+  { name: 'it-tools', dir: 'it-tools/client', port: 5185 },
+  { name: 'dup', dir: 'dup/client', port: 5185 },
+];
+`;
+const apps = parseApps(pwMixed);
+assert('parseApps 解析 3 个对象', apps.length === 3);
+assert('parseApps 字段乱序仍可解析', apps[0].name === 'markdown' && apps[0].port === 5180);
+assert('parseApps 无 name 的对象被忽略', !apps.some((a) => a.name === 'ghost'));
+// 重复端口 / 重复名称检测
+const dupP = findDuplicatePorts(apps);
+assert('findDuplicatePorts 命中 5185', dupP.includes(5185) && dupP.length === 1);
+const dupN = findDuplicateNames([{ name: 'a' }, { name: 'a' }, { name: 'b' }]);
+assert('findDuplicateNames 命中重复名', dupN.includes('a') && dupN.length === 1);
+assert('findDuplicatePorts 无重复返回 []', findDuplicatePorts([{ name: 'a', port: 1 }, { name: 'b', port: 2 }]).length === 0);
+assert('findDuplicateNames 无重复返回 []', findDuplicateNames([{ name: 'a' }, { name: 'b' }]).length === 0);
 
 console.log(`\n通过: ${passed}  失败: ${failed}`);
 if (failed > 0) {

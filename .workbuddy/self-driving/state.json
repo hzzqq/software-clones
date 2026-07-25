@@ -1,5 +1,5 @@
 {
-  "cycle": 179,
+  "cycle": 180,
   "max_cycles": 200,
   "phase": "polish",
   "paused": false,
@@ -2282,9 +2282,24 @@
       "verify": "checker 0 错；单元测试 27/27 通过",
       "score": 82,
       "ts": "2026-07-25T14:59:30+0800"
+    },
+    {
+      "cycle": 180,
+      "task": "env_required_keys_and_md_scan",
+      "app": "tooling",
+      "new_requirement": "missingEnvKeys 规则：server/.env.example 必须含 PORT 与 CORS_ORIGIN",
+      "implicit_fix": "文档链接腐化检测仅硬编码 3 个文件，遗漏 B1-architecture.md 等；改为递归扫描仓库内全部 .md",
+      "files": [
+        "scripts/consistency-rules.mjs",
+        "scripts/check-consistency.mjs",
+        "scripts/check-consistency.test.mjs"
+      ],
+      "verify": "checker 0 错；单元测试 32/32 通过",
+      "score": 82,
+      "ts": "2026-07-25T15:01:39+0800"
     }
   ],
-  "last_task_id": "add_hasClientTestFile_gate",
+  "last_task_id": "env_required_keys_and_md_scan",
   "repeat_count": 0,
   "last_score": 82,
   "coverage": {

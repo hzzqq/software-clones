@@ -205,3 +205,49 @@ export function findAllMarkdownFiles(root) {
   }
   return out;
 }
+
+/**
+ * 从 playwright.config.ts 文本稳健地解析 APPS 数组，逐个对象提取 name/dir/port。
+ * 相比 lib-catalog.mjs 旧实现（要求 name→dir→port 固定顺序、否则整条丢弃导致目录漂移），
+ * 本解析器对每个 `{...}` 对象独立抽取字段，对字段顺序不敏感。
+ * @returns {{name:string,dir:?string,port:?number}[]}
+ */
+export function parseApps(text) {
+  const block = text.match(/export\s+const\s+APPS[\s\S]*?=\s*\[([\s\S]*?)\]/);
+  if (!block) return [];
+  const objRe = /\{([\s\S]*?)\}/g;
+  const apps = [];
+  let m;
+  while ((m = objRe.exec(block[1])) !== null) {
+    const obj = m[1];
+    const name = (obj.match(/name\s*:\s*['"]([^'"]+)['"]/) || [])[1];
+    if (!name) continue;
+    const dir = (obj.match(/dir\s*:\s*['"]([^'"]+)['"]/) || [])[1] ?? null;
+    const portM = obj.match(/port\s*:\s*(\d+)/);
+    apps.push({ name, dir, port: portM ? Number(portM[1]) : null });
+  }
+  return apps;
+}
+
+/**
+ * 找出 APPS 中出现次数 >1 的 port（E2E 前端端口冲突会让并行 Playwright 跑串）。
+ * @returns {number[]} 重复的端口
+ */
+export function findDuplicatePorts(apps) {
+  const seen = new Map();
+  for (const a of apps) {
+    if (a.port == null) continue;
+    seen.set(a.port, (seen.get(a.port) || 0) + 1);
+  }
+  return [...seen.entries()].filter(([, c]) => c > 1).map(([p]) => p);
+}
+
+/**
+ * 找出 APPS 中出现次数 >1 的 name（重复注册是静默错误）。
+ * @returns {string[]} 重复的应用名
+ */
+export function findDuplicateNames(apps) {
+  const seen = new Map();
+  for (const a of apps) seen.set(a.name, (seen.get(a.name) || 0) + 1);
+  return [...seen.entries()].filter(([, c]) => c > 1).map(([n]) => n);
+}
