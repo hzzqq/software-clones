@@ -1,4 +1,5 @@
 import React from 'react';
+import ErrorBoundary from './components/ErrorBoundary';
 import ReactDOM from 'react-dom/client';
 import { CssBaseline, ThemeProvider } from '@mui/material';
 import App from './App';
@@ -11,10 +12,12 @@ if (!rootElement) {
 }
 
 ReactDOM.createRoot(rootElement).render(
+  <ErrorBoundary>
   <React.StrictMode>
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <App />
     </ThemeProvider>
   </React.StrictMode>
+  </ErrorBoundary>
 );

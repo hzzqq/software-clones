@@ -13,7 +13,7 @@ import { join, resolve, dirname } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { findE2ESpecs, isAppDir, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, findClientTestFiles, missingEnvKeys, findAllMarkdownFiles, parseApps, findDuplicatePorts, findDuplicateNames, findDuplicateDirs, checkBuildConfig, missingSharedTemplateFiles, missingAppDirs, findUnregisteredApps, invalidEnvValues, hasClientIndexHtml, hasServerEntry } from './consistency-rules.mjs';
+import { findE2ESpecs, isAppDir, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, findClientTestFiles, missingEnvKeys, findAllMarkdownFiles, parseApps, findDuplicatePorts, findDuplicateNames, findDuplicateDirs, checkBuildConfig, missingSharedTemplateFiles, missingAppDirs, findUnregisteredApps, invalidEnvValues, hasClientIndexHtml, hasServerEntry, errorBoundaryWired } from './consistency-rules.mjs';
 
 const TEST_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -165,6 +165,16 @@ mkdirSync(join(sandbox, 'bootb', 'server', 'src'), { recursive: true });
 assert('hasClientIndexHtml 缺失返回 false', hasClientIndexHtml(sandbox, 'bootb') === false);
 assert('hasServerEntry 缺失返回 false', hasServerEntry(sandbox, 'bootb') === false);
 assert('hasClientIndexHtml 缺失目录返回 false', hasClientIndexHtml(sandbox, 'nope') === false);
+
+// errorBoundaryWired：「文件在但未接线」的隐性容错缺口检测
+mkdirSync(join(sandbox, 'ebwired', 'client', 'src', 'components'), { recursive: true });
+writeFileSync(join(sandbox, 'ebwired', 'client', 'src', 'main.tsx'), "import ErrorBoundary from './components/ErrorBoundary';\nReactDOM.createRoot(el).render(<ErrorBoundary><App/></ErrorBoundary>);");
+assert('errorBoundaryWired 已接线返回 true', errorBoundaryWired(sandbox, 'ebwired') === true);
+mkdirSync(join(sandbox, 'ebunwired', 'client', 'src'), { recursive: true });
+writeFileSync(join(sandbox, 'ebunwired', 'client', 'src', 'main.tsx'), "ReactDOM.createRoot(el).render(<App/>);");
+writeFileSync(join(sandbox, 'ebunwired', 'client', 'src', 'App.tsx'), "export default function App(){return null;}");
+assert('errorBoundaryWired 未接线返回 false', errorBoundaryWired(sandbox, 'ebunwired') === false);
+assert('errorBoundaryWired 缺失目录返回 false', errorBoundaryWired(sandbox, 'nope') === false);
 
 // findDuplicateDirs：APPS 的 dir 不可重复（两个 App 共享 client 目录会让 E2E 冲突）
 const dupApps = [

@@ -1,4 +1,5 @@
 import React from 'react';
+import ErrorBoundary from './components/ErrorBoundary';
 import ReactDOM from 'react-dom/client';
 import { CssBaseline, ThemeProvider } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -13,6 +14,7 @@ if (!rootElement) {
 }
 
 ReactDOM.createRoot(rootElement).render(
+  <ErrorBoundary>
   <React.StrictMode>
     <ThemeProvider theme={theme}>
       <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -21,4 +23,5 @@ ReactDOM.createRoot(rootElement).render(
       </LocalizationProvider>
     </ThemeProvider>
   </React.StrictMode>
+  </ErrorBoundary>
 );

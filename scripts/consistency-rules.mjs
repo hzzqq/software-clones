@@ -362,6 +362,26 @@ export function hasServerEntry(root, app) {
   return existsSync(join(root, app, 'server', 'src', 'index.ts'));
 }
 
+/**
+ * 判定某 App 的 client 是否真正把 ErrorBoundary 接入渲染树。
+ * 仅存在 `client/src/components/ErrorBoundary.tsx` 还不够——若没在 `main.tsx` / `App.tsx`
+ * 里用它包裹根组件，React 渲染期报错仍会整页崩溃、没有任何兜底，等于「文件在但未接线」的
+ * 隐性容错缺口（本仓库 12 个 App 历史上一度全部存在该组件却无一接线）。
+ * @returns {boolean}
+ */
+export function errorBoundaryWired(root, app) {
+  const tryRead = (rel) => {
+    try {
+      return readFileSync(join(root, app, rel), 'utf8');
+    } catch {
+      return '';
+    }
+  };
+  const main = tryRead('client/src/main.tsx');
+  const appFile = tryRead('client/src/App.tsx');
+  return /ErrorBoundary/.test(main) || /ErrorBoundary/.test(appFile);
+}
+
 /** 脚手架模板必需文件清单（用于校验 shared/*-template 未被破坏）。 */
 export const SHARED_TEMPLATE_FILES = {
   'backend-template': ['package.json', 'tsconfig.json', 'src/index.ts'],

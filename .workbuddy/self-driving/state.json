@@ -1,5 +1,5 @@
 {
-  "cycle": 186,
+  "cycle": 187,
   "max_cycles": 200,
   "phase": "polish",
   "paused": false,
@@ -2110,7 +2110,7 @@
       ],
       "verify": "kanban client 53 passed + typecheck pass",
       "score": 85,
-      "ts": 1784956401.0
+      "ts": 1784956401
     },
     {
       "cycle": 168,
@@ -2127,7 +2127,7 @@
       ],
       "verify": "kener client 59 passed + typecheck pass",
       "score": 85,
-      "ts": 1784956820.0
+      "ts": 1784956820
     },
     {
       "cycle": 169,
@@ -2390,11 +2390,37 @@
       "verify": "checker 0 错；单元测试 57/57 通过；--json 输出合法 JSON",
       "score": 82,
       "ts": "2026-07-25T16:30:00+0800"
+    },
+    {
+      "cycle": 187,
+      "task": "wire_error_boundary",
+      "new_requirement": "errorBoundaryWired 规则：校验 ErrorBoundary 真正接入渲染树（非仅文件存在）",
+      "implicit_fix": "12 个 App 的 client/src/main.tsx 历史全部存在 ErrorBoundary.tsx 却从未接线，渲染期报错会整页崩溃且无兜底；已用 <ErrorBoundary> 包裹根渲染树",
+      "files": [
+        "apiclient/client/src/main.tsx",
+        "excalidraw/client/src/main.tsx",
+        "glance/client/src/main.tsx",
+        "it-tools/client/src/main.tsx",
+        "kanban/client/src/main.tsx",
+        "kener/client/src/main.tsx",
+        "lofi/client/src/main.tsx",
+        "markdown/client/src/main.tsx",
+        "memos/client/src/main.tsx",
+        "nonio/client/src/main.tsx",
+        "photopea/client/src/main.tsx",
+        "tvtime/client/src/main.tsx",
+        "scripts/consistency-rules.mjs",
+        "scripts/check-consistency.mjs",
+        "scripts/check-consistency.test.mjs"
+      ],
+      "verify": "checker 0 错；单元测试 60/60 通过",
+      "score": 88,
+      "ts": "2026-07-25T13:52:08.106Z"
     }
   ],
-  "last_task_id": "dup_dir_and_json_observability",
+  "last_task_id": "wire_error_boundary",
   "repeat_count": 0,
-  "last_score": 82,
+  "last_score": 88,
   "coverage": {
     "B1": {
       "it-tools": "optimized",
