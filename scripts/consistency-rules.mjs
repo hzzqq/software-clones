@@ -13,6 +13,26 @@
 import { existsSync, readdirSync, statSync, readFileSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 
+/** 递归列出目录下所有单元/集成测试源文件（client 端 *.test.ts(x) / *.spec.ts(x)）。 */
+function walkTestFiles(dir, out = []) {
+  let entries;
+  try {
+    entries = readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return out;
+  }
+  for (const e of entries) {
+    const full = join(dir, e.name);
+    if (e.isDirectory()) {
+      if (e.name === 'node_modules' || e.name === 'dist' || e.name.startsWith('.')) continue;
+      walkTestFiles(full, out);
+    } else if (/(\.test|\.spec)\.tsx?$/.test(e.name)) {
+      out.push(full);
+    }
+  }
+  return out;
+}
+
 /** 判定某顶层目录是否为「全栈 App」：同时含 client/package.json 与 server/package.json。 */
 export function isAppDir(root, name) {
   if (!name || name.startsWith('.')) return false;
@@ -120,4 +140,24 @@ export function hasClientTestScript(root, app) {
   } catch {
     return false;
   }
+}
+
+/**
+ * 列出某 App client 目录下的单元测试文件（递归，排除 node_modules/dist）。
+ * 用于校验「声明了 test 脚本却零用例」的空心安全网。
+ * @returns {string[]} 命中文件绝对路径
+ */
+export function findClientTestFiles(root, app) {
+  const dir = join(root, app, 'client');
+  if (!existsSync(dir)) return [];
+  return walkTestFiles(dir);
+}
+
+/**
+ * 判定某 App 的 client 是否真正含有单元测试用例文件（不仅是声明了一个 test 脚本）。
+ * 防止 CI 矩阵里出现「脚本在但一个用例都没有」的空心回归网。
+ * @returns {boolean}
+ */
+export function hasClientTestFile(root, app) {
+  return findClientTestFiles(root, app).length > 0;
 }

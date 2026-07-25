@@ -1,6 +1,6 @@
 {
-  "cycle": 173,
-  "max_cycles": 176,
+  "cycle": 178,
+  "max_cycles": 200,
   "phase": "polish",
   "paused": false,
   "log": [
@@ -2197,11 +2197,81 @@
       "result": "checker 绿（含 CONTRIBUTING 规则）；README 已链接贡献指南",
       "score": 71,
       "ts": "2026-07-25T01:18:31+0800"
+    },
+    {
+      "cycle": 174,
+      "task": "extract_rules_and_add_unit_tests",
+      "new_requirement": "抽取 isAppDir/findE2ESpecs 为脚本/consistency-rules.mjs 共享纯函数库，并新增零依赖单元测试",
+      "implicit_fix": "校验器用脆弱的 string.includes 判定注册，且空 e2e 目录会假绿；改为精确规则+要求至少 1 个 *.spec.ts",
+      "files": [
+        "scripts/consistency-rules.mjs",
+        "scripts/check-consistency.test.mjs",
+        "scripts/check-consistency.mjs",
+        "package.json"
+      ],
+      "result": "checker 0 错; 单元测试 6/6 通过",
+      "score": 80,
+      "ts": "2026-07-25T10:40:00+0800"
+    },
+    {
+      "cycle": 175,
+      "task": "exact_registration_parsing",
+      "new_requirement": "新增 parsePlaywrightApps/parseYamlMatrixApps 精确解析器，替代脆弱的整文件 includes",
+      "implicit_fix": "注册判定用 substring.includes 可能在注释/路径中误命中；并新增「配置登记但无 App 目录」的幽灵注册反向检测",
+      "files": [
+        "scripts/consistency-rules.mjs",
+        "scripts/check-consistency.mjs",
+        "scripts/check-consistency.test.mjs"
+      ],
+      "result": "checker 0 错; 单元测试 14/14 通过",
+      "score": 82,
+      "ts": "2026-07-25T10:55:00+0800"
+    },
+    {
+      "cycle": 176,
+      "task": "doc_link_rot_detection",
+      "new_requirement": "新增 findBrokenDocLinks 内部相对链接腐化检测（忽略外链/锚点，解析相对路径）",
+      "implicit_fix": "测试沙盒的 rmSync 早于后续依赖磁盘的用例执行，导致用例假失败；调整清理时机修复测试生命周期",
+      "files": [
+        "scripts/consistency-rules.mjs",
+        "scripts/check-consistency.mjs",
+        "scripts/check-consistency.test.mjs"
+      ],
+      "result": "checker 0 错; 单元测试 18/18 通过",
+      "score": 82,
+      "ts": "2026-07-25T11:10:00+0800"
+    },
+    {
+      "cycle": 177,
+      "task": "enforce_client_test_script",
+      "new_requirement": "新增 hasClientTestScript 规则：每个 App 的 client/package.json 必须声明 test 脚本（可回归验证）",
+      "implicit_fix": "未声明 test 脚本的 App 在 CI 中无法回归验证而不自知；该校验器作为静态闸门提前暴露该缺口",
+      "files": [
+        "scripts/consistency-rules.mjs",
+        "scripts/check-consistency.mjs",
+        "scripts/check-consistency.test.mjs"
+      ],
+      "result": "checker 0 错; 单元测试 22/22 通过",
+      "score": 80,
+      "ts": "2026-07-25T11:25:00+0800"
+    },
+    {
+      "cycle": 178,
+      "task": "ci_run_rules_tests_and_docs",
+      "new_requirement": "CI consistency 作业新增运行规则单元测试（scripts/check-consistency.test.mjs），并补全 CONTRIBUTING 文档",
+      "implicit_fix": "此前 CI 仅跑校验器不跑其单测，规则回归（如测试沙盒清理顺序 bug）不会被 CI 拦截；本校验器亦拦截了本次文档误删 check-consistency.mjs 字面量的回归",
+      "files": [
+        ".github/workflows/e2e.yml",
+        "CONTRIBUTING.md"
+      ],
+      "result": "checker 0 错; 单元测试 22/22 通过; 校验器捕获并修复了 CONTRIBUTING 字符串回归",
+      "score": 78,
+      "ts": "2026-07-25T11:40:00+0800"
     }
   ],
-  "last_task_id": "add_contributing_doc_and_enforce_it",
+  "last_task_id": "ci_run_rules_tests_and_docs",
   "repeat_count": 0,
-  "last_score": 71,
+  "last_score": 78,
   "coverage": {
     "B1": {
       "it-tools": "optimized",

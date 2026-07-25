@@ -11,7 +11,7 @@
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { findE2ESpecs, isAppDir, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript } from './consistency-rules.mjs';
+import { findE2ESpecs, isAppDir, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, findClientTestFiles } from './consistency-rules.mjs';
 
 let passed = 0;
 let failed = 0;
@@ -62,6 +62,25 @@ assert('hasClientTestScript 命中 test 脚本', hasClientTestScript(sandbox, 'a
 assert('hasClientTestScript 无 test 返回 false', hasClientTestScript(sandbox, 'app2') === false);
 assert('hasClientTestScript 损坏 package.json 返回 false', hasClientTestScript(sandbox, 'app3') === false);
 assert('hasClientTestScript 缺失目录返回 false', hasClientTestScript(sandbox, 'nope') === false);
+
+// hasClientTestFile / findClientTestFiles：声明了 test 脚本，但必须有真实用例文件才算安全网
+mkdirSync(join(sandbox, 'app4', 'client', 'src'), { recursive: true });
+writeFileSync(join(sandbox, 'app4', 'client', 'package.json'), JSON.stringify({ scripts: { test: 'vitest' } }));
+writeFileSync(join(sandbox, 'app4', 'client', 'src', 'util.test.ts'), '// case');
+assert('hasClientTestFile 命中用例文件', hasClientTestFile(sandbox, 'app4') === true);
+assert('findClientTestFiles 递归列出用例', findClientTestFiles(sandbox, 'app4').length === 1);
+// .tsx 用例与嵌套目录也应命中
+mkdirSync(join(sandbox, 'app4', 'client', 'src', 'deep'), { recursive: true });
+writeFileSync(join(sandbox, 'app4', 'client', 'src', 'deep', 'x.spec.tsx'), '// case');
+assert('findClientTestFiles 命中嵌套 .spec.tsx', findClientTestFiles(sandbox, 'app4').length === 2);
+// node_modules 内的用例不计（避免误报）
+mkdirSync(join(sandbox, 'app4', 'client', 'node_modules', 'dep'), { recursive: true });
+writeFileSync(join(sandbox, 'app4', 'client', 'node_modules', 'dep', 'dep.test.ts'), '// ignore');
+assert('findClientTestFiles 跳过 node_modules', findClientTestFiles(sandbox, 'app4').length === 2);
+// 有脚本但零用例 → 空心安全网（校验器应判 FAIL）
+mkdirSync(join(sandbox, 'app5', 'client'), { recursive: true });
+writeFileSync(join(sandbox, 'app5', 'client', 'package.json'), JSON.stringify({ scripts: { test: 'vitest' } }));
+assert('hasClientTestFile 零用例返回 false', hasClientTestFile(sandbox, 'app5') === false);
 
 // parsePlaywrightApps：从 APPS 数组精确提取 name
 const pwText = `
