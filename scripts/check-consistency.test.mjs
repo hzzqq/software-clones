@@ -13,7 +13,7 @@ import { join, resolve, dirname } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { findE2ESpecs, isAppDir, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, findClientTestFiles, missingEnvKeys, findAllMarkdownFiles, parseApps, findDuplicatePorts, findDuplicateNames, findDuplicateDirs, checkBuildConfig, missingSharedTemplateFiles, missingAppDirs, findUnregisteredApps, invalidEnvValues, hasClientIndexHtml, hasServerEntry, errorBoundaryWired } from './consistency-rules.mjs';
+import { findE2ESpecs, isAppDir, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, findClientTestFiles, missingEnvKeys, findAllMarkdownFiles, parseApps, findDuplicatePorts, findDuplicateNames, findDuplicateDirs, checkBuildConfig, missingSharedTemplateFiles, missingAppDirs, findUnregisteredApps, invalidEnvValues, hasClientIndexHtml, hasServerEntry, errorBoundaryWired, hasAppReadme } from './consistency-rules.mjs';
 
 const TEST_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -175,6 +175,13 @@ writeFileSync(join(sandbox, 'ebunwired', 'client', 'src', 'main.tsx'), "ReactDOM
 writeFileSync(join(sandbox, 'ebunwired', 'client', 'src', 'App.tsx'), "export default function App(){return null;}");
 assert('errorBoundaryWired 未接线返回 false', errorBoundaryWired(sandbox, 'ebunwired') === false);
 assert('errorBoundaryWired 缺失目录返回 false', errorBoundaryWired(sandbox, 'nope') === false);
+
+// hasAppReadme：每个 App 子项目应有自带 README.md（隐性文档缺口检测）
+mkdirSync(join(sandbox, 'readmeapp'), { recursive: true });
+assert('hasAppReadme 缺失返回 false', hasAppReadme(sandbox, 'readmeapp') === false);
+writeFileSync(join(sandbox, 'readmeapp', 'README.md'), '# readmeapp\n');
+assert('hasAppReadme 存在返回 true', hasAppReadme(sandbox, 'readmeapp') === true);
+rmSync(join(sandbox, 'readmeapp'), { recursive: true, force: true }); // 避免污染后续 findAllMarkdownFiles 计数
 
 // findDuplicateDirs：APPS 的 dir 不可重复（两个 App 共享 client 目录会让 E2E 冲突）
 const dupApps = [

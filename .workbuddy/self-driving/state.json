@@ -1,5 +1,5 @@
 {
-  "cycle": 187,
+  "cycle": 188,
   "max_cycles": 200,
   "phase": "polish",
   "paused": false,
@@ -2416,11 +2416,37 @@
       "verify": "checker 0 错；单元测试 60/60 通过",
       "score": 88,
       "ts": "2026-07-25T13:52:08.106Z"
+    },
+    {
+      "cycle": 188,
+      "task": "add_app_readmes",
+      "new_requirement": "hasAppReadme 规则：每个 App 子项目须自带 README.md 上手说明",
+      "implicit_fix": "仓库有总文档但 12 个 App 子项目此前均无自身 README（贡献者不知如何单独启动），已补齐 12 份并加闸门防止漂移",
+      "files": [
+        "apiclient/README.md",
+        "excalidraw/README.md",
+        "glance/README.md",
+        "it-tools/README.md",
+        "kanban/README.md",
+        "kener/README.md",
+        "lofi/README.md",
+        "markdown/README.md",
+        "memos/README.md",
+        "nonio/README.md",
+        "photopea/README.md",
+        "tvtime/README.md",
+        "scripts/consistency-rules.mjs",
+        "scripts/check-consistency.mjs",
+        "scripts/check-consistency.test.mjs"
+      ],
+      "verify": "checker 0 错；单元测试 62/62 通过",
+      "score": 82,
+      "ts": "2026-07-25T13:56:51.027Z"
     }
   ],
-  "last_task_id": "wire_error_boundary",
+  "last_task_id": "add_app_readmes",
   "repeat_count": 0,
-  "last_score": 88,
+  "last_score": 82,
   "coverage": {
     "B1": {
       "it-tools": "optimized",

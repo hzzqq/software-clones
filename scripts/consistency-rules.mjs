@@ -382,6 +382,16 @@ export function errorBoundaryWired(root, app) {
   return /ErrorBoundary/.test(main) || /ErrorBoundary/.test(appFile);
 }
 
+/**
+ * 判定某 App 是否自带 README.md（放在 <app>/README.md）。
+ * 每个 App 是独立可运行的子项目，缺自带 README 会让贡献者不知如何启动该 App，
+ * 属于「仓库有总文档、子项目无上手说明」的隐性文档缺口。
+ * @returns {boolean}
+ */
+export function hasAppReadme(root, app) {
+  return existsSync(join(root, app, 'README.md'));
+}
+
 /** 脚手架模板必需文件清单（用于校验 shared/*-template 未被破坏）。 */
 export const SHARED_TEMPLATE_FILES = {
   'backend-template': ['package.json', 'tsconfig.json', 'src/index.ts'],
