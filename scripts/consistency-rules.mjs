@@ -269,6 +269,19 @@ export function missingAppDirs(root, apps) {
 }
 
 /**
+ * 反向幽灵注册检测：每个真实存在的全栈 App 都必须登记在注册清单里。
+ * 一个新增的 App 若忘记写进 playwright APPS / CI 矩阵，此前只是 WARNING（易被忽略），
+ * 现作为 ERROR 强制「目录 ↔ 注册」双向一致，避免 clone 后无法被 CI/E2E 覆盖。
+ * @param {string[]} allApps 真实存在的 App 名
+ * @param {string[]} registered 注册清单（APPS / CI 矩阵解析结果）
+ * @returns {string[]} 已存在但未注册的 App 名
+ */
+export function findUnregisteredApps(allApps, registered) {
+  const reg = new Set(registered);
+  return allApps.filter((a) => !reg.has(a));
+}
+
+/**
  * 校验某 App 是否具备可构建的脚手架：client 需 tsconfig + vite 配置，server 需 tsconfig。
  * 缺失任意一项意味着该 App 无法在 CI 中编译/启动（「能 clone 但不能 build」的隐性缺口）。
  * @returns {{clientTs:boolean, clientVite:boolean, serverTs:boolean, ok:boolean}}

@@ -1,5 +1,5 @@
 {
-  "cycle": 182,
+  "cycle": 183,
   "max_cycles": 200,
   "phase": "polish",
   "paused": false,
@@ -2330,11 +2330,26 @@
       "verify": "checker 0 错；单元测试 43/43 通过",
       "score": 82,
       "ts": "2026-07-25T15:30:00+0800"
+    },
+    {
+      "cycle": 183,
+      "task": "reverse_ghost_registration",
+      "app": "tooling",
+      "new_requirement": "findUnregisteredApps 规则：真实存在的 App 必须登记在 APPS 与 CI 矩阵（目录↔注册 双向一致）",
+      "implicit_fix": "此前新增 App 漏写 APPS/CI 矩阵仅是软 WARNING（易被忽略合并），改为 ERROR 强制双向一致；移除冗余的 per-app 软告警改用统一反向幽灵硬校验",
+      "files": [
+        "scripts/consistency-rules.mjs",
+        "scripts/check-consistency.mjs",
+        "scripts/check-consistency.test.mjs"
+      ],
+      "verify": "checker 0 错；单元测试 45/45 通过",
+      "score": 80,
+      "ts": "2026-07-25T15:45:00+0800"
     }
   ],
-  "last_task_id": "apps_dir_integrity",
+  "last_task_id": "reverse_ghost_registration",
   "repeat_count": 0,
-  "last_score": 82,
+  "last_score": 80,
   "coverage": {
     "B1": {
       "it-tools": "optimized",

@@ -18,7 +18,7 @@ import { readdirSync, readFileSync, existsSync, writeFileSync, mkdirSync } from 
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildCatalogText } from './lib-catalog.mjs';
-import { isAppDir, findE2ESpecs, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, missingEnvKeys, findAllMarkdownFiles, parseApps, findDuplicatePorts, findDuplicateNames, checkBuildConfig, missingSharedTemplateFiles, missingAppDirs } from './consistency-rules.mjs';
+import { isAppDir, findE2ESpecs, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, missingEnvKeys, findAllMarkdownFiles, parseApps, findDuplicatePorts, findDuplicateNames, checkBuildConfig, missingSharedTemplateFiles, missingAppDirs, findUnregisteredApps } from './consistency-rules.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -73,8 +73,6 @@ function main() {
     const missingKeys = missingEnvKeys(ROOT, app);
     if (missingKeys.length) errors.push(`[${app}] server/.env.example 缺少必需配置项: ${missingKeys.join(', ')}`);
     if (!checks.build) errors.push(`[${app}] 构建脚手架不全（client 需 tsconfig+vite 配置，server 需 tsconfig）`);
-    if (!checks.ciMatrix) warnings.push(`[${app}] e2e.yml CI 矩阵未登记`);
-    if (!checks.playwrightApps) warnings.push(`[${app}] playwright.config.ts APPS 未登记`);
     perApp.push({ app, ...checks });
   }
 
@@ -84,6 +82,12 @@ function main() {
   }
   for (const name of registeredYml) {
     if (!appSet.has(name)) errors.push(`[ghost] e2e.yml CI 矩阵登记了不存在的 App "${name}"`);
+  }
+
+  // 反向幽灵检测：真实存在的 App 必须登记在 APPS 与 CI 矩阵（目录 ↔ 注册 双向一致）
+  for (const name of apps) {
+    if (!registeredPw.includes(name)) errors.push(`[ghost] 真实 App "${name}" 未登记在 playwright.config.ts APPS`);
+    if (!registeredYml.includes(name)) errors.push(`[ghost] 真实 App "${name}" 未登记在 e2e.yml CI 矩阵`);
   }
 
   // 配置内部一致性：APPS 的端口/名称不可重复（否则并行 Playwright 跑串或注册静默冲突）

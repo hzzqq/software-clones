@@ -11,7 +11,7 @@
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { findE2ESpecs, isAppDir, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, findClientTestFiles, missingEnvKeys, findAllMarkdownFiles, parseApps, findDuplicatePorts, findDuplicateNames, checkBuildConfig, missingSharedTemplateFiles, missingAppDirs } from './consistency-rules.mjs';
+import { findE2ESpecs, isAppDir, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, findClientTestFiles, missingEnvKeys, findAllMarkdownFiles, parseApps, findDuplicatePorts, findDuplicateNames, checkBuildConfig, missingSharedTemplateFiles, missingAppDirs, findUnregisteredApps } from './consistency-rules.mjs';
 
 let passed = 0;
 let failed = 0;
@@ -181,6 +181,10 @@ assert('missingAppDirs 命中不存在的 dir', missingDirs.length === 1);
 assert('missingAppDirs 报告正确条目', missingDirs[0] && missingDirs[0].name === 'gone');
 assert('missingAppDirs 全部存在返回 []', missingAppDirs(sandbox, [{ name: 'dirapp', dir: 'dirapp/client' }]).length === 0);
 assert('missingAppDirs 忽略无 dir 的条目', missingAppDirs(sandbox, [{ name: 'x' }]).length === 0);
+
+// findUnregisteredApps：真实 App 必须登记在注册清单（反向幽灵，目录 ↔ 注册 双向一致）
+assert('findUnregisteredApps 命中未注册', findUnregisteredApps(['a', 'b', 'c'], ['a', 'b']).includes('c'));
+assert('findUnregisteredApps 全部已注册返回 []', findUnregisteredApps(['a', 'b'], ['a', 'b', 'x']).length === 0);
 
 console.log(`\n通过: ${passed}  失败: ${failed}`);
 if (failed > 0) {
