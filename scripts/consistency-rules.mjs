@@ -11,7 +11,7 @@
  *   - findE2ESpecs(root, app)           列出 e2e/<app>/ 下所有 *.spec.ts（冒烟用例必须存在）
  */
 import { existsSync, readdirSync, statSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, dirname, resolve } from 'node:path';
 
 /** 判定某顶层目录是否为「全栈 App」：同时含 client/package.json 与 server/package.json。 */
 export function isAppDir(root, name) {
@@ -72,4 +72,36 @@ export function parseYamlMatrixApps(text) {
     if (name && !out.includes(name)) out.push(name);
   }
   return out;
+}
+
+/**
+ * 检测 Markdown 文档中的「内部相对链接」是否指向不存在的文件（文档链接腐化 / 漂移）。
+ * 忽略：绝对 http(s)/mailto、纯锚点(#)、查询串；仅校验相对文件链接（含 ../ ）。
+ * @param {string} docText 文档全文
+ * @param {string} docDir 文档所在目录的绝对路径（用于解析相对链接）
+ * @returns {string[]} 指向不存在文件的链接目标列表（空数组表示全部有效）
+ */
+export function findBrokenDocLinks(docText, docDir) {
+  const re = /\[[^\]]*\]\(([^)]+)\)/g;
+  const broken = [];
+  let m;
+  while ((m = re.exec(docText)) !== null) {
+    let target = m[1].trim();
+    if (
+      !target ||
+      target.startsWith('http://') ||
+      target.startsWith('https://') ||
+      target.startsWith('mailto:') ||
+      target.startsWith('#')
+    ) {
+      continue;
+    }
+    const hashIdx = target.indexOf('#');
+    if (hashIdx >= 0) target = target.slice(0, hashIdx);
+    const qIdx = target.indexOf('?');
+    if (qIdx >= 0) target = target.slice(0, qIdx);
+    if (!target) continue;
+    if (!existsSync(resolve(docDir, target))) broken.push(m[1].trim());
+  }
+  return broken;
 }

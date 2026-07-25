@@ -11,7 +11,7 @@
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { findE2ESpecs, isAppDir, parsePlaywrightApps, parseYamlMatrixApps } from './consistency-rules.mjs';
+import { findE2ESpecs, isAppDir, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks } from './consistency-rules.mjs';
 
 let passed = 0;
 let failed = 0;
@@ -51,8 +51,6 @@ assert('findE2ESpecs 忽略非 .spec.ts', findE2ESpecs(sandbox, 'demo').length =
 // 缺失目录返回 []
 assert('findE2ESpecs 缺失目录返回 []', findE2ESpecs(sandbox, 'nope').length === 0);
 
-rmSync(sandbox, { recursive: true, force: true });
-
 // parsePlaywrightApps：从 APPS 数组精确提取 name
 const pwText = `
 export const APPS: AppSpec[] = [
@@ -84,6 +82,20 @@ assert('parseYamlMatrixApps 提取 2 个应用', ymlApps.length === 2);
 assert('parseYamlMatrixApps 含 it-tools', ymlApps.includes('it-tools'));
 assert('parseYamlMatrixApps 不含 node 列表', !ymlApps.includes('22'));
 assert('parseYamlMatrixApps 无 matrix 返回 []', parseYamlMatrixApps('app: []').length === 0);
+
+// findBrokenDocLinks：内部相对链接腐化检测
+const docGood = 'see [client](demo/client/package.json) and [server](demo/server/package.json)';
+const docBad = 'broken [x](docs/MISSING.md) and [y](../nope/zzz.md)';
+assert('findBrokenDocLinks 全有效返回 []', findBrokenDocLinks(docGood, sandbox).length === 0);
+const broken = findBrokenDocLinks(docBad, sandbox);
+assert('findBrokenDocLinks 捕获 2 个失效链接', broken.length === 2);
+assert('findBrokenDocLinks 报告失效目标', broken.includes('docs/MISSING.md') && broken.includes('../nope/zzz.md'));
+// 忽略外链/锚点
+const docExternal = 'repo [gh](https://github.com/x/y) and [top](#top) are fine';
+assert('findBrokenDocLinks 忽略外链与锚点', findBrokenDocLinks(docExternal, sandbox).length === 0);
+
+// 清理临时沙盒
+rmSync(sandbox, { recursive: true, force: true });
 
 console.log(`\n通过: ${passed}  失败: ${failed}`);
 if (failed > 0) {

@@ -18,7 +18,7 @@ import { readdirSync, readFileSync, existsSync, writeFileSync, mkdirSync } from 
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildCatalogText } from './lib-catalog.mjs';
-import { isAppDir, findE2ESpecs, parsePlaywrightApps, parseYamlMatrixApps } from './consistency-rules.mjs';
+import { isAppDir, findE2ESpecs, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks } from './consistency-rules.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -76,6 +76,17 @@ function main() {
   }
   for (const name of registeredYml) {
     if (!appSet.has(name)) errors.push(`[ghost] e2e.yml CI 矩阵登记了不存在的 App "${name}"`);
+  }
+
+  // 文档内部链接腐化检测：README/CONTRIBUTING/APP_CATALOG 的本地相对链接必须指向真实文件
+  const docFiles = ['README.md', 'CONTRIBUTING.md', 'docs/APP_CATALOG.md'];
+  for (const rel of docFiles) {
+    const text = readText(rel);
+    if (!text) continue;
+    const broken = findBrokenDocLinks(text, dirname(join(ROOT, rel)));
+    for (const b of broken) {
+      errors.push(`[${rel}] 内部链接指向不存在的文件: ${b}`);
+    }
   }
 
   // 生成物新鲜度：docs/APP_CATALOG.md 必须与事实来源严格一致（防止手改后失真）
