@@ -11,7 +11,7 @@
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { findE2ESpecs, isAppDir, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, findClientTestFiles, missingEnvKeys, findAllMarkdownFiles, parseApps, findDuplicatePorts, findDuplicateNames, checkBuildConfig, missingSharedTemplateFiles, missingAppDirs, findUnregisteredApps } from './consistency-rules.mjs';
+import { findE2ESpecs, isAppDir, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, findClientTestFiles, missingEnvKeys, findAllMarkdownFiles, parseApps, findDuplicatePorts, findDuplicateNames, checkBuildConfig, missingSharedTemplateFiles, missingAppDirs, findUnregisteredApps, invalidEnvValues } from './consistency-rules.mjs';
 
 let passed = 0;
 let failed = 0;
@@ -137,6 +137,17 @@ writeFileSync(join(sandbox, 'envapp', 'server', '.env.example'), 'PORT=4100\n');
 assert('missingEnvKeys 缺键返回缺失项', missingEnvKeys(sandbox, 'envapp').includes('CORS_ORIGIN'));
 // 文件不存在视为缺全部
 assert('missingEnvKeys 缺失文件返回全部', missingEnvKeys(sandbox, 'nope').length === 2);
+// invalidEnvValues：键存在但值非法也应被捕获（missingEnvKeys 只查存在性）
+mkdirSync(join(sandbox, 'envbad', 'server'), { recursive: true });
+writeFileSync(join(sandbox, 'envbad', 'server', '.env.example'), 'PORT=abc\nCORS_ORIGIN=localhost\n');
+assert('invalidEnvValues 捕获非法 PORT', invalidEnvValues(sandbox, 'envbad').some((s) => s.includes('PORT')));
+assert('invalidEnvValues 捕获非法 CORS_ORIGIN', invalidEnvValues(sandbox, 'envbad').some((s) => s.includes('CORS_ORIGIN')));
+mkdirSync(join(sandbox, 'envgood', 'server'), { recursive: true });
+writeFileSync(join(sandbox, 'envgood', 'server', '.env.example'), 'PORT=4100\nCORS_ORIGIN=http://localhost:5173\n');
+assert('invalidEnvValues 合法配置返回 []', invalidEnvValues(sandbox, 'envgood').length === 0);
+mkdirSync(join(sandbox, 'envstar', 'server'), { recursive: true });
+writeFileSync(join(sandbox, 'envstar', 'server', '.env.example'), 'PORT=4100\nCORS_ORIGIN=*\n');
+assert('invalidEnvValues 接受 * 通配来源', invalidEnvValues(sandbox, 'envstar').length === 0);
 
 // findAllMarkdownFiles：递归收集所有 .md（忽略 .git / node_modules）
 mkdirSync(join(sandbox, 'docs'), { recursive: true });

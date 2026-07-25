@@ -298,6 +298,40 @@ export function checkBuildConfig(root, app) {
   return res;
 }
 
+/**
+ * 在「必需配置项存在」(missingEnvKeys) 之上，进一步校验其取值是否合理，
+ * 避免 `.env.example` 里 `PORT=abc` / `CORS_ORIGIN=localhost` 这类「键在但值非法」的静默错误——
+ * 这种配置 clone 后能骗过存在性检查，却在真实运行时让后端端口无效或 CORS 失效。
+ * @returns {string[]} 取值不合法的描述（空数组表示全部有效）
+ */
+export function invalidEnvValues(root, app) {
+  const p = join(root, app, 'server', '.env.example');
+  if (!existsSync(p)) return [];
+  let text = '';
+  try {
+    text = readFileSync(p, 'utf8');
+  } catch {
+    return [];
+  }
+  const problems = [];
+  const portM = text.match(/^\s*PORT\s*=\s*(\S+)/m);
+  if (portM) {
+    const v = portM[1];
+    const n = Number(v);
+    if (!/^\d+$/.test(v) || n <= 0 || n >= 65536) {
+      problems.push(`PORT=${v} 不是合法的 1-65535 端口`);
+    }
+  }
+  const corsM = text.match(/^\s*CORS_ORIGIN\s*=\s*(\S+)/m);
+  if (corsM) {
+    const v = corsM[1];
+    if (!(v === '*' || /^https?:\/\//.test(v))) {
+      problems.push(`CORS_ORIGIN=${v} 不是合法来源（应为 * 或 http(s):// 开头）`);
+    }
+  }
+  return problems;
+}
+
 /** 脚手架模板必需文件清单（用于校验 shared/*-template 未被破坏）。 */
 export const SHARED_TEMPLATE_FILES = {
   'backend-template': ['package.json', 'tsconfig.json', 'src/index.ts'],

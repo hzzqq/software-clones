@@ -1,5 +1,5 @@
 {
-  "cycle": 183,
+  "cycle": 184,
   "max_cycles": 200,
   "phase": "polish",
   "paused": false,
@@ -2345,11 +2345,26 @@
       "verify": "checker 0 错；单元测试 45/45 通过",
       "score": 80,
       "ts": "2026-07-25T15:45:00+0800"
+    },
+    {
+      "cycle": 184,
+      "task": "env_value_validation",
+      "app": "tooling",
+      "new_requirement": "invalidEnvValues 规则：.env.example 的 PORT/CORS_ORIGIN 取值必须合法（不仅存在）",
+      "implicit_fix": "missingEnvKeys 只查『键是否存在』，对 PORT=abc 或 CORS_ORIGIN=localhost 这类『键在但值非法』的静默错误无能为力，会导致运行时端口无效/CORS 失效；新增取值合法性校验",
+      "files": [
+        "scripts/consistency-rules.mjs",
+        "scripts/check-consistency.mjs",
+        "scripts/check-consistency.test.mjs"
+      ],
+      "verify": "checker 0 错；单元测试 49/49 通过",
+      "score": 82,
+      "ts": "2026-07-25T16:00:00+0800"
     }
   ],
-  "last_task_id": "reverse_ghost_registration",
+  "last_task_id": "env_value_validation",
   "repeat_count": 0,
-  "last_score": 80,
+  "last_score": 82,
   "coverage": {
     "B1": {
       "it-tools": "optimized",

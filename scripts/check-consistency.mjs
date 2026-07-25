@@ -18,7 +18,7 @@ import { readdirSync, readFileSync, existsSync, writeFileSync, mkdirSync } from 
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildCatalogText } from './lib-catalog.mjs';
-import { isAppDir, findE2ESpecs, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, missingEnvKeys, findAllMarkdownFiles, parseApps, findDuplicatePorts, findDuplicateNames, checkBuildConfig, missingSharedTemplateFiles, missingAppDirs, findUnregisteredApps } from './consistency-rules.mjs';
+import { isAppDir, findE2ESpecs, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, missingEnvKeys, findAllMarkdownFiles, parseApps, findDuplicatePorts, findDuplicateNames, checkBuildConfig, missingSharedTemplateFiles, missingAppDirs, findUnregisteredApps, invalidEnvValues } from './consistency-rules.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -72,6 +72,8 @@ function main() {
     if (checks.clientTest && !checks.clientTestFile) errors.push(`[${app}] client 声明了 test 脚本却没有单元测试用例文件（空心安全网）`);
     const missingKeys = missingEnvKeys(ROOT, app);
     if (missingKeys.length) errors.push(`[${app}] server/.env.example 缺少必需配置项: ${missingKeys.join(', ')}`);
+    const envProblems = invalidEnvValues(ROOT, app);
+    for (const pr of envProblems) errors.push(`[${app}] server/.env.example 配置非法: ${pr}`);
     if (!checks.build) errors.push(`[${app}] 构建脚手架不全（client 需 tsconfig+vite 配置，server 需 tsconfig）`);
     perApp.push({ app, ...checks });
   }
