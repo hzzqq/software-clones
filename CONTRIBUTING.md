@@ -8,14 +8,21 @@
 无需 `npm install` 任何 App 依赖即可运行仓库级校验（纯 Node 内置模块）：
 
 ```bash
+npm test                # 一键全量验收：结构一致性 + 规则单测 + 12 个 App 的 client 单测（636 例）
 npm run verify          # 运行 scripts/verify-all.mjs（一致性校验 + 规则单元测试 + 目录新鲜度）
 npm run test:rules      # 仅运行 scripts/check-consistency.test.mjs（规则纯函数单测）
+npm run test:app kanban # 仅运行某个 App 的 client+server 单测（scripts/verify-apps.mjs）
 npm run fix             # 自动修复可自愈项（当前：重新生成过期的 docs/APP_CATALOG.md）
 node scripts/verify-all.mjs   # 直接运行统一验收入口
+node scripts/verify-apps.mjs --scope client   # 仅运行全部 App 的 client 单测
 node scripts/check-consistency.mjs   # 单独运行一致性校验器本身
 node scripts/check-consistency.mjs --app it-tools   # 只校验某个 App（聚焦模式，快速反馈）
 node scripts/check-consistency.mjs --fix   # 校验并尝试自动修复
 ```
+
+`npm test` 是仓库的统一验收入口：它不只检查「测试文件是否存在」，而是**真正执行** 12 个 App 的 client
+单测（共 636 个用例），把单测变成持续红线。注意：App 的 server 单测依赖 `better-sqlite3` 原生绑定，
+需在 `npm install` 编译后运行（`verify-apps.mjs <app> --scope server`），CI 的 `unit-tests` 作业即如此。
 
 该命令会校验：
 
@@ -31,7 +38,9 @@ node scripts/check-consistency.mjs --fix   # 校验并尝试自动修复
 - 仓库内**全部** Markdown 的内部相对链接均有效（链接腐化防护，递归扫描）；
 - `docs/APP_CATALOG.md` 与事实来源严格一致（新鲜度，可用 `--fix` 自动修复）。
 
-CI 的 `consistency` 作业会自动运行 `node scripts/verify-all.mjs`，PR 阶段即可拦截漂移与规则回归。
+CI 的 `consistency` 作业会自动运行 `node scripts/verify-all.mjs`（结构一致性 + 规则单测），
+`unit-tests` 作业则会借助 `scripts/verify-apps.mjs` **真正运行每个 App 的 client 单测**，
+两者共同在 PR 阶段拦截文档/结构漂移与单测回归。
 
 ## 重新生成 App 目录
 
@@ -49,10 +58,10 @@ node scripts/check-consistency.mjs --fix   # 等价：校验并自动重新生�
 2. `server` 下提供 `.env.example`（含 `PORT` / `CORS_ORIGIN` / `DB_PATH`）。
 3. `client/package.json` 的 `scripts` 至少声明一个 `test` 命令（如 `vitest run`）。
 4. 在 `playwright.config.ts` 的 `APPS` 增加一项（含唯一 `port`）。
-5. 在 `.github/workflows/e2e.yml` 的 `matrix.app` 增加该 App。
+5. 在 `.github/workflows/e2e.yml` 的 `matrix.app` 增加该 App（`e2e` 与 `unit-tests` 两个作业共用同一矩阵）。
 6. 在 `e2e/<name>/` 放置至少一个 `*.spec.ts` 冒烟用例（断言应用成功挂载）。
 7. 在 `README.md` 的「全部克隆 App」列表与 `docs/APP_CATALOG.md`（重新生成）补充该 App。
-8. 运行 `npm run verify` 确认全绿后再提交。
+8. 运行 `npm test` 确认全绿（结构一致性 + 规则单测 + 12 App client 单测）后再提交。
 
 ## 代码约定
 

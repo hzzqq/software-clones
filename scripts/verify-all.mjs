@@ -5,6 +5,8 @@
  * 依次执行：
  *   1. 一致性校验（check-consistency.mjs）—— 含目录新鲜度检查
  *   2. 规则单元测试（check-consistency.test.mjs）
+ *   3. 真实 App 单测（verify-apps.mjs --scope client）—— 真正运行 12 个 App 的
+ *      636 个 client 用例，把「测试文件存在」升级为「测试确实通过」的持续红线。
  *
  * 任一阶段失败即以非零退出码结束，便于本地与 CI 统一调用：
  *   node scripts/verify-all.mjs
@@ -18,6 +20,7 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const steps = [
   { name: '一致性校验', args: ['scripts/check-consistency.mjs'] },
   { name: '规则单元测试', args: ['scripts/check-consistency.test.mjs'] },
+  { name: 'App 单测（client）', args: ['scripts/verify-apps.mjs', '--scope', 'client'] },
 ];
 
 let failed = 0;

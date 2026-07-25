@@ -9,6 +9,7 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:report": "playwright show-report",
     "verify": "node scripts/verify-all.mjs",
+    "test": "node scripts/verify-all.mjs",
     "test:app": "node scripts/verify-apps.mjs",
     "test:all": "node scripts/verify-apps.mjs",
     "test:rules": "node scripts/check-consistency.test.mjs",

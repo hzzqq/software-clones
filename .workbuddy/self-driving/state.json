@@ -1,5 +1,5 @@
 {
-  "cycle": 193,
+  "cycle": 194,
   "max_cycles": 200,
   "phase": "polish",
   "paused": false,
@@ -2500,11 +2500,26 @@
       "verify": "checker 0 错；规则单测 70/70 通过",
       "score": 82,
       "ts": "2026-07-25T17:33:03.736Z"
+    },
+    {
+      "cycle": 194,
+      "task": "single_test_entrypoint",
+      "app": "tooling",
+      "new_requirement": "根 package.json 新增 test 入口=verify-all.mjs，统一执行「结构一致性+规则单测+12 App 真实 client 单测(636例)」",
+      "implicit_fix": "此前 verify-all 只跑结构校验+规则单测，从不真正执行 App 单测，等于「测试存在≠通过」的假绿；CONTRIBUTING 补充 server 单测依赖原生绑定的说明",
+      "files": [
+        "scripts/verify-all.mjs",
+        "package.json",
+        "CONTRIBUTING.md"
+      ],
+      "verify": "npm test → 一致性0错 + 规则70/70 + client 636 passed/0 failed；exit 0",
+      "score": 84,
+      "ts": "2026-07-25T17:36:30.347Z"
     }
   ],
-  "last_task_id": "ci_unit_test_gate_guard",
+  "last_task_id": "single_test_entrypoint",
   "repeat_count": 0,
-  "last_score": 82,
+  "last_score": 84,
   "coverage": {
     "B1": {
       "it-tools": "optimized",
