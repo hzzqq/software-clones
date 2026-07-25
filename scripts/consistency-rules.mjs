@@ -332,6 +332,23 @@ export function invalidEnvValues(root, app) {
   return problems;
 }
 
+/**
+ * 校验某 App 的 client 是否具备 Vite 入口 index.html（缺失则 dev server 无法挂载页面）。
+ * 与 checkBuildConfig 互补：后者只查 vite 配置存在，本函数查真正的入口文件。
+ * @returns {boolean}
+ */
+export function hasClientIndexHtml(root, app) {
+  return existsSync(join(root, app, 'client', 'index.html'));
+}
+
+/**
+ * 校验某 App 的 server 是否具备入口 src/index.ts（缺失则后端无法启动）。
+ * @returns {boolean}
+ */
+export function hasServerEntry(root, app) {
+  return existsSync(join(root, app, 'server', 'src', 'index.ts'));
+}
+
 /** 脚手架模板必需文件清单（用于校验 shared/*-template 未被破坏）。 */
 export const SHARED_TEMPLATE_FILES = {
   'backend-template': ['package.json', 'tsconfig.json', 'src/index.ts'],

@@ -1,5 +1,5 @@
 {
-  "cycle": 184,
+  "cycle": 185,
   "max_cycles": 200,
   "phase": "polish",
   "paused": false,
@@ -2360,11 +2360,26 @@
       "verify": "checker 0 错；单元测试 49/49 通过",
       "score": 82,
       "ts": "2026-07-25T16:00:00+0800"
+    },
+    {
+      "cycle": 185,
+      "task": "bootability_gates",
+      "app": "tooling",
+      "new_requirement": "hasClientIndexHtml + hasServerEntry 规则：client 需 index.html 入口、server 需 src/index.ts 入口",
+      "implicit_fix": "checkBuildConfig 仅验证 tsconfig/vite 配置存在，对『有配置却无入口文件』的空心脚手架(无法挂载/启动)无能为力，新增入口文件硬校验补齐该缺口",
+      "files": [
+        "scripts/consistency-rules.mjs",
+        "scripts/check-consistency.mjs",
+        "scripts/check-consistency.test.mjs"
+      ],
+      "verify": "checker 0 错；单元测试 54/54 通过",
+      "score": 80,
+      "ts": "2026-07-25T16:15:00+0800"
     }
   ],
-  "last_task_id": "env_value_validation",
+  "last_task_id": "bootability_gates",
   "repeat_count": 0,
-  "last_score": 82,
+  "last_score": 80,
   "coverage": {
     "B1": {
       "it-tools": "optimized",

@@ -11,7 +11,7 @@
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { findE2ESpecs, isAppDir, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, findClientTestFiles, missingEnvKeys, findAllMarkdownFiles, parseApps, findDuplicatePorts, findDuplicateNames, checkBuildConfig, missingSharedTemplateFiles, missingAppDirs, findUnregisteredApps, invalidEnvValues } from './consistency-rules.mjs';
+import { findE2ESpecs, isAppDir, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, findClientTestFiles, missingEnvKeys, findAllMarkdownFiles, parseApps, findDuplicatePorts, findDuplicateNames, checkBuildConfig, missingSharedTemplateFiles, missingAppDirs, findUnregisteredApps, invalidEnvValues, hasClientIndexHtml, hasServerEntry } from './consistency-rules.mjs';
 
 let passed = 0;
 let failed = 0;
@@ -148,6 +148,19 @@ assert('invalidEnvValues 合法配置返回 []', invalidEnvValues(sandbox, 'envg
 mkdirSync(join(sandbox, 'envstar', 'server'), { recursive: true });
 writeFileSync(join(sandbox, 'envstar', 'server', '.env.example'), 'PORT=4100\nCORS_ORIGIN=*\n');
 assert('invalidEnvValues 接受 * 通配来源', invalidEnvValues(sandbox, 'envstar').length === 0);
+
+// hasClientIndexHtml / hasServerEntry：入口文件是 app 可挂载/可启动的硬门槛
+mkdirSync(join(sandbox, 'boota', 'client'), { recursive: true });
+mkdirSync(join(sandbox, 'boota', 'server', 'src'), { recursive: true });
+writeFileSync(join(sandbox, 'boota', 'client', 'index.html'), '<html></html>');
+writeFileSync(join(sandbox, 'boota', 'server', 'src', 'index.ts'), '// entry');
+assert('hasClientIndexHtml 命中入口', hasClientIndexHtml(sandbox, 'boota') === true);
+assert('hasServerEntry 命中入口', hasServerEntry(sandbox, 'boota') === true);
+mkdirSync(join(sandbox, 'bootb', 'client'), { recursive: true });
+mkdirSync(join(sandbox, 'bootb', 'server', 'src'), { recursive: true });
+assert('hasClientIndexHtml 缺失返回 false', hasClientIndexHtml(sandbox, 'bootb') === false);
+assert('hasServerEntry 缺失返回 false', hasServerEntry(sandbox, 'bootb') === false);
+assert('hasClientIndexHtml 缺失目录返回 false', hasClientIndexHtml(sandbox, 'nope') === false);
 
 // findAllMarkdownFiles：递归收集所有 .md（忽略 .git / node_modules）
 mkdirSync(join(sandbox, 'docs'), { recursive: true });

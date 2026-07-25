@@ -18,7 +18,7 @@ import { readdirSync, readFileSync, existsSync, writeFileSync, mkdirSync } from 
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildCatalogText } from './lib-catalog.mjs';
-import { isAppDir, findE2ESpecs, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, missingEnvKeys, findAllMarkdownFiles, parseApps, findDuplicatePorts, findDuplicateNames, checkBuildConfig, missingSharedTemplateFiles, missingAppDirs, findUnregisteredApps, invalidEnvValues } from './consistency-rules.mjs';
+import { isAppDir, findE2ESpecs, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, missingEnvKeys, findAllMarkdownFiles, parseApps, findDuplicatePorts, findDuplicateNames, checkBuildConfig, missingSharedTemplateFiles, missingAppDirs, findUnregisteredApps, invalidEnvValues, hasClientIndexHtml, hasServerEntry } from './consistency-rules.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -63,6 +63,8 @@ function main() {
       clientTest: hasClientTestScript(ROOT, app),
       clientTestFile: hasClientTestFile(ROOT, app),
       build: checkBuildConfig(ROOT, app).ok,
+      clientEntry: hasClientIndexHtml(ROOT, app),
+      serverEntry: hasServerEntry(ROOT, app),
     };
     if (!checks.readme) errors.push(`[${app}] README.md 未提及该 App（文档漂移）`);
     if (!checks.e2eDir) errors.push(`[${app}] 缺少 e2e/${app}/ 冒烟目录`);
@@ -75,6 +77,8 @@ function main() {
     const envProblems = invalidEnvValues(ROOT, app);
     for (const pr of envProblems) errors.push(`[${app}] server/.env.example 配置非法: ${pr}`);
     if (!checks.build) errors.push(`[${app}] 构建脚手架不全（client 需 tsconfig+vite 配置，server 需 tsconfig）`);
+    if (!checks.clientEntry) errors.push(`[${app}] client 缺少 index.html 入口（Vite 无法挂载页面）`);
+    if (!checks.serverEntry) errors.push(`[${app}] server 缺少 src/index.ts 入口（后端无法启动）`);
     perApp.push({ app, ...checks });
   }
 
@@ -145,13 +149,14 @@ function main() {
   // 打印报告
   console.log(`\n软件克隆单体仓库一致性校验 — 共发现 ${apps.length} 个全栈 App\n`);
   for (const row of perApp) {
-    const ok = row.readme && row.e2eDir && row.e2eSpec && row.envExample && row.clientTest && row.clientTestFile && row.build;
+    const ok = row.readme && row.e2eDir && row.e2eSpec && row.envExample && row.clientTest && row.clientTestFile && row.build && row.clientEntry && row.serverEntry;
     const tag = ok ? 'OK ' : 'FAIL';
     console.log(
       `  [${tag}] ${row.app.padEnd(12)} readme:${row.readme ? '✓' : '✗'} ` +
         `e2e:${row.e2eDir ? '✓' : '✗'} spec:${row.e2eSpec ? '✓' : '✗'} ` +
         `env:${row.envExample ? '✓' : '✗'} test:${row.clientTest ? '✓' : '✗'} ` +
         `cases:${row.clientTestFile ? '✓' : '✗'} build:${row.build ? '✓' : '✗'} ` +
+        `cidx:${row.clientEntry ? '✓' : '✗'} sidx:${row.serverEntry ? '✓' : '✗'} ` +
         `ci:${row.ciMatrix ? '✓' : '✗'} pw:${row.playwrightApps ? '✓' : '✗'}`
     );
   }
