@@ -1,6 +1,6 @@
 {
-  "cycle": 200,
-  "max_cycles": 200,
+  "cycle": 205,
+  "max_cycles": 205,
   "phase": "polish",
   "paused": false,
   "log": [
@@ -2608,6 +2608,84 @@
       ],
       "verify": "consistency 0错 + 规则 84/84（新增 hasGitHook 3 例）；钩子模拟运行通过",
       "score": 84
+    },
+    {
+      "cycle": 201,
+      "app": "nonio",
+      "task_id": "format_datetime_safe",
+      "new_requirement": "formatDateTime 安全绝对时间格式化(YYYY-MM-DD HH:mm, 非法回退「时间未知」)+测试",
+      "implicit": "PostDetailPage/CommentThread 用 new Date(...).toLocaleString() 对非法 createdAt 渲染 \"Invalid Date\"，改用安全格式化",
+      "files": [
+        "nonio/client/src/utils/forum.ts",
+        "nonio/client/src/utils/forum.test.ts",
+        "nonio/client/src/pages/PostDetailPage.tsx",
+        "nonio/client/src/components/CommentThread.tsx"
+      ],
+      "verify": "nonio client 50 passed + typecheck pass",
+      "score": 82,
+      "ts": 1785046262.7977371
+    },
+    {
+      "cycle": 202,
+      "app": "kanban",
+      "task_id": "count_cards_by_tag",
+      "new_requirement": "countCardsByTag 按标签统计卡片数(Record<tagId,count>)+测试；工具栏新增标签计数 chips(按数排序取前5,带标签色)",
+      "implicit": "dueSoonCards/overdueCards 用 new Date(c.dueDate) 对空串/非法串得 NaN 在比较中静默误判，新增 safeDueTime 统一将 null/空串/非法视为「无截止日」",
+      "files": [
+        "kanban/client/src/utils/filterCards.ts",
+        "kanban/client/test/filterCards.test.ts",
+        "kanban/client/src/pages/BoardPage.tsx",
+        "kanban/client/src/components/Toolbar.tsx"
+      ],
+      "verify": "kanban client 58 passed + typecheck pass",
+      "score": 82,
+      "ts": 1785046585.8588881
+    },
+    {
+      "cycle": 203,
+      "app": "apiclient",
+      "task_id": "redact_sensitive_headers",
+      "new_requirement": "redactSensitiveHeaders 响应头脱敏纯函数(Authorization/Set-Cookie/Token 等掩码)+测试",
+      "implicit": "ResponseViewer 以明文渲染响应头，Set-Cookie/会话令牌等凭据会意外暴露；展示前统一脱敏",
+      "files": [
+        "apiclient/client/src/utils/http.ts",
+        "apiclient/client/test/http.test.ts",
+        "apiclient/client/src/components/ResponseViewer.tsx"
+      ],
+      "verify": "apiclient client 68 passed + typecheck pass",
+      "score": 84,
+      "ts": 1785046764.104497
+    },
+    {
+      "cycle": 204,
+      "app": "it-tools",
+      "task_id": "compact_number",
+      "new_requirement": "compactNumber 紧凑数字格式化(1.5k/2.5M/3B)+测试；工具抽屉统计复用展示",
+      "implicit": "工具统计此前用裸 String(total) 拼接，大数量不紧凑；新增复用型格式化纯函数统一数字展示",
+      "files": [
+        "it-tools/client/src/utils/tools.ts",
+        "it-tools/client/src/utils/tools.test.ts",
+        "it-tools/client/src/layouts/MainLayout.tsx"
+      ],
+      "verify": "it-tools client 84 passed + typecheck pass",
+      "score": 80,
+      "ts": 1785047023.4354768
+    },
+    {
+      "cycle": 205,
+      "app": "tooling",
+      "task_id": "nvmrc_node_pin",
+      "new_requirement": "hasNvmrc 一致性规则（根须存在 .nvmrc 锁定 Node 版本）+ 规则单测；新增根 .nvmrc(Node 22)",
+      "implicit": "仓库此前未锁定 Node 版本，贡献者/CI 可能用不同 Node 主版本导致构建/依赖行为漂移（不可复现的隐性风险）",
+      "files": [
+        "scripts/consistency-rules.mjs",
+        "scripts/check-consistency.mjs",
+        "scripts/check-consistency.test.mjs",
+        ".nvmrc"
+      ],
+      "verify": "consistency 0错 + 规则 86/86 通过",
+      "score": 80,
+      "ts": 1785047208.7676325
     }
   ],
   "last_task_id": "local_precommit_hook",
