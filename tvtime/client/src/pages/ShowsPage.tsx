@@ -26,7 +26,7 @@ import ClearIcon from '@mui/icons-material/Clear';
 import { showApi } from '../api/shows';
 import type { Show } from '../types';
 import ShowCard from '../components/ShowCard';
-import { filterShows, sortShows, isComplete, type ShowSort } from '../utils/show';
+import { filterShows, sortShows, isComplete, clampEpisodeCount, type ShowSort } from '../utils/show';
 
 export default function ShowsPage(): JSX.Element {
   const [shows, setShows] = useState<Show[]>([]);
@@ -69,7 +69,7 @@ export default function ShowsPage(): JSX.Element {
     try {
       await showApi.create({
         title: form.title.trim(),
-        totalEpisodes: Number(form.totalEpisodes) || 1,
+        totalEpisodes: clampEpisodeCount(form.totalEpisodes),
         note: form.note,
       });
       setOpen(false);

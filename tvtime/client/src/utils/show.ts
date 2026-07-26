@@ -49,6 +49,26 @@ export function formatEpisodeCode(season: number, episode: number): string {
   return `S${s}E${e}`;
 }
 
+/**
+ * 剧集观看进度可读摘要：「已看 X / 总 Y（Z%）」。
+ * 用于详情页头部一行展示，替代散落的零散数字。纯函数，不修改入参。
+ */
+export function formatProgress(show: Show): string {
+  const pct = progressPercent(show.watchedCount, show.totalEpisodes);
+  return `已看 ${show.watchedCount} / ${show.totalEpisodes}（${pct}%）`;
+}
+
+/**
+ * 夹回剧集总数：必须为有限且 >= 1 的整数；非法 / 负数 / 0 回退 fallback（默认 1）。
+ * 用于新增剧集时的表单校验，修复「Number(form.totalEpisodes) || 1」对负数输入
+ * 原样放行（如 -5 为真值）导致存储负集数的隐性 bug。
+ */
+export function clampEpisodeCount(raw: unknown, fallback = 1): number {
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n < 1) return fallback;
+  return Math.floor(n);
+}
+
 /** 计算「接下来看」的下一集标签（纯函数，不修改入参）。
  * 已看完（watched >= total 或 total <= 0）返回「已看完」；
  * 否则返回「下一集 第 N 集」（N = watched + 1）。 */

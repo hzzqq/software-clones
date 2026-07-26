@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { progressPercent, nextUnwatched, isComplete, filterShows, sortShows, episodesLeft, remainingWatchTime, formatWatchTime, filterEpisodesByWatched, episodesByStatus } from './show';
+import { progressPercent, nextUnwatched, isComplete, filterShows, sortShows, episodesLeft, remainingWatchTime, formatWatchTime, filterEpisodesByWatched, episodesByStatus, formatProgress, clampEpisodeCount } from './show';
 import type { Episode, Show } from '../types';
 
 function mkShow(id: number, title: string, watchedCount: number, totalEpisodes: number, updatedAt: string): Show {
@@ -175,5 +175,38 @@ describe('episodesByStatus', () => {
   it('不修改入参', () => {
     episodesByStatus(eps);
     expect(eps).toHaveLength(4);
+  });
+});
+
+describe('formatProgress', () => {
+  const show: Show = { id: 1, title: 'X', note: '', totalEpisodes: 12, watchedCount: 3, createdAt: '', updatedAt: '' };
+  it('生成「已看 X / 总 Y（Z%）」', () => {
+    expect(formatProgress(show)).toBe('已看 3 / 12（25%）');
+  });
+  it('全部看完为 100%', () => {
+    expect(formatProgress({ ...show, watchedCount: 12 })).toBe('已看 12 / 12（100%）');
+  });
+  it('总集为 0 不崩溃', () => {
+    expect(formatProgress({ ...show, totalEpisodes: 0, watchedCount: 0 })).toBe('已看 0 / 0（0%）');
+  });
+});
+
+describe('clampEpisodeCount', () => {
+  it('正常正整数原样', () => {
+    expect(clampEpisodeCount(12)).toBe(12);
+    expect(clampEpisodeCount('8')).toBe(8);
+  });
+  it('负数/0 回退 fallback', () => {
+    expect(clampEpisodeCount(-5)).toBe(1);
+    expect(clampEpisodeCount(0)).toBe(1);
+  });
+  it('非数字回退 fallback', () => {
+    expect(clampEpisodeCount('abc')).toBe(1);
+    expect(clampEpisodeCount(NaN)).toBe(1);
+    expect(clampEpisodeCount(undefined)).toBe(1);
+  });
+  it('支持自定义 fallback 与取整', () => {
+    expect(clampEpisodeCount(3.9, 4)).toBe(3);
+    expect(clampEpisodeCount(-1, 4)).toBe(4);
   });
 });

@@ -10,11 +10,12 @@ import { showApi } from '../api/shows';
 import { episodeApi } from '../api/episodes';
 import type { Show, Episode } from '../types';
 import EpisodeGrid from '../components/EpisodeGrid';
-import { progressPercent, nextUnwatched, isComplete, episodesLeft, remainingWatchTime, formatWatchTime, nextEpisodeLabel, filterEpisodesByWatched, episodesByStatus, type EpisodeFilter } from '../utils/show';
+import { progressPercent, nextUnwatched, isComplete, episodesLeft, remainingWatchTime, formatWatchTime, nextEpisodeLabel, filterEpisodesByWatched, episodesByStatus, formatProgress, type EpisodeFilter } from '../utils/show';
 
 export default function ShowDetailPage(): JSX.Element {
   const { id } = useParams<{ id: string }>();
   const showId = Number(id);
+  const validId = Number.isInteger(showId) && showId > 0;
   const [show, setShow] = useState<Show | null>(null);
   const [episodes, setEpisodes] = useState<Episode[]>([]);
   const [epFilter, setEpFilter] = useState<EpisodeFilter>('all');
@@ -22,6 +23,13 @@ export default function ShowDetailPage(): JSX.Element {
   const [error, setError] = useState<string | null>(null);
 
   const load = async () => {
+    if (!validId) {
+      setShow(null);
+      setEpisodes([]);
+      setError('无效的剧集 ID');
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const [s, eps] = await Promise.all([showApi.get(showId), showApi.episodes(showId)]);
@@ -87,6 +95,7 @@ export default function ShowDetailPage(): JSX.Element {
       <Typography variant="h5">{show.title}</Typography>
       {show.note && <Typography variant="body2" color="text.secondary">{show.note}</Typography>}
       <LinearProgress variant="determinate" value={pct} sx={{ my: 1, height: 8, borderRadius: 4 }} />
+      <Typography variant="caption" color="text.secondary">{formatProgress(show)}</Typography>
       <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
         <Chip size="small" label={`${show.watchedCount}/${show.totalEpisodes}`} />
         <Chip size="small" label={`${pct}%`} color={isComplete(show.watchedCount, show.totalEpisodes) ? 'success' : 'default'} />
