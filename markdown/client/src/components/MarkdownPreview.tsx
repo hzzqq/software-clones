@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { marked } from 'marked';
 import { Box } from '@mui/material';
 import { extractHeadings } from '../utils/markdown';
+import { sanitizeHtml } from '../utils/sanitize';
 
 interface Props {
   content: string;
@@ -11,7 +12,7 @@ export default function MarkdownPreview({ content }: Props): JSX.Element {
   const headings = useMemo(() => extractHeadings(content), [content]);
   const html = useMemo(() => {
     marked.setOptions({ breaks: true, gfm: true });
-    const raw = marked.parse(content || '') as string;
+    const raw = sanitizeHtml(marked.parse(content || '') as string);
     let i = 0;
     return raw.replace(/<h([1-3])>(.*?)<\/h\1>/g, (_m, lvl, text) => {
       const id = headings[i]?.id ?? `h-${i}`;
