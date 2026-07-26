@@ -27,6 +27,7 @@ import HistoryIcon from '@mui/icons-material/History';
 import ExtensionIcon from '@mui/icons-material/Extension';
 import ClearIcon from '@mui/icons-material/Clear';
 import { sortTools, fuzzyMatchTools, summarizeTools, toolCategoryLabel } from '../utils/search';
+import { compactNumber } from '../utils/tools';
 
 import { tools } from '../tools/registry';
 
@@ -125,7 +126,7 @@ export default function MainLayout(): JSX.Element {
         </FormControl>
       </Box>
       <Box sx={{ px: 2, pb: 1 }}>
-        <Chip size="small" variant="outlined" label={`匹配 ${summary.total} 个工具 · ${summary.categories} 类`} />
+        <Chip size="small" variant="outlined" label={`匹配 ${compactNumber(summary.total)} 个工具 · ${summary.categories} 类`} />
       </Box>
       <Divider />
       <List dense>

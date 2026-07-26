@@ -16,6 +16,7 @@ import {
   csvToJson,
   isValidJson,
   parseJson,
+  compactNumber,
 } from './tools';
 
 describe('base64', () => {
@@ -136,5 +137,26 @@ describe('json <-> csv', () => {
   });
   it('throws when root is not an array', () => {
     expect(() => jsonToCsv('{"a":1}')).toThrow('数组');
+  });
+});
+
+describe('compactNumber', () => {
+  it('小于 1000 原样返回', () => {
+    expect(compactNumber(0)).toBe('0');
+    expect(compactNumber(42)).toBe('42');
+    expect(compactNumber(999)).toBe('999');
+  });
+  it('千/百万/十亿 缩写', () => {
+    expect(compactNumber(1500)).toBe('1.5k');
+    expect(compactNumber(2500000)).toBe('2.5M');
+    expect(compactNumber(3000000000)).toBe('3B');
+  });
+  it('百位以上取整，以下保留一位小数', () => {
+    expect(compactNumber(123456)).toBe('123.5k');
+    expect(compactNumber(1200)).toBe('1.2k');
+  });
+  it('非有限值回退 0', () => {
+    expect(compactNumber(NaN)).toBe('0');
+    expect(compactNumber(Infinity)).toBe('0');
   });
 });

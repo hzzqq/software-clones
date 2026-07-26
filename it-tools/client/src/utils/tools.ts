@@ -283,3 +283,26 @@ function parseCsvLine(line: string, delimiter: string): string[] {
   result.push(cur);
   return result;
 }
+
+/**
+ * 将较大数字压缩为紧凑可读形式：1500 → "1.5k"，2_500_000 → "2.5M"，< 1000 原样返回。
+ * 用于工具抽屉统计等需要节省空间的场景。纯函数。
+ */
+export function compactNumber(n: number): string {
+  if (!Number.isFinite(n)) return '0';
+  const abs = Math.abs(n);
+  if (abs < 1000) return String(n);
+  const units: [number, string][] = [
+    [1e9, 'B'],
+    [1e6, 'M'],
+    [1e3, 'k'],
+  ];
+  for (const [base, suffix] of units) {
+    if (abs >= base) {
+      const v = n / base;
+      const text = v >= 100 ? String(Math.round(v)) : String(Math.round(v * 10) / 10);
+      return `${text}${suffix}`;
+    }
+  }
+  return String(n);
+}
