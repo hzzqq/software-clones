@@ -15,7 +15,7 @@ import UnarchiveOutlinedIcon from '@mui/icons-material/UnarchiveOutlined';
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { Note } from '../types';
-import { visibilityLabel, formatRelativeTime, countChars, formatCharCount } from '../utils/notes';
+import { visibilityLabel, formatRelativeTime, countChars, formatCharCount, extractTitle, truncatePreview } from '../utils/notes';
 
 interface Props {
   note: Note;
@@ -58,7 +58,25 @@ export default function NoteCard(props: Props): JSX.Element {
             {note.pinned ? ' · 📌' : ''} · {formatCharCount(countChars(note.content))} 字
           </Typography>
         </Stack>
-        <Typography sx={{ whiteSpace: 'pre-wrap', mt: 1 }}>{note.content}</Typography>
+        {(() => {
+          const title = extractTitle(note.content);
+          const preview = truncatePreview(note.content);
+          return (
+            <>
+              {title && (
+                <Typography variant="subtitle2" fontWeight={700} sx={{ mt: 1 }}>
+                  {title}
+                </Typography>
+              )}
+              <Typography
+                sx={{ whiteSpace: 'pre-wrap', mt: title ? 0.5 : 1 }}
+                color={preview ? 'text.primary' : 'text.secondary'}
+              >
+                {preview || '（空笔记）'}
+              </Typography>
+            </>
+          );
+        })()}
         {note.tags.length > 0 && (
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mt: 1 }}>
             {note.tags.map((t) => (

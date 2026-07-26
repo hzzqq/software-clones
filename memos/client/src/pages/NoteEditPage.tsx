@@ -11,16 +11,25 @@ export default function NoteEditPage(): JSX.Element {
   const [note, setNote] = useState<Note | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const noteId = Number(id);
+  const validId = Number.isInteger(noteId) && noteId > 0;
+
   useEffect(() => {
+    if (!validId) {
+      setNote(null);
+      setLoading(false);
+      return;
+    }
     noteApi
-      .get(Number(id))
+      .get(noteId)
       .then(setNote)
       .catch(() => setNote(null))
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [noteId, validId]);
 
   const handleSave = async (input: { content: string; visibility: Visibility }) => {
-    await noteApi.update(Number(id), input);
+    if (!validId) return;
+    await noteApi.update(noteId, input);
     navigate('/');
   };
 

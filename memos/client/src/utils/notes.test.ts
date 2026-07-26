@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseTags, formatRelativeTime, visibilityLabel, groupNotesByTag, filterNotesByTag, pinnedNotes, sortNotesByPinned, summarizeNotes, groupNotesByMonth, formatCharCount, sortNotes } from './notes';
+import { parseTags, formatRelativeTime, visibilityLabel, groupNotesByTag, filterNotesByTag, pinnedNotes, sortNotesByPinned, summarizeNotes, groupNotesByMonth, formatCharCount, sortNotes, extractTitle, truncatePreview } from './notes';
 import { Visibility, Note } from '../types';
 
 describe('parseTags', () => {
@@ -252,5 +252,43 @@ describe('sortNotes', () => {
     const before = notes.map((n) => n.id);
     sortNotes(notes, 'newest');
     expect(notes.map((n) => n.id)).toEqual(before);
+  });
+});
+
+describe('extractTitle', () => {
+  it('取首行非空内容作标题', () => {
+    expect(extractTitle('第一行标题\n正文内容')).toBe('第一行标题');
+  });
+  it('剥离前导 # 标题符与首尾空白', () => {
+    expect(extractTitle('   ## 标题  ')).toBe('标题');
+    expect(extractTitle('#todo 写文档')).toBe('todo 写文档');
+  });
+  it('跳过空行', () => {
+    expect(extractTitle('\n\n  正文在第三行')).toBe('正文在第三行');
+  });
+  it('空/纯空白返回空串', () => {
+    expect(extractTitle('')).toBe('');
+    expect(extractTitle('   \n  ')).toBe('');
+    expect(extractTitle(undefined as unknown as string)).toBe('');
+  });
+});
+
+describe('truncatePreview', () => {
+  it('折叠空白并去除首尾空白', () => {
+    expect(truncatePreview('  hello\n  world  ')).toBe('hello world');
+  });
+  it('短文本原样返回', () => {
+    expect(truncatePreview('短内容', 140)).toBe('短内容');
+  });
+  it('超长截断加省略号', () => {
+    const s = 'x'.repeat(200);
+    const out = truncatePreview(s, 140);
+    expect(out.length).toBe(140);
+    expect(out.endsWith('…')).toBe(true);
+    expect(out.startsWith('x'.repeat(139))).toBe(true);
+  });
+  it('空/undefined 安全', () => {
+    expect(truncatePreview('')).toBe('');
+    expect(truncatePreview(undefined as unknown as string)).toBe('');
   });
 });

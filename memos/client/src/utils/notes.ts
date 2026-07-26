@@ -160,3 +160,27 @@ export function groupNotesByMonth(notes: Note[]): Record<string, Note[]> {
   for (const key of keys) ordered[key] = buckets[key];
   return ordered;
 }
+
+/**
+ * 从笔记正文提取标题：取第一段非空行，去除开头 # 标题符号与首尾空白。
+ * 空内容 / 全空白 / 无有效行返回 ''。用于列表卡片展示标题而非整段正文。
+ */
+export function extractTitle(content: string): string {
+  const lines = (content ?? '').split('\n');
+  for (const line of lines) {
+    const t = line.trim().replace(/^#+\s*/, '').trim();
+    if (t) return t;
+  }
+  return '';
+}
+
+/**
+ * 生成列表预览文本：折叠全部空白为单空格并去除首尾空白，超长按 max 截断加省略号。
+ * 用于笔记卡片，避免超长正文（含换行）撑爆卡片布局（真实 UX / 性能兜底）。
+ * 空内容返回 ''；不修改入参。
+ */
+export function truncatePreview(content: string, max = 140): string {
+  const flat = (content ?? '').replace(/\s+/g, ' ').trim();
+  if (flat.length <= max) return flat;
+  return flat.slice(0, max - 1) + '…';
+}
