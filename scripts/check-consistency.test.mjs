@@ -13,7 +13,7 @@ import { join, resolve, dirname } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { findE2ESpecs, isAppDir, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, findClientTestFiles, missingEnvKeys, findAllMarkdownFiles, parseApps, findDuplicatePorts, findDuplicateNames, findDuplicateDirs, checkBuildConfig, missingSharedTemplateFiles, missingAppDirs, findUnregisteredApps, invalidEnvValues, hasClientIndexHtml, hasServerEntry, errorBoundaryWired, hasAppReadme, ciRunsUnitTests } from './consistency-rules.mjs';
+import { findE2ESpecs, isAppDir, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, findClientTestFiles, missingEnvKeys, findAllMarkdownFiles, parseApps, findDuplicatePorts, findDuplicateNames, findDuplicateDirs, checkBuildConfig, missingSharedTemplateFiles, missingAppDirs, findUnregisteredApps, invalidEnvValues, hasClientIndexHtml, hasServerEntry, errorBoundaryWired, hasAppReadme, ciRunsUnitTests, hasLicenseFile, gitignoreCoversArtifacts, clientTestUsesVitest, readmeMentionsVerify, appReadmeMentionsRun } from './consistency-rules.mjs';
 
 const TEST_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -283,6 +283,44 @@ writeFileSync(
   'jobs:\n  unit-tests:\n    run: node scripts/verify-apps.mjs\n  e2e:\n    run: echo hi\n'
 );
 assert('ciRunsUnitTests 闸门齐全时返回 []', ciRunsUnitTests(sandbox).length === 0);
+
+// hasLicenseFile：仓库根须含 LICENSE（开源合规前置）
+writeFileSync(join(sandbox, 'LICENSE'), 'MIT License\n');
+assert('hasLicenseFile 存在返回 true', hasLicenseFile(sandbox) === true);
+rmSync(join(sandbox, 'LICENSE'));
+assert('hasLicenseFile 缺失返回 false', hasLicenseFile(sandbox) === false);
+
+// gitignoreCoversArtifacts：根 .gitignore 须忽略依赖/构建产物/密钥
+assert('gitignoreCoversArtifacts 无文件返回全部缺失', gitignoreCoversArtifacts(sandbox).length === 6);
+writeFileSync(join(sandbox, '.gitignore'), 'node_modules/\ndist/\n.env\n.env.local\n*.local\n*.tsbuildinfo\n');
+assert('gitignoreCoversArtifacts 齐全返回 []', gitignoreCoversArtifacts(sandbox).length === 0);
+writeFileSync(join(sandbox, '.gitignore'), 'node_modules/\n');
+const missIgnore = gitignoreCoversArtifacts(sandbox);
+assert('gitignoreCoversArtifacts 缺项被捕获', missIgnore.length > 0 && missIgnore.includes('*.tsbuildinfo'));
+rmSync(join(sandbox, '.gitignore'));
+
+// clientTestUsesVitest：test 脚本必须调用 vitest（非空 hearted 替身）
+mkdirSync(join(sandbox, 'vtapp', 'client'), { recursive: true });
+writeFileSync(join(sandbox, 'vtapp', 'client', 'package.json'), JSON.stringify({ scripts: { test: 'vitest run' } }));
+assert('clientTestUsesVitest 命中 vitest', clientTestUsesVitest(sandbox, 'vtapp') === true);
+writeFileSync(join(sandbox, 'vtapp', 'client', 'package.json'), JSON.stringify({ scripts: { test: 'echo ok' } }));
+assert('clientTestUsesVitest 空心脚本返回 false', clientTestUsesVitest(sandbox, 'vtapp') === false);
+rmSync(join(sandbox, 'vtapp'), { recursive: true, force: true });
+
+// readmeMentionsVerify：根 README 须说明统一验收命令 npm test
+writeFileSync(join(sandbox, 'README.md'), '# hi\nrun `npm test` to verify\n');
+assert('readmeMentionsVerify 提及 npm test 返回 true', readmeMentionsVerify(sandbox) === true);
+writeFileSync(join(sandbox, 'README.md'), '# hi\nuse yarn\n');
+assert('readmeMentionsVerify 未提及返回 false', readmeMentionsVerify(sandbox) === false);
+rmSync(join(sandbox, 'README.md'));
+
+// appReadmeMentionsRun：App README 须含 npm install 与统一 npm test
+mkdirSync(join(sandbox, 'runapp'), { recursive: true });
+writeFileSync(join(sandbox, 'runapp', 'README.md'), '# runapp\nnpm install then npm test\n');
+assert('appReadmeMentionsRun 含运行/验证命令返回 true', appReadmeMentionsRun(sandbox, 'runapp') === true);
+writeFileSync(join(sandbox, 'runapp', 'README.md'), '# runapp\nnpm install but no test mention\n');
+assert('appReadmeMentionsRun 缺 npm test 返回 false', appReadmeMentionsRun(sandbox, 'runapp') === false);
+rmSync(join(sandbox, 'runapp'), { recursive: true, force: true });
 
 console.log(`\n通过: ${passed}  失败: ${failed}`);
 if (failed > 0) {

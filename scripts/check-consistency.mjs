@@ -18,7 +18,7 @@ import { readdirSync, readFileSync, existsSync, writeFileSync, mkdirSync } from 
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildCatalogText } from './lib-catalog.mjs';
-import { isAppDir, findE2ESpecs, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, missingEnvKeys, findAllMarkdownFiles, parseApps, findDuplicatePorts, findDuplicateNames, findDuplicateDirs, checkBuildConfig, missingSharedTemplateFiles, missingAppDirs, findUnregisteredApps, invalidEnvValues, hasClientIndexHtml, hasServerEntry, errorBoundaryWired, hasAppReadme, ciRunsUnitTests } from './consistency-rules.mjs';
+import { isAppDir, findE2ESpecs, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, missingEnvKeys, findAllMarkdownFiles, parseApps, findDuplicatePorts, findDuplicateNames, findDuplicateDirs, checkBuildConfig, missingSharedTemplateFiles, missingAppDirs, findUnregisteredApps, invalidEnvValues, hasClientIndexHtml, hasServerEntry, errorBoundaryWired, hasAppReadme, ciRunsUnitTests, hasLicenseFile, gitignoreCoversArtifacts, clientTestUsesVitest, readmeMentionsVerify, appReadmeMentionsRun } from './consistency-rules.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -77,6 +77,8 @@ function main() {
       serverEntry: hasServerEntry(ROOT, app),
       errorBoundary: errorBoundaryWired(ROOT, app),
       appReadme: hasAppReadme(ROOT, app),
+      clientVitest: clientTestUsesVitest(ROOT, app),
+      appReadmeRun: appReadmeMentionsRun(ROOT, app),
     };
     if (!checks.readme) errors.push(`[${app}] README.md 未提及该 App（文档漂移）`);
     if (!checks.e2eDir) errors.push(`[${app}] 缺少 e2e/${app}/ 冒烟目录`);
@@ -93,6 +95,8 @@ function main() {
     if (!checks.serverEntry) errors.push(`[${app}] server 缺少 src/index.ts 入口（后端无法启动）`);
     if (!checks.errorBoundary) errors.push(`[${app}] client 未把 ErrorBoundary 接入渲染树（渲染报错将整页崩溃、无兜底）`);
     if (!checks.appReadme) errors.push(`[${app}] 缺少 <app>/README.md（子项目无上手说明）`);
+    if (!checks.clientVitest) errors.push(`[${app}] client/package.json 的 test 脚本未调用 vitest（无法真实回归验证）`);
+    if (!checks.appReadmeRun) errors.push(`[${app}] <app>/README.md 未说明运行/验证命令（npm install / npm test）`);
     perApp.push({ app, ...checks });
   }
 
@@ -177,13 +181,30 @@ function main() {
     errors.push('CONTRIBUTING.md 未指引贡献者运行 scripts/check-consistency.mjs');
   }
 
+  // 开源合规：仓库根必须含 LICENSE，clone 者才能合法再分发/使用
+  if (!hasLicenseFile(ROOT)) {
+    errors.push('缺少根 LICENSE 文件（开源合规：clone 者需明确许可才能再分发）');
+  }
+
+  // .gitignore 必须忽略依赖/构建产物/密钥，避免巨型提交或凭证泄露
+  const missingIgnore = gitignoreCoversArtifacts(ROOT);
+  for (const pat of missingIgnore) {
+    errors.push(`[gitignore] 缺少忽略项 "${pat}"（依赖/构建产物/密钥可能被提交）`);
+  }
+
+  // 根 README 必须说明统一验收命令 npm test，贡献者才知道如何本地复验
+  if (!readmeMentionsVerify(ROOT)) {
+    errors.push('README.md 未说明统一验收命令 npm test（贡献者无法本地复验）');
+  }
+
   // 已执行的校验闸门清单（可观测性：JSON 报告里记录本次到底验了哪些不变量）
   const RULES = [
     'readme-mention', 'e2e-dir', 'e2e-spec', 'env-example', 'env-keys',
     'env-values', 'client-test-script', 'client-test-file', 'build-config',
-    'client-entry', 'server-entry', 'error-boundary', 'app-readme', 'apps-dir', 'no-dup-port', 'no-dup-name',
+    'client-entry', 'server-entry', 'error-boundary', 'app-readme', 'client-vitest', 'app-readme-run',
+    'apps-dir', 'no-dup-port', 'no-dup-name',
     'no-dup-dir', 'ghost-reg', 'reverse-ghost', 'shared-template', 'doc-links',
-    'catalog-fresh', 'contributing', 'ci-runs-unit-tests',
+    'catalog-fresh', 'license', 'gitignore-artifacts', 'readme-verify', 'contributing', 'ci-runs-unit-tests',
   ];
 
   const summary = {
@@ -206,7 +227,7 @@ function main() {
   if (!jsonMode) {
     console.log(`\n软件克隆单体仓库一致性校验 — 共发现 ${apps.length} 个全栈 App\n`);
     for (const row of perApp) {
-      const ok = row.readme && row.e2eDir && row.e2eSpec && row.envExample && row.clientTest && row.clientTestFile && row.build && row.clientEntry && row.serverEntry && row.errorBoundary && row.appReadme;
+      const ok = row.readme && row.e2eDir && row.e2eSpec && row.envExample && row.clientTest && row.clientTestFile && row.build && row.clientEntry && row.serverEntry && row.errorBoundary && row.appReadme && row.clientVitest && row.appReadmeRun;
       const tag = ok ? 'OK ' : 'FAIL';
       console.log(
         `  [${tag}] ${row.app.padEnd(12)} readme:${row.readme ? '✓' : '✗'} ` +
@@ -216,6 +237,7 @@ function main() {
           `cidx:${row.clientEntry ? '✓' : '✗'} sidx:${row.serverEntry ? '✓' : '✗'} ` +
           `eb:${row.errorBoundary ? '✓' : '✗'} ` +
           `ard:${row.appReadme ? '✓' : '✗'} ` +
+          `vit:${row.clientVitest ? '✓' : '✗'} run:${row.appReadmeRun ? '✓' : '✗'} ` +
           `ci:${row.ciMatrix ? '✓' : '✗'} pw:${row.playwrightApps ? '✓' : '✗'}`
       );
     }

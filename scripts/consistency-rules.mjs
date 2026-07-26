@@ -413,6 +413,83 @@ export function missingSharedTemplateFiles(root) {
 }
 
 /**
+ * 校验仓库根是否包含 LICENSE 文件（开源克隆仓库的合规与再分发前置）。
+ * 缺失 LICENSE 会让 clone 者在法律上无法安全再分发 / 使用，属于「能 clone 但不能合规使用」的隐性缺口。
+ * @returns {boolean}
+ */
+export function hasLicenseFile(root) {
+  return existsSync(join(root, 'LICENSE'));
+}
+
+/**
+ * 校验根 .gitignore 是否覆盖了「不应被提交」的典型产物：依赖目录、构建产物、密钥文件、本地覆盖与 TS 增量编译产物。
+ * 缺失这些忽略项会让巨型 node_modules / 构建产物 / .env 密钥被意外提交，污染仓库甚至泄露凭证。
+ * @returns {string[]} 缺失的忽略模式（空数组表示齐全）
+ */
+export function gitignoreCoversArtifacts(root) {
+  const p = join(root, '.gitignore');
+  if (!existsSync(p)) return ['node_modules/', 'dist/', '.env', '.env.local', '*.local', '*.tsbuildinfo'];
+  let text = '';
+  try {
+    text = readFileSync(p, 'utf8');
+  } catch {
+    return ['node_modules/', 'dist/', '.env', '.env.local', '*.local', '*.tsbuildinfo'];
+  }
+  const required = ['node_modules/', 'dist/', '.env', '.env.local', '*.local', '*.tsbuildinfo'];
+  return required.filter((pat) => !text.includes(pat));
+}
+
+/**
+ * 校验某 App 的 client `test` 脚本是否真正调用了 vitest（而非 `echo ok` 之类的空心替身）。
+ * 仅声明 test 脚本还不够——若脚本不跑真实测试运行器，「CI 跑过 test」就是假绿。
+ * @returns {boolean}
+ */
+export function clientTestUsesVitest(root, app) {
+  const p = join(root, app, 'client', 'package.json');
+  if (!existsSync(p)) return false;
+  try {
+    const pkg = JSON.parse(readFileSync(p, 'utf8'));
+    const test = (pkg.scripts || {}).test;
+    return typeof test === 'string' && /\bvitest\b/.test(test);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * 校验根 README.md 是否向贡献者说明了统一验收命令 `npm test`（仓库级验收红线）。
+ * 缺失该说明会让贡献者不知如何本地复验，等于「有门禁却没文档」的隐性缺口。
+ * @returns {boolean}
+ */
+export function readmeMentionsVerify(root) {
+  const p = join(root, 'README.md');
+  if (!existsSync(p)) return false;
+  try {
+    return /npm\s+test/.test(readFileSync(p, 'utf8'));
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * 校验某 App 的自带 README.md 是否包含「如何运行 / 如何验证」的入门说明：
+ * 必须出现 `npm install`（启动依赖）与统一验收命令 `npm test`（仓库级红线）。
+ * 仅存在 README 还不够——若没写清启动与验证命令，贡献者仍不知如何单独跑起该 App，
+ * 更不知有仓库级统一验收红线。
+ * @returns {boolean}
+ */
+export function appReadmeMentionsRun(root, app) {
+  const p = join(root, app, 'README.md');
+  if (!existsSync(p)) return false;
+  try {
+    const t = readFileSync(p, 'utf8');
+    return /npm\s+install/.test(t) && /npm\s+test/.test(t);
+  } catch {
+    return false;
+  }
+}
+
+/**
  * 校验 CI 是否真正执行了 App 单测（防止「unit-tests 闸门被悄悄删掉」的隐性漂移）。
  * 仓库此前只有结构一致性校验，CI 从不执行 12 个 App 的单测，真实回归会被放过。
  * 本规则要求 e2e.yml 同时存在 `unit-tests:` 作业且引用真实单测编排器 `verify-apps.mjs`，

@@ -27,3 +27,13 @@ cd nonio/server && npm install && npm run dev
 
 > 共享约定（响应信封、`camelCase`↔`snake_case`、`VITE_API_BASE` 注入等）见仓库根
 > [README.md](../../README.md) 与 [B1-architecture.md](../../B1-architecture.md)。
+
+
+## 验证
+
+```bash
+# 在仓库根运行统一验收（结构一致性 + 规则单测 + 本 App 的 client 单测）
+npm test
+```
+
+> 单独验证本 App：`npm run test:app <name>`（见仓库根 CONTRIBUTING.md）。

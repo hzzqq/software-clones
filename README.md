@@ -57,3 +57,20 @@ software-clones/
 ├── kanban/            # App2 任务/看板
 └── glance/            # App3 信息聚合仪表盘
 ```
+
+## 验证 / Verify
+
+本仓库提供仓库级统一验收红线，无需先 `npm install` 任何 App 即可运行纯 Node 校验：
+
+```bash
+npm test                # 一键全量验收：结构一致性 + 规则单测 + 12 个 App 的 client 单测
+npm run verify          # 结构一致性校验 + 规则单元测试 + 目录新鲜度
+npm run fix             # 自动修复可自愈项（如重新生成过期的 docs/APP_CATALOG.md）
+node scripts/check-consistency.mjs   # 单独运行一致性校验器
+```
+
+详见 [CONTRIBUTING.md](CONTRIBUTING.md)。
+
+## License
+
+本仓库以 [MIT License](LICENSE) 开源。每个 App 均为对应公开产品的学习型克隆实现，仅供学习与二次开发使用。

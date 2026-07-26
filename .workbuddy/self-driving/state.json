@@ -1,5 +1,5 @@
 {
-  "cycle": 194,
+  "cycle": 199,
   "max_cycles": 200,
   "phase": "polish",
   "paused": false,
@@ -2515,11 +2515,86 @@
       "verify": "npm test → 一致性0错 + 规则70/70 + client 636 passed/0 failed；exit 0",
       "score": 84,
       "ts": "2026-07-25T17:36:30.347Z"
+    },
+    {
+      "cycle": 195,
+      "app": "tooling",
+      "task_id": "license_gate",
+      "new_requirement": "hasLicenseFile 规则（仓库根须含 LICENSE，开源合规前置）",
+      "implicit": "根 README 此前无 License 章节，clone 者无明确许可说明",
+      "files": [
+        "scripts/consistency-rules.mjs",
+        "scripts/check-consistency.mjs",
+        "scripts/check-consistency.test.mjs",
+        "LICENSE",
+        "README.md"
+      ],
+      "verify": "consistency 0错 + 规则 81/81",
+      "score": 80
+    },
+    {
+      "cycle": 196,
+      "app": "tooling",
+      "task_id": "gitignore_artifact_gate",
+      "new_requirement": "gitignoreCoversArtifacts 规则（须忽略 node_modules/dist/.env/.env.local/*.local/*.tsbuildinfo）",
+      "implicit": ".gitignore 缺 *.local/*.tsbuildinfo（Vite 本地覆盖与 TS 增量编译产物可能被提交）",
+      "files": [
+        ".gitignore",
+        "scripts/consistency-rules.mjs",
+        "scripts/check-consistency.mjs",
+        "scripts/check-consistency.test.mjs"
+      ],
+      "verify": "consistency 0错 + 规则 81/81",
+      "score": 78
+    },
+    {
+      "cycle": 197,
+      "app": "tooling",
+      "task_id": "client_vitest_gate",
+      "new_requirement": "clientTestUsesVitest 规则（client test 脚本必须真正调用 vitest，杜绝 echo 空心替身）",
+      "implicit": "核查 12 App 的 test 脚本均为 `vitest run`（CI 非 watch，无挂起风险），确认无裸 vitest",
+      "files": [
+        "scripts/consistency-rules.mjs",
+        "scripts/check-consistency.mjs",
+        "scripts/check-consistency.test.mjs"
+      ],
+      "verify": "consistency 0错 + 规则 81/81",
+      "score": 76
+    },
+    {
+      "cycle": 198,
+      "app": "tooling",
+      "task_id": "readme_verify_gate",
+      "new_requirement": "readmeMentionsVerify 规则（根 README 须说明统一验收命令 npm test）",
+      "implicit": "根 README 此前缺「验证 / Verify」章节，贡献者不知如何本地复验",
+      "files": [
+        "README.md",
+        "scripts/consistency-rules.mjs",
+        "scripts/check-consistency.mjs",
+        "scripts/check-consistency.test.mjs"
+      ],
+      "verify": "consistency 0错 + 规则 81/81",
+      "score": 78
+    },
+    {
+      "cycle": 199,
+      "app": "tooling",
+      "task_id": "app_readme_verify_gate",
+      "new_requirement": "appReadmeMentionsRun 规则（各 App README 须含 npm install + 统一 npm test）",
+      "implicit": "12 个 App README 均无「验证」章节指向仓库级 npm test，批量补「## 验证」段",
+      "files": [
+        "scripts/consistency-rules.mjs",
+        "scripts/check-consistency.mjs",
+        "scripts/check-consistency.test.mjs",
+        "12× <app>/README.md"
+      ],
+      "verify": "consistency 0错 + 规则 81/81；app run:✓ 全绿",
+      "score": 82
     }
   ],
-  "last_task_id": "single_test_entrypoint",
+  "last_task_id": "app_readme_verify_gate",
   "repeat_count": 0,
-  "last_score": 84,
+  "last_score": 82,
   "coverage": {
     "B1": {
       "it-tools": "optimized",
@@ -2562,7 +2637,10 @@
       ".editorconfig",
       ".gitignore",
       "scripts/lib-catalog.mjs",
-      "scripts/verify-apps.mjs"
+      "scripts/verify-apps.mjs",
+      "scripts/consistency-rules.mjs",
+      "scripts/check-consistency.mjs",
+      "scripts/check-consistency.test.mjs"
     ],
     "docs": [
       "README.md",
