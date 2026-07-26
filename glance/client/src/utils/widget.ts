@@ -30,6 +30,15 @@ export function parseDto(d: WidgetDTO): Widget {
   };
 }
 
+/**
+ * 将数值夹入 [min, max]；非有限值（NaN/Infinity/undefined）回退为 fallback。
+ * 用于组件配置表单，防止非法/越界数值被持久化。
+ */
+export function clampNumber(n: number, min: number, max: number, fallback: number): number {
+  if (!Number.isFinite(n)) return fallback;
+  return Math.max(min, Math.min(max, n));
+}
+
 /** Coerce a partial layout into a valid WidgetLayout, clamping to sane bounds. */
 export function normalizeLayout(l: Partial<WidgetLayout> | undefined): WidgetLayout {
   const layout = l ?? DEFAULT_LAYOUT;

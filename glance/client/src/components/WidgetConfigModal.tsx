@@ -28,6 +28,7 @@ import {
   WidgetType,
 } from '../types';
 import { CreateWidgetInput, UpdateWidgetInput } from '../api/widgets';
+import { clampNumber, normalizeLayout } from '../utils/widget';
 
 interface WidgetConfigModalProps {
   open: boolean;
@@ -132,7 +133,7 @@ function ConfigEditor({ type, config, onChange }: ConfigEditorProps): JSX.Elemen
             label="最大条数"
             type="number"
             value={c.maxItems ?? 10}
-            onChange={(e) => onChange({ ...c, maxItems: Number(e.target.value) })}
+            onChange={(e) => onChange({ ...c, maxItems: clampNumber(Number(e.target.value), 1, 100, 10) })}
           />
         </Stack>
       );
@@ -145,13 +146,13 @@ function ConfigEditor({ type, config, onChange }: ConfigEditorProps): JSX.Elemen
             label="纬度 lat"
             type="number"
             value={c.lat ?? 0}
-            onChange={(e) => onChange({ ...c, lat: Number(e.target.value) })}
+            onChange={(e) => onChange({ ...c, lat: clampNumber(Number(e.target.value), -90, 90, 0) })}
           />
           <TextField
             label="经度 lon"
             type="number"
             value={c.lon ?? 0}
-            onChange={(e) => onChange({ ...c, lon: Number(e.target.value) })}
+            onChange={(e) => onChange({ ...c, lon: clampNumber(Number(e.target.value), -180, 180, 0) })}
           />
           <TextField
             label="标签（可选）"
@@ -264,13 +265,13 @@ export default function WidgetConfigModal({
     setError('');
     try {
       if (widget) {
-        const patch: UpdateWidgetInput = { type, title, layout, config };
+        const patch: UpdateWidgetInput = { type, title, layout: normalizeLayout(layout), config };
         await onUpdate(widget.id, patch);
       } else {
         const input: CreateWidgetInput = {
           type,
           title: title.trim() || TYPE_LABELS[type],
-          layout,
+          layout: normalizeLayout(layout),
           config,
         };
         await onCreate(input);

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { safeParse, parseDto, normalizeLayout, DEFAULT_LAYOUT } from './widget';
+import { safeParse, parseDto, normalizeLayout, clampNumber, DEFAULT_LAYOUT } from './widget';
 import { WidgetDTO } from '../types';
 
 describe('safeParse', () => {
@@ -11,6 +11,19 @@ describe('safeParse', () => {
   });
   it('falls back on empty string', () => {
     expect(safeParse('', [1, 2])).toEqual([1, 2]);
+  });
+});
+
+describe('clampNumber', () => {
+  it('夹入 [min,max]', () => {
+    expect(clampNumber(5, 1, 10, 0)).toBe(5);
+    expect(clampNumber(-3, 1, 10, 0)).toBe(1);
+    expect(clampNumber(99, 1, 10, 0)).toBe(10);
+  });
+  it('非有限值回退 fallback', () => {
+    expect(clampNumber(NaN, 1, 10, 7)).toBe(7);
+    expect(clampNumber(Infinity, 1, 10, 7)).toBe(7);
+    expect(clampNumber(Number('abc'), 1, 10, 7)).toBe(7);
   });
 });
 
