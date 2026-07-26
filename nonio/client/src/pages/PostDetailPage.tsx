@@ -17,7 +17,7 @@ import { commentApi } from '../api/comments';
 import type { Post, Comment, CommentNode } from '../types';
 import Composer from '../components/Composer';
 import CommentThread from '../components/CommentThread';
-import { buildCommentTree } from '../utils/forum';
+import { buildCommentTree, formatDateTime } from '../utils/forum';
 
 export default function PostDetailPage(): JSX.Element {
   const { id } = useParams<{ id: string }>();
@@ -91,7 +91,7 @@ export default function PostDetailPage(): JSX.Element {
       <Stack direction="row" alignItems="center" spacing={1}>
         <Chip size="small" color="secondary" label={post.channelName} />
         <Typography variant="caption" color="text.secondary">
-          @{post.authorName} · {new Date(post.createdAt).toLocaleString()}
+          @{post.authorName} · {formatDateTime(post.createdAt)}
         </Typography>
       </Stack>
       <Typography variant="h5" sx={{ mt: 1 }}>

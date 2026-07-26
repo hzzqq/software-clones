@@ -3,6 +3,7 @@ import { Box, Typography, IconButton, Stack, Button } from '@mui/material';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import ReplyIcon from '@mui/icons-material/Reply';
 import type { CommentNode } from '../types';
+import { formatDateTime } from '../utils/forum';
 import Composer from './Composer';
 
 interface Props {
@@ -20,7 +21,7 @@ export default function CommentThread({ node, depth, onReply, onLike }: Props): 
       <Typography variant="body2">
         <b>@{node.authorName}</b>{' '}
         <Typography component="span" variant="caption" color="text.secondary">
-          {new Date(node.createdAt).toLocaleString()}
+          {formatDateTime(node.createdAt)}
         </Typography>
       </Typography>
       <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>

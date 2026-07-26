@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseTags, slugify, buildCommentTree, countComments, searchPosts, excerpt, topPosts, summarizePosts, filterPostsByChannel, formatRelativeTime, sortPosts } from './forum';
+import { parseTags, slugify, buildCommentTree, countComments, searchPosts, excerpt, topPosts, summarizePosts, filterPostsByChannel, formatRelativeTime, formatDateTime, sortPosts } from './forum';
 import type { Comment, Post } from '../types';
 
 function mkComment(id: number, parentId: number | null): Comment {
@@ -260,5 +260,23 @@ describe('formatRelativeTime', () => {
   it('非法输入或未来时间返回空串（避免展示 Invalid Date）', () => {
     expect(formatRelativeTime('not-a-date', now)).toBe('');
     expect(formatRelativeTime(new Date('2026-03-02T00:00:00Z'), now)).toBe('');
+  });
+});
+
+describe('formatDateTime', () => {
+  it('格式化为 YYYY-MM-DD HH:mm', () => {
+    expect(formatDateTime(new Date('2026-03-01T09:05:00'))).toBe('2026-03-01 09:05');
+    expect(formatDateTime('2026-12-25T23:09:00')).toBe('2026-12-25 23:09');
+  });
+  it('补零：个位月/日/时/分保留两位', () => {
+    expect(formatDateTime(new Date('2026-01-02T03:04:00'))).toBe('2026-01-02 03:04');
+  });
+  it('接受时间戳', () => {
+    expect(formatDateTime(new Date('2026-03-01T09:05:00').getTime())).toBe('2026-03-01 09:05');
+  });
+  it('非法 / 空输入回退「时间未知」，避免 Invalid Date', () => {
+    expect(formatDateTime('not-a-date')).toBe('时间未知');
+    expect(formatDateTime('')).toBe('时间未知');
+    expect(formatDateTime(NaN)).toBe('时间未知');
   });
 });

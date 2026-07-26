@@ -246,3 +246,16 @@ export function formatRelativeTime(input: Date | string | number, now: Date = ne
   if (wk < 5) return `${wk} 周前`;
   return `${d.getMonth() + 1} 月 ${d.getDate()} 日`;
 }
+
+/**
+ * 将时间格式化为绝对日期时间「YYYY-MM-DD HH:mm」。
+ * 非法 / 空输入回退「时间未知」，避免向用户渲染 "Invalid Date"。
+ * 纯函数，不修改入参；用于详情页等需要精确时刻的场景。
+ */
+export function formatDateTime(input: Date | string | number): string {
+  const d = input instanceof Date ? input : new Date(input);
+  const t = d.getTime();
+  if (Number.isNaN(t)) return '时间未知';
+  const p = (n: number): string => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
