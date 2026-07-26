@@ -56,14 +56,22 @@ export function countCardsByPriority(cards: Card[]): Record<number, number> {
  * 条件：dueDate 非空、completed !== 1、且 dueDate ≤ now + withinDays 天。
  * 不修改入参。
  */
+/**
+ * 安全解析截止日：null / 空串 / 非法串统一视为「无截止日」返回 null，
+ * 避免 new Date('').getTime() 产生的 NaN 在比较中静默误判。
+ */
+function safeDueTime(dueDate: string | null): number | null {
+  if (dueDate === null || dueDate === '') return null;
+  const t = new Date(dueDate).getTime();
+  return Number.isNaN(t) ? null : t;
+}
+
 export function dueSoonCards(cards: Card[], withinDays = 3): Card[] {
   const horizon = Date.now() + withinDays * 24 * 60 * 60 * 1000;
-  return cards.filter(
-    (c) =>
-      c.completed !== 1 &&
-      c.dueDate !== null &&
-      new Date(c.dueDate).getTime() <= horizon
-  );
+  return cards.filter((c) => {
+    const t = safeDueTime(c.dueDate);
+    return c.completed !== 1 && t !== null && t <= horizon;
+  });
 }
 
 /**
@@ -72,9 +80,10 @@ export function dueSoonCards(cards: Card[], withinDays = 3): Card[] {
  */
 export function overdueCards(cards: Card[]): Card[] {
   const now = Date.now();
-  return cards.filter(
-    (c) => c.completed !== 1 && c.dueDate !== null && new Date(c.dueDate).getTime() < now
-  );
+  return cards.filter((c) => {
+    const t = safeDueTime(c.dueDate);
+    return c.completed !== 1 && t !== null && t < now;
+  });
 }
 
 /**
@@ -131,4 +140,19 @@ export function formatDueLabel(dueDate: string | null, now: Date = new Date()): 
   if (diffDays === 0) return { text: '今天', tone: 'today' };
   if (diffDays <= 3) return { text: `${diffDays}天后`, tone: 'soon' };
   return { text: `${diffDays}天后`, tone: 'none' };
+}
+
+/**
+ * 按标签统计卡片数量（不修改入参）。
+ * 返回 tagId → 卡片数的映射；一张卡片若含多个标签会被分别计入。
+ * 用于工具栏「标签计数」展示，与 countCardsByPriority 互补。
+ */
+export function countCardsByTag(cards: Card[]): Record<number, number> {
+  const map: Record<number, number> = {};
+  for (const c of cards) {
+    for (const id of c.tagIds ?? []) {
+      map[id] = (map[id] ?? 0) + 1;
+    }
+  }
+  return map;
 }

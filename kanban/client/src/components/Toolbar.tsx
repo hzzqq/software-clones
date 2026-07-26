@@ -35,6 +35,7 @@ interface ToolbarProps {
   totalCards?: number;
   completedCards?: number;
   priorityCounts?: Record<number, number>;
+  tagCounts?: Record<number, number>;
   dueSoonCount?: number;
   overdueCount?: number;
 }
@@ -57,6 +58,7 @@ export default function Toolbar({
   totalCards,
   completedCards,
   priorityCounts,
+  tagCounts,
   dueSoonCount,
   overdueCount,
 }: ToolbarProps): JSX.Element {
@@ -90,6 +92,26 @@ export default function Toolbar({
         )}
         {typeof dueSoonCount === 'number' && dueSoonCount > 0 && (
           <Chip size="small" color="warning" sx={{ mt: 0.5 }} label={`${dueSoonCount} 项临期`} />
+        )}
+        {tagCounts && Object.keys(tagCounts).length > 0 && (
+          <Stack direction="row" spacing={0.5} sx={{ mt: 0.5 }} alignItems="center">
+            {Object.entries(tagCounts)
+              .sort((a, b) => Number(b[1]) - Number(a[1]))
+              .slice(0, 5)
+              .map(([id, n]) => {
+                const tag = tags.find((t) => t.id === Number(id));
+                const label = tag ? `#${tag.name}` : `#${id}`;
+                return (
+                  <Chip
+                    key={id}
+                    size="small"
+                    variant="outlined"
+                    label={`${label}: ${n}`}
+                    sx={tag ? { borderColor: tag.color, color: tag.color } : undefined}
+                  />
+                );
+              })}
+          </Stack>
         )}
         {typeof overdueCount === 'number' && overdueCount > 0 && (
           <Chip size="small" color="error" sx={{ mt: 0.5 }} label={`${overdueCount} 项逾期`} />

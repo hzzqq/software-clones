@@ -22,7 +22,7 @@ import { boardsApi } from '../api/boards';
 import { ApiError } from '../api/client';
 import { CardPatch } from '../api/cards';
 import { Card } from '../types';
-import { countCardsByPriority, dueSoonCards, overdueCards } from '../utils/filterCards';
+import { countCardsByPriority, dueSoonCards, overdueCards, countCardsByTag } from '../utils/filterCards';
 
 /** Single-board view: toolbar + drag-enabled columns + card editor. */
 export default function BoardPage(): JSX.Element {
@@ -145,6 +145,7 @@ export default function BoardPage(): JSX.Element {
         totalCards={board.detail.cards.length}
         completedCards={board.detail.cards.filter((c) => c.completed === 1).length}
         priorityCounts={countCardsByPriority(board.detail.cards)}
+        tagCounts={countCardsByTag(board.detail.cards)}
         dueSoonCount={dueSoonCards(board.detail.cards).length}
         overdueCount={overdueCards(board.detail.cards).length}
       />

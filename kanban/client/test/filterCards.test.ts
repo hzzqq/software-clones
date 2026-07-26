@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { filterCardsByQuery, sortCards, countCardsByPriority, dueSoonCards, overdueCards, filterCardsByPriority, filterCardsByCompleted, formatDueLabel } from '../src/utils/filterCards';
+import { filterCardsByQuery, sortCards, countCardsByPriority, dueSoonCards, overdueCards, filterCardsByPriority, filterCardsByCompleted, formatDueLabel, countCardsByTag } from '../src/utils/filterCards';
 import type { Card } from '../src/types';
 
 function mk(id: number, title: string, description = ''): Card {
@@ -207,5 +207,46 @@ describe('formatDueLabel', () => {
   });
   it('非法日期字符串 → 日期无效 / none（不渲染 NaN天后）', () => {
     expect(formatDueLabel('not-a-date', now)).toEqual({ text: '日期无效', tone: 'none' });
+  });
+});
+
+describe('countCardsByTag', () => {
+  it('按 tagIds 统计卡片数（多标签分别计入）', () => {
+    const cards = [mk(1, 'a'), mk(2, 'b'), mk(3, 'c')];
+    cards[0].tagIds = [10, 20];
+    cards[1].tagIds = [20];
+    cards[2].tagIds = [];
+    expect(countCardsByTag(cards)).toEqual({ 10: 1, 20: 2 });
+  });
+  it('空列表返回空对象', () => {
+    expect(countCardsByTag([])).toEqual({});
+  });
+});
+
+describe('dueSoonCards / overdueCards 空串截止日', () => {
+  const base = (overdue: boolean): Card => ({
+    id: 1,
+    listId: 1,
+    title: 't',
+    description: '',
+    dueDate: overdue ? '2000-01-01T00:00:00Z' : new Date(Date.now() + 86400000).toISOString(),
+    priority: 0,
+    completed: 0,
+    position: 1,
+    createdAt: '',
+    updatedAt: '',
+    tagIds: [],
+  });
+  it('空串 dueDate 视为「无截止日」，不进入临期/逾期（不再因 NaN 静默误判）', () => {
+    const c = base(false);
+    c.dueDate = '';
+    expect(dueSoonCards([c])).toHaveLength(0);
+    expect(overdueCards([c])).toHaveLength(0);
+  });
+  it('合法临期且未完成 → 计入临期', () => {
+    expect(dueSoonCards([base(false)])).toHaveLength(1);
+  });
+  it('已逾期未完成 → 计入逾期', () => {
+    expect(overdueCards([base(true)])).toHaveLength(1);
   });
 });
