@@ -3,7 +3,7 @@ import { Box, Chip, Typography, Tabs, Tab, Stack, IconButton, Tooltip } from '@m
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CheckIcon from '@mui/icons-material/Check';
 import type { ProxyResponse } from '../types';
-import { statusKind, statusFamily, tryPrettyJson, headersToText, byteLengthOf, formatBytes } from '../utils/http';
+import { statusKind, statusFamily, tryPrettyJson, headersToText, redactSensitiveHeaders, byteLengthOf, formatBytes } from '../utils/http';
 
 interface Props {
   response: ProxyResponse | null;
@@ -75,7 +75,7 @@ export default function ResponseViewer({ response, loading }: Props): JSX.Elemen
         {tab === 0 ? (
           <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{displayBody}</pre>
         ) : (
-          <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{headersToText(response.headers)}</pre>
+          <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{headersToText(redactSensitiveHeaders(response.headers))}</pre>
         )}
       </Box>
     </Box>

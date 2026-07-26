@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseQueryString, buildUrlWithQuery, statusFamily } from '../src/utils/http';
+import { parseQueryString, buildUrlWithQuery, statusFamily, redactSensitiveHeaders } from '../src/utils/http';
 
 describe('parseQueryString', () => {
   it('解析多个 key=value 对', () => {
@@ -58,5 +58,32 @@ describe('statusFamily', () => {
   });
   it('418 → 客户端错误', () => {
     expect(statusFamily(418)).toBe('客户端错误');
+  });
+});
+
+describe('redactSensitiveHeaders', () => {
+  it('掩码敏感响应头（Set-Cookie / Authorization 等）', () => {
+    const h = {
+      'content-type': 'application/json',
+      'set-cookie': 'session=abc123; Path=/',
+      authorization: 'Bearer secret-token',
+      'x-api-key': 'key-123',
+    };
+    const out = redactSensitiveHeaders(h);
+    expect(out['content-type']).toBe('application/json');
+    expect(out['set-cookie']).toBe('••••••••');
+    expect(out['authorization']).toBe('••••••••');
+    expect(out['x-api-key']).toBe('••••••••');
+  });
+  it('大小写不敏感匹配 key', () => {
+    expect(redactSensitiveHeaders({ Authorization: 'x' })['Authorization']).toBe('••••••••');
+  });
+  it('不修改入参', () => {
+    const h = { cookie: 'a' };
+    redactSensitiveHeaders(h);
+    expect(h.cookie).toBe('a');
+  });
+  it('空对象返回空对象', () => {
+    expect(redactSensitiveHeaders({})).toEqual({});
   });
 });

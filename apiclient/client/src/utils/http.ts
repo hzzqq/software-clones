@@ -24,6 +24,25 @@ export function headersToText(headers: Record<string, string>): string {
     .join('\n');
 }
 
+/** 命中这些响应/请求头的 key 时，其值视为敏感信息需要脱敏。 */
+const SENSITIVE_HEADER_RE =
+  /^(authorization|proxy-authorization|token|cookie|set-cookie|secret|apikey|api-key|x-api-key)$/i;
+
+/**
+ * 对含敏感信息的请求/响应头脱敏：命中 SENSITIVE_HEADER_RE 的 key，其值替换为掩码。
+ * 纯函数，不修改入参。用于在 UI 展示响应头时避免意外暴露 Cookie / Token 等凭据。
+ */
+export function redactSensitiveHeaders(
+  headers: Record<string, string>,
+  mask = '••••••••'
+): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [k, v] of Object.entries(headers)) {
+    out[k] = SENSITIVE_HEADER_RE.test(k) ? mask : v;
+  }
+  return out;
+}
+
 /** 将 key=value 多行文本解析为对象（用于 query params）。兼容 Windows CRLF。 */
 export function parseKeyValueText(text: string): Record<string, string> {
   const out: Record<string, string> = {};
