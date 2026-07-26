@@ -15,6 +15,7 @@ import {
   Switch,
   TextField,
   Typography,
+  Alert,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
@@ -25,7 +26,7 @@ import StationCard from '../components/StationCard';
 import CategoryFilter from '../components/CategoryFilter';
 import { Station } from '../types';
 import { stationApi } from '../api/stations';
-import { filterStations, sortStations, shuffleStations, groupStationsByCategory, categoryLabel, filterStationsByLikes, filterStationsByCategory, summarizeStations, formatCount, type StationSort } from '../utils/station';
+import { filterStations, sortStations, shuffleStations, groupStationsByCategory, categoryLabel, filterStationsByLikes, filterStationsByCategory, summarizeStations, formatCount, validateStreamUrl, type StationSort } from '../utils/station';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
 export default function RadioPage(): JSX.Element {
@@ -44,6 +45,7 @@ export default function RadioPage(): JSX.Element {
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState({ name: '', streamUrl: '', description: '', category: 'lofi' });
+  const [formError, setFormError] = useState<string | null>(null);
 
   const load = () => {
     setLoading(true);
@@ -91,7 +93,15 @@ export default function RadioPage(): JSX.Element {
     });
   };
   const handleAdd = async () => {
-    if (!form.name.trim() || !form.streamUrl.trim()) return;
+    if (!form.name.trim()) {
+      setFormError('请填写电台名称');
+      return;
+    }
+    if (!validateStreamUrl(form.streamUrl)) {
+      setFormError('流地址须为 http(s) 开头的合法 URL');
+      return;
+    }
+    setFormError(null);
     await stationApi.create({
       name: form.name.trim(),
       streamUrl: form.streamUrl.trim(),
@@ -219,6 +229,7 @@ export default function RadioPage(): JSX.Element {
 
       {showAdd && (
         <Stack spacing={1} sx={{ mb: 2, p: 2, border: 1, borderColor: 'divider', borderRadius: 2 }}>
+          {formError && <Alert severity="error" sx={{ mb: 1 }}>{formError}</Alert>}
           <TextField
             label="名称"
             size="small"
@@ -229,6 +240,8 @@ export default function RadioPage(): JSX.Element {
             label="流地址 (stream url)"
             size="small"
             value={form.streamUrl}
+            error={!!formError && !validateStreamUrl(form.streamUrl)}
+            helperText="须为 http(s) 开头的合法 URL"
             onChange={(e) => setForm({ ...form, streamUrl: e.target.value })}
           />
           <TextField

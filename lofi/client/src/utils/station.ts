@@ -141,3 +141,19 @@ export function summarizeStations(stations: Station[]): StationsSummary {
   }
   return { total: stations.length, categories: cats.size, totalLikes };
 }
+
+/**
+ * 校验电台流地址是否合法：非空，且为 http/https 协议（播放器仅支持标准流）。
+ * 返回 boolean，纯函数。用于新增/编辑电台的客户端前置校验，避免创建非法流地址
+ * 导致播放器静默失败（此前 handleAdd 仅判空即可创建，隐性 bug）。
+ */
+export function validateStreamUrl(url: string): boolean {
+  const v = (url ?? '').trim();
+  if (!v) return false;
+  try {
+    const u = new URL(v);
+    return u.protocol === 'http:' || u.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}

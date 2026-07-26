@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { categoryLabel, truncate, filterStations, sortStations, shuffleStations, groupStationsByCategory, filterStationsByLikes, summarizeStations, formatCount, formatClock } from './station';
+import { categoryLabel, truncate, filterStations, sortStations, shuffleStations, groupStationsByCategory, filterStationsByLikes, summarizeStations, formatCount, formatClock, validateStreamUrl } from './station';
 import { Station } from '../types';
 
 const sample: Station[] = [
@@ -208,5 +208,26 @@ describe('formatClock', () => {
   it('非法 / 负数按 0:00', () => {
     expect(formatClock(-3)).toBe('0:00');
     expect(formatClock(Number.NaN)).toBe('0:00');
+  });
+});
+
+describe('validateStreamUrl', () => {
+  it('接受 http/https 合法 URL', () => {
+    expect(validateStreamUrl('http://example.com/a')).toBe(true);
+    expect(validateStreamUrl('https://stream.example.com/radio.m3u')).toBe(true);
+    expect(validateStreamUrl('  https://x.com  ')).toBe(true);
+  });
+  it('拒绝空/空白', () => {
+    expect(validateStreamUrl('')).toBe(false);
+    expect(validateStreamUrl('   ')).toBe(false);
+  });
+  it('拒绝非 http(s) 协议与非法串', () => {
+    expect(validateStreamUrl('ftp://example.com')).toBe(false);
+    expect(validateStreamUrl('javascript:alert(1)')).toBe(false);
+    expect(validateStreamUrl('not a url')).toBe(false);
+    expect(validateStreamUrl('//relative')).toBe(false);
+  });
+  it('undefined 安全', () => {
+    expect(validateStreamUrl(undefined as unknown as string)).toBe(false);
   });
 });
