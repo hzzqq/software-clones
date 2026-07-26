@@ -10,7 +10,7 @@ export default function UptimeBar({ checks, days = 90 }: { checks: CheckPoint[];
     const dayStart = new Date();
     dayStart.setDate(dayStart.getDate() - (days - 1 - i));
     const key = dayStart.toISOString().slice(0, 10);
-    const hit = checks.find((c) => c.checkedAt.slice(0, 10) === key);
+    const hit = checks.find((c) => (c.checkedAt ?? '').slice(0, 10) === key);
     return hit ? (hit.ok ? 'up' : 'down') : 'none';
   });
 

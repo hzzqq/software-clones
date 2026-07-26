@@ -48,6 +48,18 @@ export function serviceHealthLabel(uptime: number): string {
   return '差';
 }
 
+/**
+ * 将可用率百分比格式化为展示串："99.98%"。
+ * 非法 / 非有限值 → "—"；越界值夹回 [0,100] 再显示；保留 2 位小数。
+ * 用于状态页可用率精确展示（uptimePercentage 默认只取整，丢失精度）。
+ */
+export function formatUptime(percent: number): string {
+  if (!Number.isFinite(percent)) return '—';
+  const clamped = Math.max(0, Math.min(100, percent));
+  const rounded = Math.round(clamped * 100) / 100;
+  return `${rounded.toFixed(2)}%`;
+}
+
 export function uptimePercentage(items: { lastStatus?: ServiceStatus }[]): number {
   if (!items.length) return 0;
   const score = (s?: ServiceStatus): number => (s === 'up' ? 100 : s === 'degraded' ? 50 : 0);

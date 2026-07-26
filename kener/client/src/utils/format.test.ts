@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatDuration, incidentDurationSeconds, uptimePercentage, countByStatus, incidentSeverityLabel, uptimeColor, summarizeIncidents, formatIncidentWindow } from './format';
+import { formatDuration, incidentDurationSeconds, uptimePercentage, countByStatus, incidentSeverityLabel, uptimeColor, summarizeIncidents, formatIncidentWindow, formatUptime } from './format';
 import type { Incident } from '../types';
 
 describe('formatDuration', () => {
@@ -183,5 +183,21 @@ describe('formatIncidentWindow', () => {
   it('非法 createdAt → 时间未知', () => {
     const now = new Date('2026-01-01T10:00:00Z').getTime();
     expect(formatIncidentWindow({ ...base, createdAt: 'bad' }, now)).toBe('时间未知');
+  });
+});
+
+describe('formatUptime', () => {
+  it('保留 2 位小数', () => {
+    expect(formatUptime(99.987)).toBe('99.99%');
+    expect(formatUptime(100)).toBe('100.00%');
+    expect(formatUptime(0)).toBe('0.00%');
+  });
+  it('越界夹回 [0,100]', () => {
+    expect(formatUptime(123.4)).toBe('100.00%');
+    expect(formatUptime(-5)).toBe('0.00%');
+  });
+  it('非法值回退 —', () => {
+    expect(formatUptime(NaN)).toBe('—');
+    expect(formatUptime(Infinity)).toBe('—');
   });
 });

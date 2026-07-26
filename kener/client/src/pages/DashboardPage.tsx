@@ -21,7 +21,7 @@ import { useServices } from '../hooks/useServices';
 import ServiceCard from '../components/ServiceCard';
 import { servicesApi } from '../api/services';
 import { incidentsApi } from '../api/incidents';
-import { formatDuration, incidentDurationSeconds, uptimePercentage, uptimeColor, serviceHealthLabel, countByStatus, incidentSeverityLabel, summarizeIncidents } from '../utils/format';
+import { formatDuration, incidentDurationSeconds, uptimePercentage, uptimeColor, serviceHealthLabel, countByStatus, incidentSeverityLabel, summarizeIncidents, formatUptime } from '../utils/format';
 import { formatRelativeTime } from '../utils/time';
 import { overallStatus, statusLabel, ServiceStatus } from '../utils/status';
 import type { Incident } from '../types';
@@ -127,7 +127,7 @@ export default function DashboardPage() {
             size="small"
             sx={{ mt: 1 }}
             color={uptimeColor(uptimePercentage(services))}
-            label={`综合可用率 ${uptimePercentage(services)}%`}
+            label={`综合可用率 ${formatUptime(uptimePercentage(services))}`}
           />
           <Chip
             size="small"
