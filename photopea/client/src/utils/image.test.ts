@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { clamp, grayscale, invert, brightness, sepia, uid, applyFilter, contrast, saturate, getFilterLabel, FILTER_LABELS, formatPercent } from './image';
+import { clamp, clampNumber, grayscale, invert, brightness, sepia, uid, applyFilter, contrast, saturate, getFilterLabel, FILTER_LABELS, formatPercent } from './image';
 import type { FilterKind } from '../types';
 
 function makeData(): Uint8ClampedArray {
@@ -12,6 +12,14 @@ describe('image utils', () => {
     expect(clamp(5, 0, 10)).toBe(5);
     expect(clamp(-3, 0, 10)).toBe(0);
     expect(clamp(20, 0, 10)).toBe(10);
+  });
+
+  it('clampNumber 夹界且非有限值回退 fallback', () => {
+    expect(clampNumber(5, 1, 8, 1)).toBe(5);
+    expect(clampNumber(-2, 1, 8, 1)).toBe(1);
+    expect(clampNumber(99, 1, 8, 1)).toBe(8);
+    expect(clampNumber(NaN, 1, 8, 1)).toBe(1);
+    expect(clampNumber(Number('abc'), 1, 8, 1)).toBe(1);
   });
 
   it('grayscale 取 RGB 均值并三通道一致', () => {

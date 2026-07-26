@@ -41,7 +41,7 @@ import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import { uid, applyFilter, getFilterLabel, formatPercent, clampOpacity, formatBytes } from '../utils/image';
+import { uid, applyFilter, getFilterLabel, formatPercent, clampOpacity, clampNumber, formatBytes } from '../utils/image';
 import { formatRelativeTime } from '../utils/time';
 import { duplicateLayerName } from '../utils/layers';
 import { designApi } from '../api/designs';
@@ -710,7 +710,7 @@ export default function CanvasEditor(): JSX.Element {
           size="small"
           label="线宽"
           value={strokeWidth}
-          onChange={(e) => setStrokeWidth(Number(e.target.value))}
+          onChange={(e) => setStrokeWidth(clampNumber(Number(e.target.value), 1, 200, 4))}
           sx={{ width: 90 }}
         >
           {[1, 2, 4, 8, 16].map((w) => (
@@ -753,7 +753,7 @@ export default function CanvasEditor(): JSX.Element {
           size="small"
           label="导出"
           value={exportScale}
-          onChange={(e) => setExportScale(Number(e.target.value))}
+          onChange={(e) => setExportScale(clampNumber(Number(e.target.value), 0.1, 8, 1))}
           sx={{ width: 80 }}
         >
           {[1, 2, 3].map((s) => (

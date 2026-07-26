@@ -9,6 +9,12 @@ export function clamp(v: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, v));
 }
 
+/** 将数值夹入 [min, max]；非有限值（NaN/Infinity/undefined）回退 fallback。用于表单输入兜底，防止越界/非法值进入渲染与导出。 */
+export function clampNumber(v: number, min: number, max: number, fallback: number): number {
+  if (!Number.isFinite(v)) return fallback;
+  return Math.min(max, Math.max(min, v));
+}
+
 /** 将透明度值夹到 [0,1] 区间，NaN 视为 0；不修改入参。 */
 export function clampOpacity(v: number): number {
   if (Number.isNaN(v)) return 0;
