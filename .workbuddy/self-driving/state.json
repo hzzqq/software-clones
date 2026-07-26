@@ -1,5 +1,5 @@
 {
-  "cycle": 199,
+  "cycle": 200,
   "max_cycles": 200,
   "phase": "polish",
   "paused": false,
@@ -2590,11 +2590,29 @@
       ],
       "verify": "consistency 0错 + 规则 81/81；app run:✓ 全绿",
       "score": 82
+    },
+    {
+      "cycle": 200,
+      "app": "tooling",
+      "task_id": "local_precommit_hook",
+      "new_requirement": "本地 Git pre-commit 钩子(.githooks/pre-commit)，把一致性校验+规则单测下沉到提交前，避免「本地能推、CI 才红」的反馈滞后",
+      "implicit": "此前全部质量闸门只在 CI 运行，贡献者本地无强制拦截，易把不满足一致性的代码推到远端才爆红；钩子文件存在性本身也被一致性校验器（新规则 git-hook）强制，防止闸门被悄悄移除",
+      "files": [
+        ".githooks/pre-commit",
+        "scripts/consistency-rules.mjs",
+        "scripts/check-consistency.mjs",
+        "scripts/check-consistency.test.mjs",
+        "package.json",
+        "README.md",
+        "CONTRIBUTING.md"
+      ],
+      "verify": "consistency 0错 + 规则 84/84（新增 hasGitHook 3 例）；钩子模拟运行通过",
+      "score": 84
     }
   ],
-  "last_task_id": "app_readme_verify_gate",
+  "last_task_id": "local_precommit_hook",
   "repeat_count": 0,
-  "last_score": 82,
+  "last_score": 84,
   "coverage": {
     "B1": {
       "it-tools": "optimized",
@@ -2640,7 +2658,8 @@
       "scripts/verify-apps.mjs",
       "scripts/consistency-rules.mjs",
       "scripts/check-consistency.mjs",
-      "scripts/check-consistency.test.mjs"
+      "scripts/check-consistency.test.mjs",
+      ".githooks/pre-commit"
     ],
     "docs": [
       "README.md",

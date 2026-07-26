@@ -24,6 +24,18 @@ node scripts/check-consistency.mjs --fix   # 校验并尝试自动修复
 单测（共 636 个用例），把单测变成持续红线。注意：App 的 server 单测依赖 `better-sqlite3` 原生绑定，
 需在 `npm install` 编译后运行（`verify-apps.mjs <app> --scope server`），CI 的 `unit-tests` 作业即如此。
 
+## 本地提交前闸门（推荐）
+
+CI 红灯反馈太滞后——等问题推到远端才爆红，修复成本高。把质量闸门下沉到本地：
+
+```bash
+npm run hooks:install   # 一次性：git config core.hooksPath .githooks
+```
+
+随后每次 `git commit` 前，`.githooks/pre-commit` 会自动运行一致性校验器与规则单测（零依赖，
+无需 `npm install`），拦截文档/结构漂移与规则回归，commit 不达标则直接中止。校验器也强制要求
+该钩子文件存在且真正调用 `check-consistency.mjs` 与 `check-consistency.test.mjs`，防止闸门被悄悄移除。
+
 该命令会校验：
 
 - 每个全栈 App 都在 `README.md` 中被提及（文档漂移防护）；

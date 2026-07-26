@@ -13,7 +13,7 @@ import { join, resolve, dirname } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { findE2ESpecs, isAppDir, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, findClientTestFiles, missingEnvKeys, findAllMarkdownFiles, parseApps, findDuplicatePorts, findDuplicateNames, findDuplicateDirs, checkBuildConfig, missingSharedTemplateFiles, missingAppDirs, findUnregisteredApps, invalidEnvValues, hasClientIndexHtml, hasServerEntry, errorBoundaryWired, hasAppReadme, ciRunsUnitTests, hasLicenseFile, gitignoreCoversArtifacts, clientTestUsesVitest, readmeMentionsVerify, appReadmeMentionsRun } from './consistency-rules.mjs';
+import { findE2ESpecs, isAppDir, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, findClientTestFiles, missingEnvKeys, findAllMarkdownFiles, parseApps, findDuplicatePorts, findDuplicateNames, findDuplicateDirs, checkBuildConfig, missingSharedTemplateFiles, missingAppDirs, findUnregisteredApps, invalidEnvValues, hasClientIndexHtml, hasServerEntry, errorBoundaryWired, hasAppReadme, ciRunsUnitTests, hasLicenseFile, gitignoreCoversArtifacts, clientTestUsesVitest, readmeMentionsVerify, appReadmeMentionsRun, hasGitHook } from './consistency-rules.mjs';
 
 const TEST_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -321,6 +321,15 @@ assert('appReadmeMentionsRun 含运行/验证命令返回 true', appReadmeMentio
 writeFileSync(join(sandbox, 'runapp', 'README.md'), '# runapp\nnpm install but no test mention\n');
 assert('appReadmeMentionsRun 缺 npm test 返回 false', appReadmeMentionsRun(sandbox, 'runapp') === false);
 rmSync(join(sandbox, 'runapp'), { recursive: true, force: true });
+
+// hasGitHook：本地提交前质量闸门必须存在且真正调用一致性校验器与规则单测
+assert('hasGitHook 缺失返回问题', hasGitHook(sandbox).length > 0);
+mkdirSync(join(sandbox, '.githooks'), { recursive: true });
+writeFileSync(join(sandbox, '.githooks', 'pre-commit'), '#!/bin/sh\necho hi\n');
+const onlyHook = hasGitHook(sandbox);
+assert('hasGitHook 未调用校验器返回问题', onlyHook.some((p) => p.includes('check-consistency.mjs')));
+writeFileSync(join(sandbox, '.githooks', 'pre-commit'), '#!/bin/sh\nnode scripts/check-consistency.mjs\nnode scripts/check-consistency.test.mjs\n');
+assert('hasGitHook 完整调用返回 []', hasGitHook(sandbox).length === 0);
 
 console.log(`\n通过: ${passed}  失败: ${failed}`);
 if (failed > 0) {

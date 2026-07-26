@@ -490,6 +490,32 @@ export function appReadmeMentionsRun(root, app) {
 }
 
 /**
+ * 校验仓库是否提供本地 Git pre-commit 钩子（.githooks/pre-commit）。
+ * 此前所有质量闸门只在 CI 运行——贡献者本地提交时无任何强制拦截，
+ * 易把不满足一致性的代码推到远端才在 CI 爆红（反馈滞后、修复成本高）。
+ * 本规则要求钩子文件存在且真正调用一致性校验器与规则单测，把 CI 闸门下沉到本地提交前。
+ * @returns {string[]} 问题列表（空数组表示达标）
+ */
+export function hasGitHook(root) {
+  const p = join(root, '.githooks', 'pre-commit');
+  if (!existsSync(p)) return ['.githooks/pre-commit 缺失（未提供本地提交前质量闸门）'];
+  let text = '';
+  try {
+    text = readFileSync(p, 'utf8');
+  } catch {
+    return ['.githooks/pre-commit 无法读取'];
+  }
+  const problems = [];
+  if (!/check-consistency\.mjs/.test(text)) {
+    problems.push('.githooks/pre-commit 未调用 scripts/check-consistency.mjs（本地闸门形同虚设）');
+  }
+  if (!/check-consistency\.test\.mjs/.test(text)) {
+    problems.push('.githooks/pre-commit 未运行规则单元测试（规则回归无法本地拦截）');
+  }
+  return problems;
+}
+
+/**
  * 校验 CI 是否真正执行了 App 单测（防止「unit-tests 闸门被悄悄删掉」的隐性漂移）。
  * 仓库此前只有结构一致性校验，CI 从不执行 12 个 App 的单测，真实回归会被放过。
  * 本规则要求 e2e.yml 同时存在 `unit-tests:` 作业且引用真实单测编排器 `verify-apps.mjs`，

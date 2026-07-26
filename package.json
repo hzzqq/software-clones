@@ -14,7 +14,8 @@
     "test:all": "node scripts/verify-apps.mjs",
     "test:rules": "node scripts/check-consistency.test.mjs",
     "catalog": "node scripts/gen-catalog.mjs",
-    "fix": "node scripts/check-consistency.mjs --fix"
+    "fix": "node scripts/check-consistency.mjs --fix",
+    "hooks:install": "git config core.hooksPath .githooks"
   },
   "devDependencies": {
     "@playwright/test": "^1.48.0",

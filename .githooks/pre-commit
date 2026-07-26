@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# 本地 pre-commit 质量闸门（零依赖）。
+# 把此前只在 CI 运行的「一致性校验 + 规则单测」下沉到提交前，
+# 让贡献者在 push 之前就能拦截文档/结构漂移与规则回归，避免「本地能推、CI 才红」的反馈滞后。
+#
+# 安装（一次性）： npm run hooks:install   （等价于 git config core.hooksPath .githooks）
+set -euo pipefail
+
+ROOT="$(git rev-parse --show-toplevel)"
+cd "$ROOT"
+
+echo "🔍 pre-commit: 运行一致性校验器"
+node scripts/check-consistency.mjs
+
+echo "🔍 pre-commit: 运行规则单元测试"
+node scripts/check-consistency.test.mjs
+
+echo "✅ pre-commit 闸门通过"

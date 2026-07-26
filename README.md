@@ -69,6 +69,14 @@ npm run fix             # 自动修复可自愈项（如重新生成过期的 do
 node scripts/check-consistency.mjs   # 单独运行一致性校验器
 ```
 
+### 本地提交前闸门（推荐）
+
+CI 的红灯反馈太滞后。安装一次本地 Git 钩子，即可在 `git commit` 前自动跑一致性校验与规则单测，把漂移挡在 push 之前：
+
+```bash
+npm run hooks:install   # 等价于 git config core.hooksPath .githooks（一次性）
+```
+
 详见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
 ## License
