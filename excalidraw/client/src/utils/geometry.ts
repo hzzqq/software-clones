@@ -76,6 +76,16 @@ export function snapPoint(p: Point, gridSize: number): Point {
   return { x: Math.round(p.x / gridSize) * gridSize, y: Math.round(p.y / gridSize) * gridSize };
 }
 
+/**
+ * 夹回线宽到 [min,max]（默认 [1,40]）；非法 / NaN / 非有限值回退 fallback（默认 2）。
+ * 用于画笔 / 形状描边配置，避免负或极端线宽导致描边渲染异常（与 photopea 同类边界防御）。
+ */
+export function clampStrokeWidth(w: unknown, min = 1, max = 40, fallback = 2): number {
+  const n = Number(w);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.max(min, Math.min(max, n));
+}
+
 /** 计算所有图形的并集包围盒（内容边界）；空列表返回 null。 */
 export function boundingBox(els: CanvasElement[]): { x: number; y: number; width: number; height: number } | null {
   if (!els.length) return null;

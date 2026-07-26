@@ -19,7 +19,7 @@ import TitleIcon from '@mui/icons-material/Title';
 import rough from 'roughjs';
 import type { RoughCanvas } from 'roughjs/bin/canvas';
 import type { CanvasElement, Point, Scene, Tool } from '../types';
-import { normalizeRect, hitTest, uid, serializeScene, snapPoint, boundingBox, getCenter, translateElement, rotateElement, scaleElement } from '../utils/geometry';
+import { normalizeRect, hitTest, uid, serializeScene, snapPoint, boundingBox, getCenter, translateElement, rotateElement, scaleElement, clampStrokeWidth } from '../utils/geometry';
 import { formatRelativeTime } from '../utils/time';
 import { sceneApi } from '../api/scenes';
 
@@ -348,7 +348,7 @@ export default function Whiteboard({ elements, setElements }: Props): JSX.Elemen
             />
           ))}
         </Stack>
-        <TextField select size="small" label="线宽" value={strokeWidth} onChange={(e) => setStrokeWidth(Number(e.target.value))} sx={{ width: 90 }}>
+        <TextField select size="small" label="线宽" value={strokeWidth} onChange={(e) => setStrokeWidth(clampStrokeWidth(Number(e.target.value)))} sx={{ width: 90 }}>
           {[1, 2, 4, 8].map((w) => (
             <MenuItem key={w} value={w}>{w}</MenuItem>
           ))}

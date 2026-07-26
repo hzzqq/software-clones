@@ -1,5 +1,5 @@
 {
-  "cycle": 208,
+  "cycle": 213,
   "max_cycles": 213,
   "phase": "polish",
   "paused": false,
@@ -2731,11 +2731,89 @@
       "verify": "photopea client 全量测试通过 + tsc --noEmit 通过",
       "score": 82,
       "ts": 1785054298.0350862
+    },
+    {
+      "cycle": 209,
+      "app": "memos",
+      "task_id": "title_preview_clamp",
+      "new_requirement": "extractTitle/truncatePreview 标题预览纯函数+测试",
+      "implicit": "NoteEditPage Number(id) 非法 id 直传 API 崩溃→校验跳过；NoteCard 超长正文撑爆卡片→截断预览",
+      "files": [
+        "memos/client/src/utils/notes.ts",
+        "memos/client/src/utils/notes.test.ts",
+        "memos/client/src/components/NoteCard.tsx",
+        "memos/client/src/pages/NoteEditPage.tsx"
+      ],
+      "verify": "memos client 53 passed + tsc",
+      "score": 82,
+      "ts": 1785071154.1334558
+    },
+    {
+      "cycle": 210,
+      "app": "lofi",
+      "task_id": "validate_stream_url",
+      "new_requirement": "validateStreamUrl 流地址校验纯函数+测试",
+      "implicit": "handleAdd 仅判空即可创建非法(ftp/javascript:)流地址→播放器静默失败；新增表单错误态拦截",
+      "files": [
+        "lofi/client/src/utils/station.ts",
+        "lofi/client/src/utils/station.test.ts",
+        "lofi/client/src/pages/RadioPage.tsx"
+      ],
+      "verify": "lofi client 56 passed + tsc",
+      "score": 84,
+      "ts": 1785071154.1334572
+    },
+    {
+      "cycle": 211,
+      "app": "kener",
+      "task_id": "format_uptime_precision",
+      "new_requirement": "formatUptime 两位小数可用率展示+测试",
+      "implicit": "UptimeBar c.checkedAt.slice 对 undefined 崩溃→?(...)防未定义；整数可用率丢失精度→两位小数",
+      "files": [
+        "kener/client/src/utils/format.ts",
+        "kener/client/src/utils/format.test.ts",
+        "kener/client/src/components/UptimeBar.tsx",
+        "kener/client/src/pages/DashboardPage.tsx"
+      ],
+      "verify": "kener client 69 passed + tsc",
+      "score": 82,
+      "ts": 1785071154.133458
+    },
+    {
+      "cycle": 212,
+      "app": "tvtime",
+      "task_id": "progress_summary_clamp",
+      "new_requirement": "formatProgress 观看进度摘要+测试",
+      "implicit": "ShowsPage Number(total)||1 对负数原样放行→存储负集数；clampEpisodeCount 夹回≥1；ShowDetailPage 非法 id 兜底",
+      "files": [
+        "tvtime/client/src/utils/show.ts",
+        "tvtime/client/src/utils/show.test.ts",
+        "tvtime/client/src/pages/ShowsPage.tsx",
+        "tvtime/client/src/pages/ShowDetailPage.tsx"
+      ],
+      "verify": "tvtime client 58 passed + tsc",
+      "score": 83,
+      "ts": 1785071154.1334586
+    },
+    {
+      "cycle": 213,
+      "app": "excalidraw",
+      "task_id": "clamp_stroke_width",
+      "new_requirement": "clampStrokeWidth 线宽边界纯函数+测试",
+      "implicit": "Whiteboard setStrokeWidth(Number(...)) 无上下界/NaN 兜底（与 photopea 同类隐患）→clampStrokeWidth 统一边界",
+      "files": [
+        "excalidraw/client/src/utils/geometry.ts",
+        "excalidraw/client/src/utils/geometry.test.ts",
+        "excalidraw/client/src/components/Whiteboard.tsx"
+      ],
+      "verify": "excalidraw client 42 passed + tsc",
+      "score": 80,
+      "ts": 1785071154.133459
     }
   ],
-  "last_task_id": "clamp_canvas_inputs",
+  "last_task_id": "clamp_stroke_width",
   "repeat_count": 0,
-  "last_score": 82,
+  "last_score": 80,
   "coverage": {
     "B1": {
       "it-tools": "optimized",
@@ -2760,13 +2838,13 @@
     "polish": {
       "markdown": "r206",
       "nonio": "r163",
-      "memos": "r164",
-      "kener": "r168",
-      "lofi": "r166",
+      "memos": "r209",
+      "kener": "r211",
+      "lofi": "r210",
       "glance": "r207",
       "apiclient": "r157",
-      "tvtime": "r158",
-      "excalidraw": "r159",
+      "tvtime": "r212",
+      "excalidraw": "r213",
       "photopea": "r208",
       "it-tools": "r161",
       "kanban": "r167"

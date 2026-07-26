@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { normalizeRect, distance, hitTest, elementBounds, uid, serializeScene, snapPoint, boundingBox, getCenter, translateElement } from './geometry';
+import { normalizeRect, distance, hitTest, elementBounds, uid, serializeScene, snapPoint, boundingBox, getCenter, translateElement, clampStrokeWidth } from './geometry';
 import type { CanvasElement } from '../types';
 
 describe('normalizeRect', () => {
@@ -110,5 +110,28 @@ describe('translateElement', () => {
     translateElement(rect, 1, 1);
     expect(rect.x).toBe(10);
     expect(rect.y).toBe(20);
+  });
+});
+
+describe('clampStrokeWidth', () => {
+  it('正常范围内原样', () => {
+    expect(clampStrokeWidth(2)).toBe(2);
+    expect(clampStrokeWidth(8)).toBe(8);
+    expect(clampStrokeWidth('4')).toBe(4);
+  });
+  it('超出 [1,40] 夹回边界', () => {
+    expect(clampStrokeWidth(0)).toBe(1);
+    expect(clampStrokeWidth(-5)).toBe(1);
+    expect(clampStrokeWidth(999)).toBe(40);
+  });
+  it('非法/NaN 回退 fallback', () => {
+    expect(clampStrokeWidth(NaN)).toBe(2);
+    expect(clampStrokeWidth('abc')).toBe(2);
+    expect(clampStrokeWidth(undefined)).toBe(2);
+  });
+  it('支持自定义 min/max/fallback', () => {
+    expect(clampStrokeWidth(0.5, 1, 10, 3)).toBe(1);
+    expect(clampStrokeWidth(20, 1, 10, 3)).toBe(10);
+    expect(clampStrokeWidth(NaN, 1, 10, 5)).toBe(5);
   });
 });
