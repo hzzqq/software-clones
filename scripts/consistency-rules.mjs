@@ -11,7 +11,7 @@
  *   - findE2ESpecs(root, app)           列出 e2e/<app>/ 下所有 *.spec.ts（冒烟用例必须存在）
  */
 import { existsSync, readdirSync, statSync, readFileSync } from 'node:fs';
-import { join, dirname, resolve } from 'node:path';
+import { join, dirname, resolve, relative } from 'node:path';
 
 /** 递归列出目录下所有单元/集成测试源文件（client 端 *.test.ts(x) / *.spec.ts(x)）。 */
 function walkTestFiles(dir, out = []) {
@@ -546,6 +546,71 @@ export function ciRunsUnitTests(root) {
   }
   if (!/verify-apps\.mjs/.test(text)) {
     problems.push('e2e.yml 未引用 scripts/verify-apps.mjs 单测编排器');
+  }
+  return problems;
+}
+
+/**
+ * 检测 App 源码中疑似硬编码密钥/凭据的赋值（纵深防御，防止密钥被提交泄露）。
+ *
+ * 仅匹配明确的赋值形态：秘密名(apiKey/secret/password/token 等)紧接 : 或 = 后跟一个引号字符串字面量，
+ * 且字面量长度 >= 12、不是占位符(your-/changeme/example 等)、不是路径(含斜杠)、不是环境变量/模板
+ * (process.env / 美元括号)。这样可避开 type="password"、注册表 key: 'password'、import 路径等误报。
+ *
+ * 扫描范围：每个全栈 App 的 client/src、server/src(排除 node_modules/dist/点前缀目录与 *.test/*.spec)。
+ * @returns {string[]} 形如 app/client/src/file.ts:行号 的问题清单(空数组表示达标)
+ */
+const SECRET_ASSIGN = /(api[_-]?key|apikey|secret|access[_-]?token|auth[_-]?token|private[_-]?key|client[_-]?secret|password|passwd|pwd)\s*[:=]\s*(['"])(?!\$\{)([^'"]{12,})\2/gi;
+const SECRET_PLACEHOLDER = /^(your[-_]?|changeme|change-me|placeholder|example|sample|dummy|test|xxxx|fake|demo|<|process\.env|import\.meta|https?:)/i;
+
+function walkForSecrets(dir, root, app, side, problems) {
+  let entries;
+  try {
+    entries = readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return;
+  }
+  for (const e of entries) {
+    const full = join(dir, e.name);
+    if (e.isDirectory()) {
+      if (e.name === 'node_modules' || e.name === 'dist' || e.name.startsWith('.')) continue;
+      walkForSecrets(full, root, app, side, problems);
+    } else if (/\.tsx?$/.test(e.name) && !/\.(test|spec)\.tsx?$/.test(e.name)) {
+      let text;
+      try {
+        text = readFileSync(full, 'utf8');
+      } catch {
+        continue;
+      }
+      const rel = relative(root, full);
+      text.split('\n').forEach((line, idx) => {
+        let m;
+        SECRET_ASSIGN.lastIndex = 0;
+        while ((m = SECRET_ASSIGN.exec(line))) {
+          const val = m[3];
+          if (val.includes('/') || SECRET_PLACEHOLDER.test(val)) continue;
+          problems.push(`${app}/${side}/${rel}:${idx + 1}`);
+        }
+      });
+    }
+  }
+}
+
+export function noHardcodedSecrets(root) {
+  const problems = [];
+  let entries;
+  try {
+    entries = readdirSync(root, { withFileTypes: true });
+  } catch {
+    return problems;
+  }
+  for (const e of entries) {
+    if (!e.isDirectory()) continue;
+    if (!isAppDir(root, e.name)) continue;
+    for (const side of ['client/src', 'server/src']) {
+      const dir = join(root, e.name, side);
+      if (existsSync(dir)) walkForSecrets(dir, root, e.name, side, problems);
+    }
   }
   return problems;
 }

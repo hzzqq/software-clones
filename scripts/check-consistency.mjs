@@ -18,7 +18,7 @@ import { readdirSync, readFileSync, existsSync, writeFileSync, mkdirSync } from 
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildCatalogText } from './lib-catalog.mjs';
-import { isAppDir, findE2ESpecs, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, missingEnvKeys, findAllMarkdownFiles, parseApps, findDuplicatePorts, findDuplicateNames, findDuplicateDirs, checkBuildConfig, missingSharedTemplateFiles, missingAppDirs, findUnregisteredApps, invalidEnvValues, hasClientIndexHtml, hasServerEntry, errorBoundaryWired, hasAppReadme, ciRunsUnitTests, hasLicenseFile, gitignoreCoversArtifacts, clientTestUsesVitest, readmeMentionsVerify, appReadmeMentionsRun, hasGitHook, hasNvmrc } from './consistency-rules.mjs';
+import { isAppDir, findE2ESpecs, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, missingEnvKeys, findAllMarkdownFiles, parseApps, findDuplicatePorts, findDuplicateNames, findDuplicateDirs, checkBuildConfig, missingSharedTemplateFiles, missingAppDirs, findUnregisteredApps, invalidEnvValues, hasClientIndexHtml, hasServerEntry, errorBoundaryWired, hasAppReadme, ciRunsUnitTests, hasLicenseFile, gitignoreCoversArtifacts, clientTestUsesVitest, readmeMentionsVerify, appReadmeMentionsRun, hasGitHook, hasNvmrc, noHardcodedSecrets } from './consistency-rules.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -208,6 +208,11 @@ function main() {
     errors.push(`[git-hook] ${pr}`);
   }
 
+  // 安全纵深防御：扫描 App 源码，禁止提交硬编码密钥/凭据字面量（避免凭证泄露）
+  for (const s of noHardcodedSecrets(ROOT)) {
+    errors.push(`[secrets] 疑似硬编码密钥/凭据：${s}`);
+  }
+
   // 已执行的校验闸门清单（可观测性：JSON 报告里记录本次到底验了哪些不变量）
   const RULES = [
     'readme-mention', 'e2e-dir', 'e2e-spec', 'env-example', 'env-keys',
@@ -215,7 +220,7 @@ function main() {
     'client-entry', 'server-entry', 'error-boundary', 'app-readme', 'client-vitest', 'app-readme-run',
     'apps-dir', 'no-dup-port', 'no-dup-name',
     'no-dup-dir', 'ghost-reg', 'reverse-ghost', 'shared-template', 'doc-links',
-    'catalog-fresh', 'license', 'gitignore-artifacts', 'readme-verify', 'contributing', 'ci-runs-unit-tests', 'git-hook', 'nvmrc',
+    'catalog-fresh', 'license', 'gitignore-artifacts', 'readme-verify', 'contributing', 'ci-runs-unit-tests', 'git-hook', 'nvmrc', 'no-hardcoded-secrets',
   ];
 
   const summary = {

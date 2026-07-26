@@ -1,6 +1,6 @@
 {
-  "cycle": 205,
-  "max_cycles": 205,
+  "cycle": 208,
+  "max_cycles": 210,
   "phase": "polish",
   "paused": false,
   "log": [
@@ -2686,11 +2686,56 @@
       "verify": "consistency 0错 + 规则 86/86 通过",
       "score": 80,
       "ts": 1785047208.7676325
+    },
+    {
+      "cycle": 206,
+      "app": "markdown",
+      "task_id": "sanitize_markdown_preview_html",
+      "new_requirement": "新增 sanitizeHtml 零依赖净化器(移除 script/style/iframe 等标签、剥离 on* 属性、中和 javascript:/vbscript:/非图片 data: URL)+测试套件",
+      "implicit": "隐性安全漏洞：MarkdownPreview 用 marked 生成 HTML 后直接 dangerouslySetInnerHTML 注入，marked v12 不消毒，用户笔记中的 <script>/<img onerror>/javascript: 链接构成存储型 XSS；已接入预览渲染链",
+      "files": [
+        "markdown/client/src/utils/sanitize.ts",
+        "markdown/client/src/utils/sanitize.test.ts",
+        "markdown/client/src/components/MarkdownPreview.tsx"
+      ],
+      "verify": "markdown client 71 passed(新增 8) + tsc --noEmit 通过",
+      "score": 85,
+      "ts": 1785053884.3688421
+    },
+    {
+      "cycle": 207,
+      "app": "glance",
+      "task_id": "clamp_widget_config_numbers",
+      "new_requirement": "clampNumber(min,max,fallback) 纯函数+测试，边界化组件配置数值",
+      "implicit": "隐性 bug：WidgetConfigModal 保存时直接持久化 layout(未跑 normalizeLayout)，用户清空/输入非法会使 x/y/w/h 存为 NaN/负值导致栅格错乱；maxItems/lat/lon 无上下界，可存越界值",
+      "files": [
+        "glance/client/src/utils/widget.ts",
+        "glance/client/src/utils/widget.test.ts",
+        "glance/client/src/components/WidgetConfigModal.tsx"
+      ],
+      "verify": "glance client 42 passed + tsc --noEmit 通过",
+      "score": 83,
+      "ts": 1785054125.4114273
+    },
+    {
+      "cycle": 208,
+      "app": "photopea",
+      "task_id": "clamp_canvas_inputs",
+      "new_requirement": "clampNumber(min,max,fallback) 纯函数+测试，边界化画布数值输入",
+      "implicit": "隐性 bug：CanvasEditor 的线宽/导出倍率用 Number(e.target.value) 直接 setState，无任何上下界，用户输入负值或极大值会使 lineWidth=0/负数或导出巨幅画布(卡死/NaN)",
+      "files": [
+        "photopea/client/src/utils/image.ts",
+        "photopea/client/src/utils/image.test.ts",
+        "photopea/client/src/components/CanvasEditor.tsx"
+      ],
+      "verify": "photopea client 全量测试通过 + tsc --noEmit 通过",
+      "score": 82,
+      "ts": 1785054298.0350862
     }
   ],
-  "last_task_id": "local_precommit_hook",
+  "last_task_id": "clamp_canvas_inputs",
   "repeat_count": 0,
-  "last_score": 84,
+  "last_score": 82,
   "coverage": {
     "B1": {
       "it-tools": "optimized",
@@ -2713,16 +2758,16 @@
       "photopea": "optimized"
     },
     "polish": {
-      "markdown": "r162",
+      "markdown": "r206",
       "nonio": "r163",
       "memos": "r164",
       "kener": "r168",
       "lofi": "r166",
-      "glance": "r156",
+      "glance": "r207",
       "apiclient": "r157",
       "tvtime": "r158",
       "excalidraw": "r159",
-      "photopea": "r160",
+      "photopea": "r208",
       "it-tools": "r161",
       "kanban": "r167"
     },
