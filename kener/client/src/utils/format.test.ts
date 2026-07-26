@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatDuration, incidentDurationSeconds, uptimePercentage, countByStatus, incidentSeverityLabel, uptimeColor, summarizeIncidents } from './format';
+import { formatDuration, incidentDurationSeconds, uptimePercentage, countByStatus, incidentSeverityLabel, uptimeColor, summarizeIncidents, formatIncidentWindow } from './format';
 import type { Incident } from '../types';
 
 describe('formatDuration', () => {
@@ -157,5 +157,31 @@ describe('incidentSeverityLabel', () => {
   it('未知值原样透传', () => {
     expect(incidentSeverityLabel('critical')).toBe('critical');
     expect(incidentSeverityLabel('')).toBe('');
+  });
+});
+
+describe('formatIncidentWindow', () => {
+  const base: Incident = {
+    id: 1,
+    serviceId: null,
+    title: 'x',
+    description: null,
+    status: 'open',
+    severity: 'medium',
+    createdAt: '2026-01-01T00:00:00Z',
+    updatedAt: '2026-01-01T00:00:00Z',
+    resolvedAt: null,
+  };
+  it('未解决 → 进行中', () => {
+    const now = new Date('2026-01-01T01:00:00Z').getTime();
+    expect(formatIncidentWindow(base, now)).toBe('进行中');
+  });
+  it('已解决 → 持续 X', () => {
+    const now = new Date('2026-01-01T01:00:00Z').getTime();
+    expect(formatIncidentWindow({ ...base, resolvedAt: '2026-01-01T00:30:00Z' }, now)).toBe('持续 30分');
+  });
+  it('非法 createdAt → 时间未知', () => {
+    const now = new Date('2026-01-01T10:00:00Z').getTime();
+    expect(formatIncidentWindow({ ...base, createdAt: 'bad' }, now)).toBe('时间未知');
   });
 });

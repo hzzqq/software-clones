@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Box, Typography, TextField, Button, Alert, Stack } from '@mui/material';
 import { servicesApi } from '../api/services';
+import { parseIdParam } from '../utils/params';
 
 export default function ServiceFormPage() {
   const { id } = useParams();
@@ -14,8 +15,13 @@ export default function ServiceFormPage() {
 
   const submit = async () => {
     try {
+      const serviceId = parseIdParam(id);
+      if (serviceId === null) {
+        setError('无效的服务 ID');
+        return;
+      }
       if (editing) {
-        await servicesApi.update(Number(id), { name, url, description });
+        await servicesApi.update(serviceId, { name, url, description });
       } else {
         await servicesApi.create({ name, url, description });
       }

@@ -77,6 +77,17 @@ export function incidentSeverityLabel(severity: string): string {
   return severity;
 }
 
+/**
+ * 格式化事件时间窗口摘要：已解决显示「持续 X」，未解决显示「进行中」，
+ * createdAt 不可解析时返回「时间未知」。纯函数，便于组件直接展示与测试。
+ */
+export function formatIncidentWindow(incident: Incident, nowMs: number): string {
+  const start = new Date(incident.createdAt).getTime();
+  if (Number.isNaN(start)) return '时间未知';
+  const seconds = incidentDurationSeconds(incident, nowMs);
+  return incident.resolvedAt ? `持续 ${formatDuration(seconds)}` : '进行中';
+}
+
 export interface StatusCounts {
   up: number;
   degraded: number;
