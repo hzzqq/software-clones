@@ -13,7 +13,7 @@ import { join, resolve, dirname } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { findE2ESpecs, isAppDir, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, findClientTestFiles, missingEnvKeys, findAllMarkdownFiles, parseApps, findDuplicatePorts, findDuplicateNames, findDuplicateDirs, checkBuildConfig, missingSharedTemplateFiles, missingAppDirs, findUnregisteredApps, invalidEnvValues, hasClientIndexHtml, hasServerEntry, errorBoundaryWired, hasAppReadme, ciRunsUnitTests, hasLicenseFile, gitignoreCoversArtifacts, clientTestUsesVitest, readmeMentionsVerify, appReadmeMentionsRun, hasGitHook } from './consistency-rules.mjs';
+import { findE2ESpecs, isAppDir, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, findClientTestFiles, missingEnvKeys, findAllMarkdownFiles, parseApps, findDuplicatePorts, findDuplicateNames, findDuplicateDirs, checkBuildConfig, missingSharedTemplateFiles, missingAppDirs, findUnregisteredApps, invalidEnvValues, hasClientIndexHtml, hasServerEntry, errorBoundaryWired, hasAppReadme, ciRunsUnitTests, hasLicenseFile, gitignoreCoversArtifacts, clientTestUsesVitest, readmeMentionsVerify, appReadmeMentionsRun, hasGitHook, hasNvmrc } from './consistency-rules.mjs';
 
 const TEST_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -330,6 +330,12 @@ const onlyHook = hasGitHook(sandbox);
 assert('hasGitHook 未调用校验器返回问题', onlyHook.some((p) => p.includes('check-consistency.mjs')));
 writeFileSync(join(sandbox, '.githooks', 'pre-commit'), '#!/bin/sh\nnode scripts/check-consistency.mjs\nnode scripts/check-consistency.test.mjs\n');
 assert('hasGitHook 完整调用返回 []', hasGitHook(sandbox).length === 0);
+
+// hasNvmrc：根须锁定 Node 版本（.nvmrc 存在）
+assert('hasNvmrc 缺失返回 false', hasNvmrc(sandbox) === false);
+writeFileSync(join(sandbox, '.nvmrc'), '22\n');
+assert('hasNvmrc 存在返回 true', hasNvmrc(sandbox) === true);
+rmSync(join(sandbox, '.nvmrc'));
 
 console.log(`\n通过: ${passed}  失败: ${failed}`);
 if (failed > 0) {

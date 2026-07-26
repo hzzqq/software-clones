@@ -440,6 +440,15 @@ export function gitignoreCoversArtifacts(root) {
 }
 
 /**
+ * 校验仓库根是否锁定 Node 版本（存在 .nvmrc）。
+ * 缺省版本锁会让贡献者 / CI 使用不同 Node 主版本，导致构建与依赖行为漂移（不可复现的隐性风险）。
+ * 返回 boolean：存在 .nvmrc 为 true。
+ */
+export function hasNvmrc(root) {
+  return existsSync(join(root, '.nvmrc'));
+}
+
+/**
  * 校验某 App 的 client `test` 脚本是否真正调用了 vitest（而非 `echo ok` 之类的空心替身）。
  * 仅声明 test 脚本还不够——若脚本不跑真实测试运行器，「CI 跑过 test」就是假绿。
  * @returns {boolean}
