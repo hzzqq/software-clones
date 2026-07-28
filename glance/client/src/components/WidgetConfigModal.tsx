@@ -333,25 +333,25 @@ export default function WidgetConfigModal({
               label="x"
               type="number"
               value={layout.x}
-              onChange={(e) => setLayout({ ...layout, x: Number(e.target.value) })}
+              onChange={(e) => setLayout(normalizeLayout({ ...layout, x: Number(e.target.value) }))}
             />
             <TextField
               label="y"
               type="number"
               value={layout.y}
-              onChange={(e) => setLayout({ ...layout, y: Number(e.target.value) })}
+              onChange={(e) => setLayout(normalizeLayout({ ...layout, y: Number(e.target.value) }))}
             />
             <TextField
               label="w"
               type="number"
               value={layout.w}
-              onChange={(e) => setLayout({ ...layout, w: Number(e.target.value) })}
+              onChange={(e) => setLayout(normalizeLayout({ ...layout, w: Number(e.target.value) }))}
             />
             <TextField
               label="h"
               type="number"
               value={layout.h}
-              onChange={(e) => setLayout({ ...layout, h: Number(e.target.value) })}
+              onChange={(e) => setLayout(normalizeLayout({ ...layout, h: Number(e.target.value) }))}
             />
           </Stack>
           {error && <Alert severity="error">{error}</Alert>}

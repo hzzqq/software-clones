@@ -74,4 +74,12 @@ describe('normalizeLayout', () => {
   it('defaults when undefined', () => {
     expect(normalizeLayout(undefined)).toEqual(DEFAULT_LAYOUT);
   });
+  it('transient NaN（输入框清空/非法字符）回退到合法默认值，避免栅格错乱', () => {
+    expect(normalizeLayout({ x: NaN, y: NaN, w: NaN, h: NaN })).toEqual({
+      x: 0,
+      y: 0,
+      w: 4,
+      h: 3,
+    });
+  });
 });
