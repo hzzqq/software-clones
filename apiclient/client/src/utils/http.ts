@@ -75,6 +75,36 @@ export function tryPrettyJson(text: string): string {
   }
 }
 
+/** 响应体媒体类型分类（用于展示标签与格式化决策）。 */
+export type ResponseMediaType = 'json' | 'html' | 'xml' | 'text' | 'other';
+
+/**
+ * 依据响应头 Content-Type 推断响应体的媒体类型。
+ * - 不区分大小写，并忽略 "; charset=..." 等后缀。
+ * - 找不到 content-type 头时回退 'other'。
+ * - 纯函数，不修改入参。
+ */
+export function getResponseMediaType(headers: Record<string, string>): ResponseMediaType {
+  const ct = Object.entries(headers).find(([k]) => k.toLowerCase() === 'content-type')?.[1];
+  if (!ct) return 'other';
+  const mime = ct.split(';')[0].trim().toLowerCase();
+  if (mime.includes('json')) return 'json';
+  if (mime.includes('html')) return 'html';
+  if (mime.includes('xml')) return 'xml';
+  if (mime.includes('text')) return 'text';
+  return 'other';
+}
+
+/**
+ * 依据 Content-Type 选择响应体的展示文本：
+ * - json 类型自动美化（失败则原样返回）。
+ * - 其余类型原样返回（HTML/XML/纯文本无需额外处理）。
+ * 纯函数，不修改入参。
+ */
+export function formatResponseBody(body: string, headers: Record<string, string>): string {
+  return getResponseMediaType(headers) === 'json' ? tryPrettyJson(body) : body;
+}
+
 /** 侧栏集合项按 方法/名称/URL 匹配关键字（空白匹配全部）。 */
 export function matchRequest(
   needle: string,
@@ -253,6 +283,18 @@ export function statusFamily(code: number): '成功' | '重定向' | '客户端�
       return '服务端错误';
     default:
       return '未知';
+  }
+}
+
+/** 判断是否为合法的 http/https 绝对地址（用于请求 URL 即时校验）。 */
+export function isValidHttpUrl(raw: string): boolean {
+  const url: string = raw.trim();
+  if (!url) return false;
+  try {
+    const u: URL = new URL(url);
+    return u.protocol === 'http:' || u.protocol === 'https:';
+  } catch {
+    return false;
   }
 }
 

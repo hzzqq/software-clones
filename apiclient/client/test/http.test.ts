@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseQueryString, buildUrlWithQuery, statusFamily, redactSensitiveHeaders } from '../src/utils/http';
+import { parseQueryString, buildUrlWithQuery, statusFamily, redactSensitiveHeaders, isValidHttpUrl } from '../src/utils/http';
 
 describe('parseQueryString', () => {
   it('解析多个 key=value 对', () => {
@@ -85,5 +85,23 @@ describe('redactSensitiveHeaders', () => {
   });
   it('空对象返回空对象', () => {
     expect(redactSensitiveHeaders({})).toEqual({});
+  });
+});
+
+describe('isValidHttpUrl', () => {
+  it('合法 http/https 地址返回 true', () => {
+    expect(isValidHttpUrl('https://api.example.com/x')).toBe(true);
+    expect(isValidHttpUrl('http://localhost:3000')).toBe(true);
+    expect(isValidHttpUrl('  https://a.b/c  ')).toBe(true);
+  });
+  it('空串 / 空白 返回 false', () => {
+    expect(isValidHttpUrl('')).toBe(false);
+    expect(isValidHttpUrl('   ')).toBe(false);
+  });
+  it('非 http(s) 协议或非法地址返回 false', () => {
+    expect(isValidHttpUrl('ftp://example.com')).toBe(false);
+    expect(isValidHttpUrl('javascript:alert(1)')).toBe(false);
+    expect(isValidHttpUrl('not a url')).toBe(false);
+    expect(isValidHttpUrl('//example.com/x')).toBe(false);
   });
 });

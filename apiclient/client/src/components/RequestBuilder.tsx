@@ -12,6 +12,7 @@ import {
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import type { HttpMethod } from '../types';
+import { isValidHttpUrl } from '../utils/http';
 
 interface Props {
   method: HttpMethod;
@@ -67,13 +68,19 @@ export default function RequestBuilder({
           placeholder="https://api.example.com/endpoint"
           value={url}
           onChange={(e) => onUrl(e.target.value)}
+          error={url.trim() !== '' && !isValidHttpUrl(url)}
+          helperText={
+            url.trim() !== '' && !isValidHttpUrl(url)
+              ? '请输入合法的 http(s) 地址'
+              : ' '
+          }
           InputProps={{
             endAdornment: (
               <InputAdornment position="end">
                 <Button
                   variant="contained"
                   onClick={onSend}
-                  disabled={loading || !url.trim()}
+                  disabled={loading || !isValidHttpUrl(url)}
                   startIcon={<SendIcon />}
                 >
                   发送
