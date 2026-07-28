@@ -17,11 +17,11 @@ import { commentApi } from '../api/comments';
 import type { Post, Comment, CommentNode } from '../types';
 import Composer from '../components/Composer';
 import CommentThread from '../components/CommentThread';
-import { buildCommentTree, formatDateTime } from '../utils/forum';
+import { buildCommentTree, formatDateTime, parseIdParam } from '../utils/forum';
 
 export default function PostDetailPage(): JSX.Element {
   const { id } = useParams<{ id: string }>();
-  const postId = Number(id);
+  const postId = parseIdParam(id);
   const [post, setPost] = useState<Post | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [tree, setTree] = useState<CommentNode[]>([]);
@@ -29,6 +29,7 @@ export default function PostDetailPage(): JSX.Element {
   const [error, setError] = useState<string | null>(null);
 
   const load = async () => {
+    if (postId === null) return;
     setLoading(true);
     setError(null);
     try {
@@ -49,6 +50,7 @@ export default function PostDetailPage(): JSX.Element {
   }, [postId]);
 
   const handleLike = async () => {
+    if (postId === null) return;
     try {
       const u = await postApi.like(postId);
       setPost(u);
@@ -58,6 +60,7 @@ export default function PostDetailPage(): JSX.Element {
   };
 
   const handleReply = async (parentId: number | null, body: string, author: string) => {
+    if (postId === null) return;
     try {
       await commentApi.create({ postId, parentId, body, authorName: author });
       await load();
@@ -77,6 +80,7 @@ export default function PostDetailPage(): JSX.Element {
 
   if (loading) return <CircularProgress sx={{ display: 'block', mx: 'auto', my: 4 }} />;
   if (error) return <Alert severity="error">{error}</Alert>;
+  if (postId === null) return <Alert severity="warning">无效的帖子 ID</Alert>;
   if (!post) return <Alert severity="warning">帖子不存在</Alert>;
 
   return (

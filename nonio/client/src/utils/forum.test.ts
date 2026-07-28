@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseTags, slugify, buildCommentTree, countComments, searchPosts, excerpt, topPosts, summarizePosts, filterPostsByChannel, formatRelativeTime, formatDateTime, sortPosts } from './forum';
+import { parseTags, slugify, buildCommentTree, countComments, searchPosts, excerpt, topPosts, summarizePosts, filterPostsByChannel, formatRelativeTime, formatDateTime, sortPosts, parseIdParam } from './forum';
 import type { Comment, Post } from '../types';
 
 function mkComment(id: number, parentId: number | null): Comment {
@@ -278,5 +278,24 @@ describe('formatDateTime', () => {
     expect(formatDateTime('not-a-date')).toBe('时间未知');
     expect(formatDateTime('')).toBe('时间未知');
     expect(formatDateTime(NaN)).toBe('时间未知');
+  });
+});
+
+describe('parseIdParam', () => {
+  it('合法数字字符串解析为 id', () => {
+    expect(parseIdParam('42')).toBe(42);
+    expect(parseIdParam('7')).toBe(7);
+  });
+  it('缺失 / 空串 / 空白 返回 null', () => {
+    expect(parseIdParam(undefined)).toBeNull();
+    expect(parseIdParam(null)).toBeNull();
+    expect(parseIdParam('')).toBeNull();
+    expect(parseIdParam('   ')).toBeNull();
+  });
+  it('非数字 / NaN 返回 null（避免以 NaN 发起请求）', () => {
+    expect(parseIdParam('abc')).toBeNull();
+    expect(parseIdParam('12.5')).toBeNull();
+    expect(parseIdParam('0')).toBeNull();
+    expect(parseIdParam('-3')).toBeNull();
   });
 });

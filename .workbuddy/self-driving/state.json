@@ -1,6 +1,6 @@
 {
-  "cycle": 213,
-  "max_cycles": 213,
+  "cycle": 214,
+  "max_cycles": 233,
   "phase": "polish",
   "paused": false,
   "log": [
@@ -2809,11 +2809,25 @@
       "verify": "excalidraw client 42 passed + tsc",
       "score": 80,
       "ts": 1785071154.133459
+    },
+    {
+      "cycle": 214,
+      "app": "nonio",
+      "task_id": "safe_post_id",
+      "new_requirement": "parseIdParam 路由参数安全解析纯函数(非法/缺失/NaN/非整数->null)+测试",
+      "implicit": "PostDetailPage 原 Number(id) 对坏路由参数得 NaN，以 NaN 发起失败请求并显示原始错误；改为安全解析+干净「无效帖子 ID」提示",
+      "files": [
+        "nonio/client/src/utils/forum.ts",
+        "nonio/client/src/utils/forum.test.ts",
+        "nonio/client/src/pages/PostDetailPage.tsx"
+      ],
+      "verify": "nonio client 53 passed + tsc --noEmit 通过",
+      "score": 82
     }
   ],
   "last_task_id": "clamp_stroke_width",
   "repeat_count": 0,
-  "last_score": 80,
+  "last_score": 82,
   "coverage": {
     "B1": {
       "it-tools": "optimized",
