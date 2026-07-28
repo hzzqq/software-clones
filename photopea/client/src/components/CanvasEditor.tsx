@@ -41,7 +41,8 @@ import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import { uid, applyFilter, getFilterLabel, formatPercent, clampOpacity, clampNumber, formatBytes } from '../utils/image';
+import CallMergeIcon from '@mui/icons-material/CallMerge';
+import { uid, applyFilter, getFilterLabel, formatPercent, clampOpacity, clampNumber, formatBytes, blendOver } from '../utils/image';
 import { formatRelativeTime } from '../utils/time';
 import { duplicateLayerName } from '../utils/layers';
 import { designApi } from '../api/designs';
@@ -262,6 +263,43 @@ export default function CanvasEditor(): JSX.Element {
       const i = layersRef.current.findIndex((l) => l.id === sel.id);
       layersRef.current.splice(i + 1, 0, layer);
       selectLayer(layer.id);
+      composite();
+      setVersion((v) => v + 1);
+    },
+    [pushUndo, selectLayer, composite]
+  );
+
+  const mergeDown = useCallback(
+    (targetId?: string): void => {
+      const id = targetId ?? selectedIdRef.current;
+      const layers = layersRef.current;
+      const i = layers.findIndex((l) => l.id === id);
+      if (i <= 0) return; // 没有下方的图层，无法合并
+      const top = layers[i];
+      const bottom = layers[i - 1];
+      pushUndo();
+      const tImg = ctxOf(top).getImageData(0, 0, WIDTH, HEIGHT);
+      const bImg = ctxOf(bottom).getImageData(0, 0, WIDTH, HEIGHT);
+      const td = tImg.data;
+      const bd = bImg.data;
+      for (let p = 0; p < bd.length; p += 4) {
+        // 用标准 source-over 合成，把两层（含各自不透明度）烘焙到下层像素
+        const res = blendOver(
+          { r: td[p], g: td[p + 1], b: td[p + 2], a: td[p + 3] },
+          top.opacity,
+          { r: bd[p], g: bd[p + 1], b: bd[p + 2], a: bd[p + 3] },
+          bottom.opacity
+        );
+        bd[p] = res.r;
+        bd[p + 1] = res.g;
+        bd[p + 2] = res.b;
+        bd[p + 3] = res.a;
+      }
+      ctxOf(bottom).putImageData(bImg, 0, 0);
+      // 不透明度已烘焙进像素，避免后续合成时重复计算
+      bottom.opacity = 1;
+      layers.splice(i, 1);
+      selectLayer(bottom.id);
       composite();
       setVersion((v) => v + 1);
     },
@@ -935,6 +973,14 @@ export default function CanvasEditor(): JSX.Element {
                 </IconButton>
                 <IconButton size="small" onClick={(e) => { e.stopPropagation(); moveLayer(layer.id, -1); }}>
                   <ArrowDownwardIcon />
+                </IconButton>
+                <IconButton
+                  size="small"
+                  disabled={layersRef.current.findIndex((l) => l.id === layer.id) <= 0}
+                  onClick={(e) => { e.stopPropagation(); mergeDown(layer.id); }}
+                  aria-label="向下合并"
+                >
+                  <CallMergeIcon />
                 </IconButton>
                 <IconButton
                   size="small"

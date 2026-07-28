@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { categoryLabel, truncate, filterStations, sortStations, shuffleStations, groupStationsByCategory, filterStationsByLikes, summarizeStations, formatCount, formatClock, validateStreamUrl } from './station';
+import { categoryLabel, truncate, filterStations, sortStations, shuffleStations, groupStationsByCategory, filterStationsByLikes, summarizeStations, formatCount, formatClock, validateStreamUrl, relativeTime } from './station';
 import { Station } from '../types';
 
 const sample: Station[] = [
@@ -208,6 +208,39 @@ describe('formatClock', () => {
   it('非法 / 负数按 0:00', () => {
     expect(formatClock(-3)).toBe('0:00');
     expect(formatClock(Number.NaN)).toBe('0:00');
+  });
+});
+
+describe('relativeTime', () => {
+  const now = new Date('2026-07-28T12:00:00.000Z').getTime();
+  const iso = (msAgo: number) => new Date(now - msAgo).toISOString();
+  it('空/空白/非法返回空串（避免 Invalid Date）', () => {
+    expect(relativeTime('')).toBe('');
+    expect(relativeTime('   ')).toBe('');
+    expect(relativeTime('not-a-date')).toBe('');
+    expect(relativeTime(undefined as unknown as string)).toBe('');
+  });
+  it('不足一分钟显示 刚刚', () => {
+    expect(relativeTime(iso(30 * 1000), now)).toBe('刚刚');
+    expect(relativeTime(iso(59 * 1000), now)).toBe('刚刚');
+  });
+  it('分钟级', () => {
+    expect(relativeTime(iso(3 * 60 * 1000), now)).toBe('3分钟前');
+  });
+  it('小时级', () => {
+    expect(relativeTime(iso(2 * 3600 * 1000), now)).toBe('2小时前');
+  });
+  it('天级', () => {
+    expect(relativeTime(iso(5 * 24 * 3600 * 1000), now)).toBe('5天前');
+  });
+  it('月级', () => {
+    expect(relativeTime(iso(60 * 24 * 3600 * 1000), now)).toBe('2个月前');
+  });
+  it('年级', () => {
+    expect(relativeTime(iso(730 * 24 * 3600 * 1000), now)).toBe('2年前');
+  });
+  it('未来时间（时钟偏差）回退为 刚刚', () => {
+    expect(relativeTime(iso(-1000), now)).toBe('刚刚');
   });
 });
 

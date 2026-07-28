@@ -1,16 +1,18 @@
 import { describe, it, expect } from 'vitest';
-import { progressPercent, nextUnwatched, isComplete, filterShows, sortShows, episodesLeft, remainingWatchTime, formatWatchTime, filterEpisodesByWatched, episodesByStatus, formatProgress, clampEpisodeCount } from './show';
+import { progressPercent, nextUnwatched, nextEpisode, isComplete, filterShows, sortShows, episodesLeft, remainingWatchTime, formatWatchTime, filterEpisodesByWatched, episodesByStatus, formatProgress, clampEpisodeCount, nextEpisodeLabel } from './show';
 import type { Episode, Show } from '../types';
 
 function mkShow(id: number, title: string, watchedCount: number, totalEpisodes: number, updatedAt: string): Show {
   return { id, title, note: '', totalEpisodes, watchedCount, createdAt: '', updatedAt };
 }
 
-function ep(index: number, watched: boolean): Episode {
+function ep(index: number, watched: boolean, season?: number, number?: number): Episode {
   return {
     id: index,
     showId: 1,
     index,
+    season,
+    number,
     watched,
     watchedAt: null,
     createdAt: '',
@@ -210,3 +212,47 @@ describe('clampEpisodeCount', () => {
     expect(clampEpisodeCount(-1, 4)).toBe(4);
   });
 });
+
+describe('nextEpisode', () => {
+  it('返回按 index 升序的第一个未看剧集对象', () => {
+    const eps = [ep(1, true), ep(2, false), ep(3, false)];
+    expect(nextEpisode(eps)).toEqual(ep(2, false));
+  });
+  it('乱序时仍返回 index 最小且未看的那一集', () => {
+    const eps = [ep(3, false), ep(1, true), ep(2, true)];
+    expect(nextEpisode(eps)?.index).toBe(3);
+  });
+  it('优先使用剧集自身的 season/number（而非 index）', () => {
+    const eps = [ep(5, false, 2, 3)];
+    expect(nextEpisode(eps)?.season).toBe(2);
+    expect(nextEpisode(eps)?.number).toBe(3);
+  });
+  it('全部看完返回 null', () => {
+    expect(nextEpisode([ep(1, true), ep(2, true)])).toBeNull();
+  });
+  it('空列表返回 null', () => {
+    expect(nextEpisode([])).toBeNull();
+  });
+});
+
+describe('nextEpisodeLabel', () => {
+  it('已看完（ep 为 null）返回「已看完」', () => {
+    expect(nextEpisodeLabel(null, 10)).toBe('已看完');
+  });
+  it('总数非法时返回「已看完」', () => {
+    expect(nextEpisodeLabel(ep(1, false), 0)).toBe('已看完');
+  });
+  it('默认用 index 拼出 S01Exx 编号', () => {
+    expect(nextEpisodeLabel(ep(3, false), 10)).toBe('下一集 S01E03');
+  });
+  it('优先用 season/number 拼编号，避免与卡片正文错位', () => {
+    expect(nextEpisodeLabel(ep(5, false, 2, 9), 10)).toBe('下一集 S02E09');
+  });
+  it('不修改入参', () => {
+    const e = ep(2, false, 1, 4);
+    nextEpisodeLabel(e, 10);
+    expect(e.watched).toBe(false);
+    expect(e.index).toBe(2);
+  });
+});
+

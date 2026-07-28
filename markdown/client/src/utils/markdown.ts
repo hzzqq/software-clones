@@ -126,10 +126,31 @@ export function extractHeadings(content: string): Heading[] {
     const m = /^(#{1,3})\s+(.+)$/.exec(line);
     if (m) {
       const text = m[2].trim();
-      out.push({ level: m[1].length, text: text.replace(/<[^>]+>/g, ''), id: slugifyHeading(text, idx++) });
+      // id 仍基于原始标题（保证锚点稳定），text 去除行内 markdown 以美化大纲展示。
+      out.push({ level: m[1].length, text: stripInlineMarkdown(text), id: slugifyHeading(text, idx++) });
     }
   }
   return out;
+}
+
+/**
+ * 去除行内 markdown 语法，返回纯文本（用于大纲/目录展示，避免把 `**粗体**`、
+ * `[链接](url)` 等标记原样暴露给用户）。纯函数，不修改入参。
+ * 处理：行内代码、粗体/斜体（星号与下划线）、删除线、链接/图片（保留文字）、行内 HTML，
+ * 最后折叠空白并 trim。注意：星号斜体需在星号粗体之后处理，否则会误拆粗体。
+ */
+export function stripInlineMarkdown(input: string): string {
+  return input
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/__([^_]+)__/g, '$1')
+    .replace(/\*([^*]+)\*/g, '$1')
+    .replace(/_([^_]+)_/g, '$1')
+    .replace(/~~([^~]+)~~/g, '$1')
+    .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/<[^>]+>/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 /** 将日期安全转为时间戳：非法 / 空值回退为 0（最早），避免排序出现 NaN。 */

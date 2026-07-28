@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseHeadersText, headersToText, parseKeyValueText, statusKind, tryPrettyJson, matchRequest, matchHistory, buildCurlCommand, sortRequests, groupByMethod, buildUrlWithQuery, statusText, byteLengthOf, formatBytes } from './http';
+import { parseHeadersText, headersToText, parseKeyValueText, statusKind, tryPrettyJson, matchRequest, matchHistory, buildCurlCommand, sortRequests, groupByMethod, buildUrlWithQuery, statusText, byteLengthOf, formatBytes, getResponseMediaType, formatResponseBody } from './http';
 
 describe('parseHeadersText', () => {
   it('解析多行 header', () => {
@@ -239,5 +239,46 @@ describe('formatBytes', () => {
   it('falls back on negative / non-finite', () => {
     expect(formatBytes(-1)).toBe('0 B');
     expect(formatBytes(NaN)).toBe('0 B');
+  });
+});
+
+describe('getResponseMediaType', () => {
+  it('识别 json（含 charset 后缀）', () => {
+    expect(getResponseMediaType({ 'Content-Type': 'application/json; charset=utf-8' })).toBe('json');
+    expect(getResponseMediaType({ 'content-type': 'application/json' })).toBe('json');
+  });
+  it('识别 html / xml / text', () => {
+    expect(getResponseMediaType({ 'Content-Type': 'text/html' })).toBe('html');
+    expect(getResponseMediaType({ 'Content-Type': 'application/xml' })).toBe('xml');
+    expect(getResponseMediaType({ 'Content-Type': 'text/plain' })).toBe('text');
+  });
+  it('无 content-type 或未知类型回退 other', () => {
+    expect(getResponseMediaType({})).toBe('other');
+    expect(getResponseMediaType({ 'Content-Type': 'image/png' })).toBe('other');
+  });
+  it('不修改入参', () => {
+    const h = { 'Content-Type': 'application/json' };
+    getResponseMediaType(h);
+    expect(h).toEqual({ 'Content-Type': 'application/json' });
+  });
+});
+
+describe('formatResponseBody', () => {
+  it('json 类型自动美化', () => {
+    const headers = { 'Content-Type': 'application/json' };
+    expect(formatResponseBody('{"a":1}', headers)).toBe('{\n  "a": 1\n}');
+  });
+  it('非 json 类型原样返回（HTML/XML/纯文本）', () => {
+    expect(formatResponseBody('<a>1</a>', { 'Content-Type': 'text/html' })).toBe('<a>1</a>');
+    expect(formatResponseBody('hello', {})).toBe('hello');
+  });
+  it('非法 json 即使标为 json 也原样返回', () => {
+    expect(formatResponseBody('not json', { 'Content-Type': 'application/json' })).toBe('not json');
+  });
+  it('不修改入参', () => {
+    const h = { 'Content-Type': 'application/json' };
+    const copy = JSON.parse(JSON.stringify(h));
+    formatResponseBody('{"a":1}', h);
+    expect(h).toEqual(copy);
   });
 });

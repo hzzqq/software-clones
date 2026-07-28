@@ -10,7 +10,7 @@ import { showApi } from '../api/shows';
 import { episodeApi } from '../api/episodes';
 import type { Show, Episode } from '../types';
 import EpisodeGrid from '../components/EpisodeGrid';
-import { progressPercent, nextUnwatched, isComplete, episodesLeft, remainingWatchTime, formatWatchTime, nextEpisodeLabel, filterEpisodesByWatched, episodesByStatus, formatProgress, type EpisodeFilter } from '../utils/show';
+import { progressPercent, nextEpisode, isComplete, episodesLeft, remainingWatchTime, formatWatchTime, formatEpisodeCode, nextEpisodeLabel, filterEpisodesByWatched, episodesByStatus, formatProgress, type EpisodeFilter } from '../utils/show';
 
 export default function ShowDetailPage(): JSX.Element {
   const { id } = useParams<{ id: string }>();
@@ -60,10 +60,9 @@ export default function ShowDetailPage(): JSX.Element {
   };
 
   const markNext = async () => {
-    const next = nextUnwatched(episodes);
+    const next = nextEpisode(episodes);
     if (next == null) return;
-    const target = episodes.find((e) => e.index === next);
-    if (target && !target.watched) await toggle(target.id);
+    if (!next.watched) await toggle(next.id);
   };
 
   const markAll = async () => {
@@ -82,6 +81,7 @@ export default function ShowDetailPage(): JSX.Element {
   const pct = progressPercent(show.watchedCount, show.totalEpisodes);
   const visibleEps = filterEpisodesByWatched(episodes, epFilter);
   const epStatus = episodesByStatus(episodes);
+  const nextEp = nextEpisode(episodes);
 
   return (
     <Box>
@@ -106,18 +106,18 @@ export default function ShowDetailPage(): JSX.Element {
         )}
       </Stack>
 
-      {!isComplete(show.watchedCount, show.totalEpisodes) && nextUnwatched(episodes) != null && (
+      {!isComplete(show.watchedCount, show.totalEpisodes) && nextEp != null && (
         <Alert
           severity="info"
           sx={{ mb: 2 }}
-          action={<Chip size="small" color="info" label={nextEpisodeLabel(show.watchedCount, show.totalEpisodes)} />}
+          action={<Chip size="small" color="info" label={nextEpisodeLabel(nextEp, show.totalEpisodes)} />}
         >
-          接下来看：第 {nextUnwatched(episodes)} 集
+          接下来看：{formatEpisodeCode(nextEp.season ?? 1, nextEp.number ?? nextEp.index)}
         </Alert>
       )}
 
       <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
-        <Button variant="contained" startIcon={<SkipNextIcon />} onClick={markNext} disabled={nextUnwatched(episodes) == null}>
+        <Button variant="contained" startIcon={<SkipNextIcon />} onClick={markNext} disabled={nextEp == null}>
           标记下一集
         </Button>
         <Button variant="outlined" startIcon={<DoneAllIcon />} onClick={markAll} disabled={show.watchedCount >= show.totalEpisodes}>

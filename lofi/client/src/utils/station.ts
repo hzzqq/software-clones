@@ -124,6 +124,32 @@ export function formatClock(totalSeconds: number): string {
   return hr > 0 ? `${hr}:${pad(min)}:${pad(sec)}` : `${min}:${pad(sec)}`;
 }
 
+/**
+ * 将 ISO 时间戳格式化为中文相对时间：
+ *   刚刚 / x分钟前 / x小时前 / x天前 / x个月前 / x年前
+ * - 空串或非法日期 → 返回 ''（调用方据此决定是否展示），避免渲染 "Invalid Date"。
+ * - 未来时间（时钟偏差）回退为 "刚刚"。
+ * - now 可注入以便确定性测试，默认 Date.now()。纯函数，不修改入参。
+ */
+export function relativeTime(iso: string, now: number = Date.now()): string {
+  const v = (iso ?? '').trim();
+  if (!v) return '';
+  const then = new Date(v).getTime();
+  if (!Number.isFinite(then)) return '';
+  const diffSec = Math.floor((now - then) / 1000);
+  if (diffSec < 60) return '刚刚';
+  const min = Math.floor(diffSec / 60);
+  if (min < 60) return `${min}分钟前`;
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return `${hr}小时前`;
+  const day = Math.floor(hr / 24);
+  if (day < 30) return `${day}天前`;
+  const month = Math.floor(day / 30);
+  if (month < 12) return `${month}个月前`;
+  const year = Math.floor(day / 365);
+  return `${year}年前`;
+}
+
 /** 电台统计概览。 */
 export interface StationsSummary {
   total: number;

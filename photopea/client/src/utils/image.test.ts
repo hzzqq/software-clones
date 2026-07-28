@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { clamp, clampNumber, grayscale, invert, brightness, sepia, uid, applyFilter, contrast, saturate, getFilterLabel, FILTER_LABELS, formatPercent } from './image';
+import { clamp, clampNumber, grayscale, invert, brightness, sepia, uid, applyFilter, contrast, saturate, getFilterLabel, FILTER_LABELS, formatPercent, blendOver } from './image';
 import type { FilterKind } from '../types';
 
 function makeData(): Uint8ClampedArray {
@@ -144,5 +144,60 @@ describe('formatPercent', () => {
   it('越界自动夹取', () => {
     expect(formatPercent(-0.5)).toBe('0%');
     expect(formatPercent(2)).toBe('100%');
+  });
+});
+
+describe('blendOver', () => {
+  const RED: any = { r: 255, g: 0, b: 0, a: 255 };
+  const BLUE: any = { r: 0, g: 0, b: 255, a: 255 };
+  const WHITE: any = { r: 255, g: 255, b: 255, a: 255 };
+  const TRANSPARENT: any = { r: 0, g: 0, b: 0, a: 0 };
+
+  it('顶层完全不透明 → 结果即顶层颜色', () => {
+    expect(blendOver(RED, 1, BLUE, 1)).toEqual(RED);
+    expect(blendOver(RED, 1, TRANSPARENT, 1)).toEqual(RED);
+  });
+
+  it('顶层完全透明（像素 alpha=0）→ 退化为底层，不产生脏色', () => {
+    expect(blendOver(TRANSPARENT, 1, BLUE, 1)).toEqual(BLUE);
+    expect(blendOver(TRANSPARENT, 0, BLUE, 1)).toEqual(BLUE);
+  });
+
+  it('顶层 opacity=0 → 等同于不存在，结果与底层一致', () => {
+    expect(blendOver(RED, 0, BLUE, 1)).toEqual(BLUE);
+  });
+
+  it('两层都透明 → 完全透明黑，不出现 NaN', () => {
+    expect(blendOver(TRANSPARENT, 1, TRANSPARENT, 1)).toEqual({ r: 0, g: 0, b: 0, a: 0 });
+  });
+
+  it('半透明顶层按权重混合（预乘 alpha，不偏暗）', () => {
+    // 红(255)以 0.5 覆盖白(255)：R 仍为 255；G/B = 127.5 → 四舍五入 128
+    const r = blendOver(RED, 0.5, WHITE, 1);
+    expect(r.r).toBe(255);
+    expect(r.g).toBe(128); // 0*0.5 + 255*0.5 = 127.5 → 128
+    expect(r.b).toBe(128);
+    expect(r.a).toBe(255);
+  });
+
+  it('半透明顶层覆盖透明底 → alpha 与颜色同步衰减', () => {
+    const r = blendOver(RED, 0.5, TRANSPARENT, 1);
+    expect(r.a).toBe(128); // 255*0.5 = 127.5 → 128
+    expect(r.r).toBe(255);
+    expect(r.g).toBe(0);
+    expect(r.b).toBe(0);
+  });
+
+  it('底层半透明、顶层不透明 → 有效 alpha 取重叠后饱和', () => {
+    const r = blendOver(RED, 1, BLUE, 0.5);
+    expect(r.a).toBe(255);
+    expect(r.r).toBe(255); // 顶层不透明盖住底层
+  });
+
+  it('非法 opacity 被夹到 [0,1]（负值/Nan 视为 0，顶层消失），不抛错', () => {
+    // topOpacity=-1 → 夹为 0 → 顶层完全消失 → 结果即底层
+    expect(blendOver(RED, -1, BLUE, 2)).toEqual(BLUE);
+    // topOpacity=NaN → 夹为 0 → 结果即底层
+    expect(blendOver(RED, Number.NaN, BLUE, 1)).toEqual(BLUE);
   });
 });

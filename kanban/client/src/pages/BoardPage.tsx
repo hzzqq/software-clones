@@ -10,6 +10,7 @@ import {
   Button,
   Card as MuiCard,
   CircularProgress,
+  Snackbar,
   Typography,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -23,12 +24,14 @@ import { ApiError } from '../api/client';
 import { CardPatch } from '../api/cards';
 import { Card } from '../types';
 import { countCardsByPriority, dueSoonCards, overdueCards, countCardsByTag } from '../utils/filterCards';
+import { formatBoardSummary } from '../utils/boardSummary';
+import { parseIdParam } from '../utils/id';
 
 /** Single-board view: toolbar + drag-enabled columns + card editor. */
 export default function BoardPage(): JSX.Element {
   const { id } = useParams<{ id: string }>();
-  const boardId: number = Number(id);
-  const board = useBoard(boardId);
+  const boardId: number | null = parseIdParam(id);
+  const board = useBoard(boardId ?? 0);
   const navigate = useNavigate();
 
   const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
@@ -39,6 +42,7 @@ export default function BoardPage(): JSX.Element {
   const [onlyIncomplete, setOnlyIncomplete] = useState<boolean>(false);
   const [search, setSearch] = useState<string>('');
   const [error, setError] = useState<string>('');
+  const [copyTip, setCopyTip] = useState<string>('');
 
   const selectedCard: Card | null =
     board.detail?.cards.find((c) => c.id === selectedCardId) ?? null;
@@ -83,6 +87,7 @@ export default function BoardPage(): JSX.Element {
   };
 
   const deleteBoard = async (): Promise<void> => {
+    if (boardId === null) return;
     try {
       await boardsApi.remove(boardId);
       navigate('/boards');
@@ -90,6 +95,25 @@ export default function BoardPage(): JSX.Element {
       setError((e as ApiError).message);
     }
   };
+
+  const copySummary = async (): Promise<void> => {
+    if (!board.detail) return;
+    const text = formatBoardSummary(board.detail);
+    try {
+      await navigator.clipboard?.writeText(text);
+      setCopyTip('已复制看板摘要');
+    } catch {
+      setCopyTip('复制失败，请手动选择');
+    }
+  };
+
+  if (boardId === null) {
+    return (
+      <Alert severity="warning" sx={{ mt: 2 }}>
+        无效的看板 ID
+      </Alert>
+    );
+  }
 
   if (board.loading) {
     return (
@@ -142,6 +166,7 @@ export default function BoardPage(): JSX.Element {
         searchQuery={search}
         onSearchChange={setSearch}
         onClearCompleted={() => void board.clearCompleted()}
+        onCopySummary={() => void copySummary()}
         totalCards={board.detail.cards.length}
         completedCards={board.detail.cards.filter((c) => c.completed === 1).length}
         priorityCounts={countCardsByPriority(board.detail.cards)}
@@ -173,6 +198,13 @@ export default function BoardPage(): JSX.Element {
         onSave={saveCard}
         onDelete={deleteCard}
         onToggleTag={toggleTag}
+      />
+      <Snackbar
+        open={copyTip !== ''}
+        autoHideDuration={2000}
+        onClose={() => setCopyTip('')}
+        message={copyTip}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       />
     </Box>
   );

@@ -3,7 +3,7 @@ import { Box, Chip, Typography, Tabs, Tab, Stack, IconButton, Tooltip } from '@m
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CheckIcon from '@mui/icons-material/Check';
 import type { ProxyResponse } from '../types';
-import { statusKind, statusFamily, tryPrettyJson, headersToText, redactSensitiveHeaders, byteLengthOf, formatBytes } from '../utils/http';
+import { statusKind, statusFamily, formatResponseBody, getResponseMediaType, headersToText, redactSensitiveHeaders, byteLengthOf, formatBytes } from '../utils/http';
 
 interface Props {
   response: ProxyResponse | null;
@@ -17,7 +17,8 @@ export default function ResponseViewer({ response, loading }: Props): JSX.Elemen
   const copyBody = async () => {
     if (!response) return;
     try {
-      await navigator.clipboard.writeText(tab === 1 ? tryPrettyJson(response.body) : response.body);
+      const text = tab === 0 ? displayBody : headerText;
+      await navigator.clipboard.writeText(text);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {
@@ -41,7 +42,9 @@ export default function ResponseViewer({ response, loading }: Props): JSX.Elemen
   }
 
   const kind = statusKind(response.status);
-  const displayBody = tab === 1 ? tryPrettyJson(response.body) : response.body;
+  const displayBody = formatResponseBody(response.body, response.headers);
+  const headerText = headersToText(redactSensitiveHeaders(response.headers));
+  const mediaType = getResponseMediaType(response.headers);
 
   return (
     <Box>
@@ -57,6 +60,7 @@ export default function ResponseViewer({ response, loading }: Props): JSX.Elemen
           size="small"
           variant="outlined"
         />
+        <Chip label={mediaType.toUpperCase()} size="small" variant="outlined" />
         <Typography variant="caption" color="text.secondary">
           {response.timeMs} ms · {formatBytes(byteLengthOf(response.body))}
         </Typography>
@@ -75,7 +79,7 @@ export default function ResponseViewer({ response, loading }: Props): JSX.Elemen
         {tab === 0 ? (
           <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{displayBody}</pre>
         ) : (
-          <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{headersToText(redactSensitiveHeaders(response.headers))}</pre>
+          <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{headerText}</pre>
         )}
       </Box>
     </Box>

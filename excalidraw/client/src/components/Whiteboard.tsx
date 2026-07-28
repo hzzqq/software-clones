@@ -19,7 +19,7 @@ import TitleIcon from '@mui/icons-material/Title';
 import rough from 'roughjs';
 import type { RoughCanvas } from 'roughjs/bin/canvas';
 import type { CanvasElement, Point, Scene, Tool } from '../types';
-import { normalizeRect, hitTest, uid, serializeScene, snapPoint, boundingBox, getCenter, translateElement, rotateElement, scaleElement, clampStrokeWidth } from '../utils/geometry';
+import { normalizeRect, hitTest, uid, serializeScene, snapPoint, boundingBox, getCenter, getSelectionBox, translateElement, rotateElement, scaleElement, clampStrokeWidth } from '../utils/geometry';
 import { formatRelativeTime } from '../utils/time';
 import { sceneApi } from '../api/scenes';
 
@@ -97,11 +97,11 @@ export default function Whiteboard({ elements, setElements }: Props): JSX.Elemen
         ctx.fillText(el.text, el.x, el.y);
       }
       if (isSel) {
-        const b = normalizeRect(el.x, el.y, el.w, el.h);
+        const b = getSelectionBox(el);
         ctx.save();
         ctx.strokeStyle = '#4263eb';
         ctx.setLineDash([4, 3]);
-        ctx.strokeRect(b.x - 4, b.y - 4, b.w + 8, b.h + 8);
+        ctx.strokeRect(b.x - 4, b.y - 4, b.width + 8, b.height + 8);
         ctx.restore();
       }
     }

@@ -109,6 +109,16 @@ export function getCenter(el: CanvasElement): Point {
   return { x: (b.minX + b.maxX) / 2, y: (b.minY + b.maxY) / 2 };
 }
 
+/**
+ * 返回用于「选中高亮」的显示包围盒（左上角 + 正尺寸）。
+ * 关键：钢笔元素 w/h 恒为 0、真实形状由 points 决定，因此必须走 elementBounds，
+ * 否则会得到起点处的 0×0 空盒，导致选中框只画在一个点上（隐性渲染 bug）。
+ */
+export function getSelectionBox(el: CanvasElement): { x: number; y: number; width: number; height: number } {
+  const b = elementBounds(el);
+  return { x: b.minX, y: b.minY, width: b.w, height: b.h };
+}
+
 /** 将单点顺时针旋转 degrees（屏幕坐标系，y 轴向下；正角度即视觉顺时针）绕 center。 */
 function rotatePoint(p: Point, degrees: number, center: Point): Point {
   const rad = (degrees * Math.PI) / 180;

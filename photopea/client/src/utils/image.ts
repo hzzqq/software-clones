@@ -112,6 +112,42 @@ export function formatPercent(value: number): string {
   return `${Math.round(clamp(value, 0, 1) * 100)}%`;
 }
 
+/** 一个像素的 RGBA 分量（各分量 0-255）。 */
+export interface Rgba {
+  r: number;
+  g: number;
+  b: number;
+  a: number;
+}
+
+/**
+ * 标准 source-over 透明合成（"上下层合并"的逐像素数学）。
+ *
+ * - 同时考虑「图层不透明度」(topOpacity/bottomOpacity，0-1) 与「像素自身 alpha」(a/255)，
+ *   因此完全透明像素 (a=0) 不会污染下层，半透明像素会按权重混合。
+ * - 使用预乘 alpha 公式，避免直接对 straight-alpha 做线性插值导致的暗边/亮边伪影
+ *   （典型隐性 bug：out.r = top.r*ta + bottom.r*ba 这种写法在半透明时会偏暗）。
+ * - 任一图层完全透明（有效 alpha 为 0）时退化为另一图层本身（含其 alpha），不出现 NaN。
+ * - 顶层完全不透明时结果即顶层颜色，与浏览器 canvas 的 drawImage 表现一致。
+ *
+ * 该函数是「向下合并图层」功能的核心，单独抽出便于在 node 下做确定性单元测试。
+ */
+export function blendOver(top: Rgba, topOpacity: number, bottom: Rgba, bottomOpacity: number): Rgba {
+  const ta = (top.a / 255) * clampOpacity(topOpacity);
+  const ba = (bottom.a / 255) * clampOpacity(bottomOpacity);
+  const outA = ta + ba * (1 - ta);
+  if (outA <= 0) return { r: 0, g: 0, b: 0, a: 0 };
+  const r = (top.r * ta + bottom.r * ba * (1 - ta)) / outA;
+  const g = (top.g * ta + bottom.g * ba * (1 - ta)) / outA;
+  const b = (top.b * ta + bottom.b * ba * (1 - ta)) / outA;
+  return {
+    r: clamp(Math.round(r), 0, 255),
+    g: clamp(Math.round(g), 0, 255),
+    b: clamp(Math.round(b), 0, 255),
+    a: clamp(Math.round(outA * 255), 0, 255),
+  };
+}
+
 /** 去掉 1 位小数末尾无意义的 .0（如 2.0 → "2"，1.5 → "1.5"）。 */
 function trimZero(v: number): string {
   const s = v.toFixed(1);

@@ -145,14 +145,27 @@ export function summarizeNotes(notes: Note[]): NotesSummary {
 }
 
 /**
- * 按创建月份（createdAt 的 YYYY-MM 前缀）分组笔记，键按时间倒序（最新月份在前）。
- * 空入参返回 {}；createdAt 无法解析为 YYYY-MM 的笔记会被忽略；不修改入参。
+ * 将时间戳安全转为「本地时区」的 YYYY-MM 键（与卡片相对时间一致，避免 UTC 月份偏差）。
+ * 非法 / 空值返回 ''，调用方据此跳过该笔记；不修改入参。
+ */
+export function monthKeyOf(iso: string): string {
+  const d = new Date(iso);
+  const t = d.getTime();
+  if (!Number.isFinite(t)) return '';
+  const y = d.getFullYear();
+  const m = d.getMonth() + 1;
+  return `${y}-${String(m).padStart(2, '0')}`;
+}
+
+/**
+ * 按创建月份（本地时区的 YYYY-MM）分组笔记，键按时间倒序（最新月份在前）。
+ * 空入参返回 {}；createdAt 无法解析的笔记会被忽略；不修改入参。
  */
 export function groupNotesByMonth(notes: Note[]): Record<string, Note[]> {
   const buckets: Record<string, Note[]> = {};
   for (const note of notes) {
-    const prefix = note.createdAt.slice(0, 7); // YYYY-MM
-    if (!prefix || !/^\d{4}-\d{2}$/.test(prefix)) continue;
+    const prefix = monthKeyOf(note.createdAt);
+    if (!prefix) continue;
     (buckets[prefix] ??= []).push(note);
   }
   const keys = Object.keys(buckets).sort((a, b) => (a < b ? 1 : a > b ? -1 : 0));

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { normalizeRect, distance, hitTest, elementBounds, uid, serializeScene, snapPoint, boundingBox, getCenter, translateElement, clampStrokeWidth } from './geometry';
+import { normalizeRect, distance, hitTest, elementBounds, uid, serializeScene, snapPoint, boundingBox, getCenter, getSelectionBox, translateElement, clampStrokeWidth } from './geometry';
 import type { CanvasElement } from '../types';
 
 describe('normalizeRect', () => {
@@ -89,6 +89,17 @@ describe('getCenter', () => {
   it('负坐标矩形中心', () => {
     const r = { id: '2', type: 'rect', stroke: '#000', strokeWidth: 2, x: -10, y: -20, w: 20, h: 40 } as CanvasElement;
     expect(getCenter(r)).toEqual({ x: 0, y: 0 });
+  });
+});
+
+describe('getSelectionBox', () => {
+  it('矩形高亮盒 = 归一化包围盒', () => {
+    const r = { id: '1', type: 'rect', stroke: '#000', strokeWidth: 2, x: 10, y: 20, w: -50, h: 30 } as CanvasElement;
+    expect(getSelectionBox(r)).toEqual({ x: -40, y: 20, width: 50, height: 30 });
+  });
+  it('钢笔高亮盒覆盖完整笔触（而非起点 0×0 空盒）', () => {
+    const pen = { id: '2', type: 'pen', stroke: '#000', strokeWidth: 2, x: 5, y: 5, w: 0, h: 0, points: [{ x: 5, y: 5 }, { x: 60, y: 90 }] } as CanvasElement;
+    expect(getSelectionBox(pen)).toEqual({ x: 5, y: 5, width: 55, height: 85 });
   });
 });
 

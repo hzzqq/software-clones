@@ -1,7 +1,7 @@
 import { Card, CardActionArea, CardContent, Chip, Stack, Typography } from '@mui/material';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 import { Station } from '../types';
-import { categoryLabel, truncate } from '../utils/station';
+import { categoryLabel, truncate, relativeTime } from '../utils/station';
 
 interface Props {
   station: Station;
@@ -29,6 +29,14 @@ export default function StationCard({ station, active, onPlay }: Props): JSX.Ele
           <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1 }}>
             <PlayCircleOutlineIcon fontSize="small" color="primary" />
             <Typography variant="caption">{station.likes} 喜欢</Typography>
+            {(() => {
+              const added = relativeTime(station.createdAt);
+              return added ? (
+                <Typography variant="caption" color="text.secondary">
+                  添加于 {added}
+                </Typography>
+              ) : null;
+            })()}
           </Stack>
         </CardContent>
       </CardActionArea>

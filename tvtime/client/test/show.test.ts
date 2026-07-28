@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { formatEpisodeCode, nextEpisodeLabel } from '../src/utils/show';
+import { formatEpisodeCode, nextEpisodeLabel, type Episode } from '../src/utils/show';
+
+function mkEp(index: number, watched: boolean, season?: number, number?: number): Episode {
+  return { id: index, showId: 1, index, season, number, watched, watchedAt: null, createdAt: '', updatedAt: '' };
+}
 
 describe('formatEpisodeCode', () => {
   it('正常季集编号补零为两位数（1,2）→ S01E02', () => {
@@ -20,16 +24,19 @@ describe('formatEpisodeCode', () => {
 });
 
 describe('nextEpisodeLabel', () => {
-  it('已看少于总数时返回「下一集 第 N 集」（N = watched + 1）', () => {
-    expect(nextEpisodeLabel(3, 10)).toBe('下一集 第 4 集');
+  it('未看剧集返回「下一集 SxxExx」（编号取剧集自身 season/number）', () => {
+    expect(nextEpisodeLabel(mkEp(4, false), 10)).toBe('下一集 S01E04');
   });
 
-  it('已看达到或超过总数时返回「已看完」', () => {
-    expect(nextEpisodeLabel(10, 10)).toBe('已看完');
-    expect(nextEpisodeLabel(12, 10)).toBe('已看完');
+  it('优先使用 season/number 而非 index 拼编号', () => {
+    expect(nextEpisodeLabel(mkEp(5, false, 2, 9), 10)).toBe('下一集 S02E09');
+  });
+
+  it('ep 为 null（全部看完）返回「已看完」', () => {
+    expect(nextEpisodeLabel(null, 10)).toBe('已看完');
   });
 
   it('总集数为 0 时返回「已看完」', () => {
-    expect(nextEpisodeLabel(0, 0)).toBe('已看完');
+    expect(nextEpisodeLabel(mkEp(1, false), 0)).toBe('已看完');
   });
 });

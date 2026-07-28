@@ -1,5 +1,5 @@
 {
-  "cycle": 214,
+  "cycle": 218,
   "max_cycles": 233,
   "phase": "polish",
   "paused": false,
@@ -2823,11 +2823,50 @@
       ],
       "verify": "nonio client 53 passed + tsc --noEmit 通过",
       "score": 82
+    },
+    {
+      "cycle": 216,
+      "app": "glance",
+      "task_id": "clamp_layout_live",
+      "new_requirement": "WidgetConfigModal 布局 x/y/w/h 输入实时接入 normalizeLayout，杜绝编辑期 NaN/负值",
+      "implicit": "cycle207 仅夹 maxItems/lat/lon，x/y/w/h 仍裸 Number()；保存虽 normalize 但编辑态可暂存 NaN 触发栅格错乱",
+      "files": [
+        "glance/client/src/components/WidgetConfigModal.tsx",
+        "glance/client/src/utils/widget.test.ts"
+      ],
+      "verify": "glance client 43 passed + tsc --noEmit 通过",
+      "score": 78
+    },
+    {
+      "cycle": 217,
+      "app": "it-tools",
+      "task_id": "yaml_safe_convert",
+      "new_requirement": "tryJsonToYaml/tryYamlToJson 非抛出转换纯函数+测试；YamlTool 接入即时有效性提示 Chip",
+      "files": [
+        "it-tools/client/src/utils/tools.ts",
+        "it-tools/client/src/tools/yaml/YamlTool.tsx",
+        "it-tools/client/test/tools.test.ts"
+      ],
+      "verify": "it-tools client 88 passed + tsc --noEmit 通过",
+      "score": 80
+    },
+    {
+      "cycle": 218,
+      "app": "apiclient",
+      "task_id": "valid_url_hint",
+      "new_requirement": "isValidHttpUrl 纯函数+测试；请求构建器对非法 URL 给出红色提示并禁用发送",
+      "files": [
+        "apiclient/client/src/utils/http.ts",
+        "apiclient/client/src/components/RequestBuilder.tsx",
+        "apiclient/client/test/http.test.ts"
+      ],
+      "verify": "apiclient client 79 passed + tsc --noEmit 通过",
+      "score": 80
     }
   ],
   "last_task_id": "clamp_stroke_width",
   "repeat_count": 0,
-  "last_score": 82,
+  "last_score": 80,
   "coverage": {
     "B1": {
       "it-tools": "optimized",

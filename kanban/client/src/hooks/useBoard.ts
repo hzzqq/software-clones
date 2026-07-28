@@ -20,6 +20,12 @@ export function useBoard(boardId: number) {
   detailRef.current = detail;
 
   const load = useCallback(async (): Promise<void> => {
+    if (!Number.isFinite(boardId) || boardId <= 0) {
+      setDetail(null);
+      setError('无效的看板 ID');
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const d: BoardDetail = await boardsApi.get(boardId);

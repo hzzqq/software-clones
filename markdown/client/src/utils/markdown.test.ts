@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseTags, countWords, deriveTitle, countCodeBlocks, estimateReadingTime, extractHeadings, extractLinks, sortNotes, filterNotesByFolder, summarizeNotes, formatRelativeTime, searchNotes } from './markdown';
+import { parseTags, countWords, deriveTitle, countCodeBlocks, estimateReadingTime, extractHeadings, extractLinks, sortNotes, filterNotesByFolder, summarizeNotes, formatRelativeTime, searchNotes, stripInlineMarkdown } from './markdown';
 import type { Note } from '../types';
 
 describe('parseTags', () => {
@@ -100,6 +100,26 @@ describe('extractHeadings', () => {
   it('生成唯一锚点 id', () => {
     const ids = hs.map((h) => h.id);
     expect(new Set(ids).size).toBe(ids.length);
+  });
+  it('大纲 text 去除行内 markdown（不再暴露 **/#/链接 等语法）', () => {
+    const hs2 = extractHeadings('# **加粗** 与 [百度](https://baidu.com) 和 `代码`');
+    expect(hs2[0].text).toBe('加粗 与 百度 和 代码');
+  });
+});
+
+describe('stripInlineMarkdown', () => {
+  it('去除粗体/斜体/行内代码/删除线', () => {
+    expect(stripInlineMarkdown('**粗** 与 *斜* 与 `码` 与 ~~删~~')).toBe('粗 与 斜 与 码 与 删');
+  });
+  it('链接只保留文字', () => {
+    expect(stripInlineMarkdown('看 [官网](https://example.com)')).toBe('看 官网');
+  });
+  it('去除行内 HTML 并折叠空白', () => {
+    expect(stripInlineMarkdown('a  <b>  b  </b>   c')).toBe('a b c');
+  });
+  it('空/纯标记输入返回空串', () => {
+    expect(stripInlineMarkdown('')).toBe('');
+    expect(stripInlineMarkdown('  ')).toBe('');
   });
 });
 

@@ -32,6 +32,7 @@ interface ToolbarProps {
   searchQuery: string;
   onSearchChange: (q: string) => void;
   onClearCompleted: () => void;
+  onCopySummary: () => void;
   totalCards?: number;
   completedCards?: number;
   priorityCounts?: Record<number, number>;
@@ -55,6 +56,7 @@ export default function Toolbar({
   searchQuery,
   onSearchChange,
   onClearCompleted,
+  onCopySummary,
   totalCards,
   completedCards,
   priorityCounts,
@@ -178,6 +180,9 @@ export default function Toolbar({
           disabled={(completedCards ?? 0) === 0}
         >
           清除已完成
+        </Button>
+        <Button variant="outlined" onClick={onCopySummary}>
+          复制摘要
         </Button>
         <Button
           color="error"

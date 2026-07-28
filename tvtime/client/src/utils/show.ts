@@ -16,6 +16,16 @@ export function nextUnwatched(episodes: Episode[]): number | null {
   return null;
 }
 
+/** 返回按 index 升序的第一个未看剧集对象；全部看完或无剧集返回 null。
+ * 相比仅依赖 watchedCount，直接读取真实剧集可避免「跳着看」时编号与卡片标签不一致。 */
+export function nextEpisode(episodes: Episode[]): Episode | null {
+  const sorted = [...episodes].sort((a, b) => a.index - b.index);
+  for (const ep of sorted) {
+    if (!ep.watched) return ep;
+  }
+  return null;
+}
+
 /** 是否已完结（全部已看）。 */
 export function isComplete(watched: number, total: number): boolean {
   return total > 0 && watched >= total;
@@ -70,11 +80,12 @@ export function clampEpisodeCount(raw: unknown, fallback = 1): number {
 }
 
 /** 计算「接下来看」的下一集标签（纯函数，不修改入参）。
- * 已看完（watched >= total 或 total <= 0）返回「已看完」；
- * 否则返回「下一集 第 N 集」（N = watched + 1）。 */
-export function nextEpisodeLabel(watched: number, total: number): string {
-  if (total <= 0 || watched >= total) return '已看完';
-  return `下一集 第 ${watched + 1} 集`;
+ * 入参为真实的下一集剧集对象：已看完（ep 为 null 或 total <= 0）返回「已看完」；
+ * 否则返回「下一集 SxxExx」，编号取自剧集自身的 season/number（缺失时回退 index），
+ * 因此与卡片正文展示的剧集编号始终一致，不再依赖 watchedCount 推断导致错位。 */
+export function nextEpisodeLabel(ep: Episode | null, total: number): string {
+  if (ep == null || total <= 0) return '已看完';
+  return `下一集 ${formatEpisodeCode(ep.season ?? 1, ep.number ?? ep.index)}`;
 }
 
 /** 按名称过滤剧集（空白匹配全部，忽略大小写）。 */
