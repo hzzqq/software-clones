@@ -7,6 +7,8 @@ import {
   minifyJson,
   jsonToYaml,
   yamlToJson,
+  tryJsonToYaml,
+  tryYamlToJson,
   generateUuid,
   generateUuidFallback,
   isValidUuid,
@@ -83,6 +85,30 @@ describe('yaml helpers', () => {
 
   it('throws when JSON source is invalid', () => {
     expect(() => jsonToYaml('{not json')).toThrow();
+  });
+
+  it('tryJsonToYaml 成功返回 ok 且含 YAML', () => {
+    const r = tryJsonToYaml('{"foo":"bar"}');
+    expect(r.ok).toBe(true);
+    expect(r.value).toContain('foo: bar');
+  });
+
+  it('tryJsonToYaml 非法 JSON 返回 ok:false（非抛出）', () => {
+    const r = tryJsonToYaml('{not json');
+    expect(r.ok).toBe(false);
+    expect(typeof r.error).toBe('string');
+  });
+
+  it('tryYamlToJson 成功返回 ok 且含 JSON', () => {
+    const r = tryYamlToJson('foo: bar\n');
+    expect(r.ok).toBe(true);
+    expect(JSON.parse(r.value as string)).toEqual({ foo: 'bar' });
+  });
+
+  it('tryYamlToJson 非法 YAML 返回 ok:false（非抛出）', () => {
+    const r = tryYamlToJson('foo: [unclosed\n');
+    expect(r.ok).toBe(false);
+    expect(typeof r.error).toBe('string');
   });
 });
 

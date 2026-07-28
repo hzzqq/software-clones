@@ -115,6 +115,37 @@ export function yamlToJson(yamlText: string): string {
   return JSON.stringify(yaml.load(yamlText), null, 2);
 }
 
+/** Result of a non-throwing YAML/JSON conversion. */
+export interface ConvertResult {
+  ok: boolean;
+  value?: string;
+  error?: string;
+}
+
+/**
+ * 非抛出版本：JSON -> YAML。非法 JSON 时返回 { ok:false } 而非抛出，
+ * 供 UI 做即时校验与友好错误提示（与 JsonTool 的 parseJson 一致）。
+ */
+export function tryJsonToYaml(jsonText: string): ConvertResult {
+  try {
+    return { ok: true, value: yaml.dump(JSON.parse(jsonText), { indent: 2, lineWidth: -1 }) };
+  } catch (e) {
+    return { ok: false, error: (e as Error).message };
+  }
+}
+
+/**
+ * 非抛出版本：YAML -> JSON。非法 YAML 时返回 { ok:false } 而非抛出。
+ * 注：js-yaml 对部分歧义文本会解析为字符串而非报错，故 ok 仅代表语法层面无异常。
+ */
+export function tryYamlToJson(yamlText: string): ConvertResult {
+  try {
+    return { ok: true, value: JSON.stringify(yaml.load(yamlText), null, 2) };
+  } catch (e) {
+    return { ok: false, error: (e as Error).message };
+  }
+}
+
 // ---------------------------------------------------------------------------
 // UUID (v4)
 // ---------------------------------------------------------------------------
