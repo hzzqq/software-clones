@@ -1,5 +1,5 @@
 {
-  "cycle": 218,
+  "cycle": 219,
   "max_cycles": 233,
   "phase": "polish",
   "paused": false,
@@ -2862,11 +2862,39 @@
       ],
       "verify": "apiclient client 79 passed + tsc --noEmit 通过",
       "score": 80
+    },
+    {
+      "cycle": 219,
+      "app": "tooling+12apps",
+      "task_id": "api_client_network_guard",
+      "new_requirement": "API 客户端对 fetch 网络失败兜底为结构化 ApiError(50001)，避免裸 TypeError 逃逸为未处理拒绝导致白屏/静默失败",
+      "implicit_fix": "request() 此前直接 await fetch，断网/CORS/服务宕机时抛裸 TypeError；调用方 try/catch 只捕获 ApiError 拿不到网络失败→无兜底白屏；新增一致性规则 api-network-guard 将该兜底锁为不变量防回归",
+      "files": [
+        "apiclient/client/src/api/client.ts",
+        "excalidraw/client/src/api/client.ts",
+        "glance/client/src/api/client.ts",
+        "it-tools/client/src/api/client.ts",
+        "kanban/client/src/api/client.ts",
+        "kener/client/src/api/client.ts",
+        "lofi/client/src/api/client.ts",
+        "markdown/client/src/api/client.ts",
+        "memos/client/src/api/client.ts",
+        "nonio/client/src/api/client.ts",
+        "photopea/client/src/api/client.ts",
+        "tvtime/client/src/api/client.ts",
+        "shared/frontend-template/src/api/client.ts",
+        "scripts/consistency-rules.mjs",
+        "scripts/check-consistency.mjs",
+        "scripts/check-consistency.test.mjs"
+      ],
+      "verify": "consistency 0错 + 规则单测 89/89(含 apiClientGuardsNetworkError 3 例)",
+      "score": 85,
+      "ts": "2026-07-29T02:04:40+0800"
     }
   ],
-  "last_task_id": "clamp_stroke_width",
+  "last_task_id": "api_client_network_guard",
   "repeat_count": 0,
-  "last_score": 80,
+  "last_score": 85,
   "coverage": {
     "B1": {
       "it-tools": "optimized",

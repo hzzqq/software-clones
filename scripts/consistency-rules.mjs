@@ -614,3 +614,31 @@ export function noHardcodedSecrets(root) {
   }
   return problems;
 }
+
+/**
+ * 校验某 App 的 API 客户端是否对「网络层失败」做了结构化兜底。
+ * 此前 `request()` 直接 `await fetch(...)`，断网 / CORS / 服务宕机时 fetch 抛裸 TypeError，
+ * 逃逸为未处理 Promise 拒绝——调用方即便 try/catch 也只能捕获 ApiError，拿不到网络失败，
+ * 最终表现为静默失败或无兜底的白屏。本规则要求客户端在 fetch 外包裹 try/catch，
+ * 并在失败时 throw 结构化的 `ApiError(50001, '网络请求失败…', 0)`，与既有的 50000(响应非 JSON) 形成体系化错误码。
+ * @param {string} clientRel 客户端入口相对 app 根的路径（默认 client/src/api/client.ts；脚手架模板传 src/api/client.ts）
+ * @returns {string[]} 问题列表（空数组表示达标）
+ */
+export function apiClientGuardsNetworkError(
+  root,
+  app,
+  clientRel = join('client', 'src', 'api', 'client.ts')
+) {
+  const p = join(root, app, clientRel);
+  if (!existsSync(p)) return [`缺少 ${clientRel}（无法校验网络错误兜底）`];
+  let text = '';
+  try {
+    text = readFileSync(p, 'utf8');
+  } catch {
+    return [`${clientRel} 无法读取`];
+  }
+  if (!/ApiError\(\s*50001/.test(text)) {
+    return [`${clientRel} 未对 fetch 网络错误兜底（应 throw ApiError(50001, …)）`];
+  }
+  return [];
+}

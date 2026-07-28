@@ -197,3 +197,35 @@ export function truncatePreview(content: string, max = 140): string {
   if (flat.length <= max) return flat;
   return flat.slice(0, max - 1) + '…';
 }
+
+/** 高亮片段：text 为原文字，match 表示是否命中查询词。 */
+export interface TextSegment {
+  text: string;
+  match: boolean;
+}
+
+/**
+ * 将文本按查询词切片为交替的 {text, match} 片段（大小写不敏感，支持 CJK 子串）。
+ * 用于安全渲染搜索高亮：调用方用 <mark> 包裹 match 片段即可，无需 dangerouslySetInnerHTML。
+ * 查询词为空 / 仅空白或原文为空时：返回单个非匹配片段（空文返回 []）。
+ * 采用线性扫描，命中部分不重叠切分；不修改入参。
+ */
+export function highlightSegments(text: string, query: string): TextSegment[] {
+  const q = (query ?? '').trim();
+  if (!q) return text ? [{ text, match: false }] : [];
+  const lower = (text ?? '').toLowerCase();
+  const lq = q.toLowerCase();
+  const segments: TextSegment[] = [];
+  let i = 0;
+  let prev = 0;
+  while (i < text.length) {
+    const idx = lower.indexOf(lq, i);
+    if (idx === -1) break;
+    if (idx > prev) segments.push({ text: text.slice(prev, idx), match: false });
+    segments.push({ text: text.slice(idx, idx + lq.length), match: true });
+    i = idx + lq.length;
+    prev = i;
+  }
+  if (prev < text.length) segments.push({ text: text.slice(prev), match: false });
+  return segments;
+}

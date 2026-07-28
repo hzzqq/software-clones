@@ -17,6 +17,7 @@ import {
   isValidJson,
   parseJson,
   compactNumber,
+  slugify,
 } from './tools';
 
 describe('base64', () => {
@@ -158,5 +159,30 @@ describe('compactNumber', () => {
   it('非有限值回退 0', () => {
     expect(compactNumber(NaN)).toBe('0');
     expect(compactNumber(Infinity)).toBe('0');
+  });
+});
+
+describe('slugify', () => {
+  it('默认短横分隔符，转小写去空格', () => {
+    expect(slugify('Hello World!')).toBe('hello-world');
+  });
+  it('剥离变音符号（Unicode NFKD）', () => {
+    expect(slugify('Café Déjà Vu')).toBe('cafe-deja-vu');
+  });
+  it('保留非 ASCII 字母数字（如中文）', () => {
+    expect(slugify('你好 World 123')).toBe('你好-world-123');
+  });
+  it('下划线分隔符正常工作', () => {
+    expect(slugify('Hello World', '_')).toBe('hello_world');
+  });
+  it('点号分隔符不再清空结果（修复正则元字符 bug）', () => {
+    expect(slugify('Hello World', '.')).toBe('hello.world');
+  });
+  it('去除首尾分隔符', () => {
+    expect(slugify('  -Hello-  ', '-')).toBe('hello');
+  });
+  it('空输入返回空串', () => {
+    expect(slugify('')).toBe('');
+    expect(slugify(null as unknown as string)).toBe('');
   });
 });

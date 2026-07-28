@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { clamp, clampNumber, grayscale, invert, brightness, sepia, uid, applyFilter, contrast, saturate, getFilterLabel, FILTER_LABELS, formatPercent, blendOver } from './image';
+import { clamp, clampNumber, grayscale, invert, brightness, sepia, uid, applyFilter, contrast, saturate, getFilterLabel, FILTER_LABELS, formatPercent, blendOver, rgbToHsl, hslToRgb, hueRotate } from './image';
 import type { FilterKind } from '../types';
 
 function makeData(): Uint8ClampedArray {
@@ -118,6 +118,69 @@ describe('image utils', () => {
   });
 });
 
+describe('hueRotate / rgbToHsl / hslToRgb', () => {
+  it('rgbToHsl 红(255,0,0) → h=0,s=1,l=0.5', () => {
+    const [h, s, l] = rgbToHsl(255, 0, 0);
+    expect(h).toBeCloseTo(0, 5);
+    expect(s).toBeCloseTo(1, 5);
+    expect(l).toBeCloseTo(0.5, 5);
+  });
+
+  it('rgbToHsl/hslToRgb 往返一致（红、绿、蓝、白、黑边界色精确）', () => {
+    for (const [r, g, b] of [[255, 0, 0], [0, 255, 0], [0, 0, 255], [255, 255, 255], [0, 0, 0]]) {
+      const [h, s, l] = rgbToHsl(r, g, b);
+      const [rr, gg, bb] = hslToRgb(h, s, l);
+      expect(rr).toBe(r);
+      expect(gg).toBe(g);
+      expect(bb).toBe(b);
+    }
+  });
+
+  it('hueRotate +120° 红→绿，+240° 红→蓝', () => {
+    const red = new Uint8ClampedArray([255, 0, 0, 255]);
+    const g = red.slice();
+    hueRotate(g, 120);
+    expect(g[0]).toBe(0);
+    expect(g[1]).toBe(255);
+    expect(g[2]).toBe(0);
+
+    const b = red.slice();
+    hueRotate(b, 240);
+    expect(b[0]).toBe(0);
+    expect(b[1]).toBe(0);
+    expect(b[2]).toBe(255);
+  });
+
+  it('hueRotate 360° 整圈回到原色，alpha 不变', () => {
+    const d = new Uint8ClampedArray([123, 45, 200, 77]);
+    const before = [...d];
+    hueRotate(d, 360);
+    expect(Array.from(d)).toEqual(before);
+  });
+
+  it('hueRotate 0° 为无操作（直接返回，不改动像素）', () => {
+    const d = new Uint8ClampedArray([10, 20, 30, 40]);
+    const before = [...d];
+    hueRotate(d, 0);
+    expect(Array.from(d)).toEqual(before);
+  });
+
+  it('hueRotate 不染色灰阶（s=0 像素旋转后不变）', () => {
+    const d = new Uint8ClampedArray([128, 128, 128, 255]);
+    const before = [...d];
+    hueRotate(d, 90);
+    expect(Array.from(d)).toEqual(before);
+  });
+
+  it('applyFilter 分发到色相滤镜', () => {
+    const d = makeData();
+    applyFilter(d, 'hue', 120);
+    expect(d[0]).toBe(0); // 红(255,0,0) → 绿(0,255,0)
+    expect(d[1]).toBe(255);
+    expect(d[2]).toBe(0);
+  });
+});
+
 describe('getFilterLabel', () => {
   const kinds: FilterKind[] = ['grayscale', 'invert', 'brightness', 'sepia', 'contrast', 'saturate'];
   it('全部 kind 都有中文标签', () => {
@@ -126,8 +189,8 @@ describe('getFilterLabel', () => {
       expect(getFilterLabel(k)).toBe(FILTER_LABELS[k]);
     }
   });
-  it('标签覆盖完整（6 种）', () => {
-    expect(Object.keys(FILTER_LABELS)).toHaveLength(6);
+  it('标签覆盖完整（7 种）', () => {
+    expect(Object.keys(FILTER_LABELS)).toHaveLength(7);
   });
 });
 

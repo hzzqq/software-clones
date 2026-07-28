@@ -18,7 +18,7 @@ import { readdirSync, readFileSync, existsSync, writeFileSync, mkdirSync } from 
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildCatalogText } from './lib-catalog.mjs';
-import { isAppDir, findE2ESpecs, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, missingEnvKeys, findAllMarkdownFiles, parseApps, findDuplicatePorts, findDuplicateNames, findDuplicateDirs, checkBuildConfig, missingSharedTemplateFiles, missingAppDirs, findUnregisteredApps, invalidEnvValues, hasClientIndexHtml, hasServerEntry, errorBoundaryWired, hasAppReadme, ciRunsUnitTests, hasLicenseFile, gitignoreCoversArtifacts, clientTestUsesVitest, readmeMentionsVerify, appReadmeMentionsRun, hasGitHook, hasNvmrc, noHardcodedSecrets } from './consistency-rules.mjs';
+import { isAppDir, findE2ESpecs, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, missingEnvKeys, findAllMarkdownFiles, parseApps, findDuplicatePorts, findDuplicateNames, findDuplicateDirs, checkBuildConfig, missingSharedTemplateFiles, missingAppDirs, findUnregisteredApps, invalidEnvValues, hasClientIndexHtml, hasServerEntry, errorBoundaryWired, hasAppReadme, ciRunsUnitTests, hasLicenseFile, gitignoreCoversArtifacts, clientTestUsesVitest, readmeMentionsVerify, appReadmeMentionsRun, hasGitHook, hasNvmrc, noHardcodedSecrets, apiClientGuardsNetworkError } from './consistency-rules.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -79,6 +79,7 @@ function main() {
       appReadme: hasAppReadme(ROOT, app),
       clientVitest: clientTestUsesVitest(ROOT, app),
       appReadmeRun: appReadmeMentionsRun(ROOT, app),
+      networkGuard: apiClientGuardsNetworkError(ROOT, app).length === 0,
     };
     if (!checks.readme) errors.push(`[${app}] README.md 未提及该 App（文档漂移）`);
     if (!checks.e2eDir) errors.push(`[${app}] 缺少 e2e/${app}/ 冒烟目录`);
@@ -97,6 +98,7 @@ function main() {
     if (!checks.appReadme) errors.push(`[${app}] 缺少 <app>/README.md（子项目无上手说明）`);
     if (!checks.clientVitest) errors.push(`[${app}] client/package.json 的 test 脚本未调用 vitest（无法真实回归验证）`);
     if (!checks.appReadmeRun) errors.push(`[${app}] <app>/README.md 未说明运行/验证命令（npm install / npm test）`);
+    if (!checks.networkGuard) errors.push(`[${app}] api/client.ts 未对 fetch 网络错误兜底（应 throw ApiError(50001)，避免裸 TypeError 逃逸为白屏）`);
     perApp.push({ app, ...checks });
   }
 
@@ -133,6 +135,11 @@ function main() {
   const missingShared = missingSharedTemplateFiles(ROOT);
   for (const f of missingShared) {
     errors.push(`[shared] 脚手架模板关键文件缺失: ${f}`);
+  }
+
+  // 脚手架模板的 API 客户端同样必须兜底网络错误（新克隆的 App 才自带该兜底）
+  for (const pr of apiClientGuardsNetworkError(ROOT, 'shared/frontend-template', 'src/api/client.ts')) {
+    errors.push(`[shared-template] ${pr}`);
   }
 
   // CI 必须真正执行 App 单测：防止 unit-tests 闸门被悄悄删除后出现「以为有门禁、其实没有」的假安全感
@@ -220,7 +227,7 @@ function main() {
     'client-entry', 'server-entry', 'error-boundary', 'app-readme', 'client-vitest', 'app-readme-run',
     'apps-dir', 'no-dup-port', 'no-dup-name',
     'no-dup-dir', 'ghost-reg', 'reverse-ghost', 'shared-template', 'doc-links',
-    'catalog-fresh', 'license', 'gitignore-artifacts', 'readme-verify', 'contributing', 'ci-runs-unit-tests', 'git-hook', 'nvmrc', 'no-hardcoded-secrets',
+    'catalog-fresh', 'license', 'gitignore-artifacts', 'readme-verify', 'contributing', 'ci-runs-unit-tests', 'git-hook', 'nvmrc', 'no-hardcoded-secrets', 'api-network-guard',
   ];
 
   const summary = {
@@ -254,6 +261,7 @@ function main() {
           `eb:${row.errorBoundary ? '✓' : '✗'} ` +
           `ard:${row.appReadme ? '✓' : '✗'} ` +
           `vit:${row.clientVitest ? '✓' : '✗'} run:${row.appReadmeRun ? '✓' : '✗'} ` +
+          `net:${row.networkGuard ? '✓' : '✗'} ` +
           `ci:${row.ciMatrix ? '✓' : '✗'} pw:${row.playwrightApps ? '✓' : '✗'}`
       );
     }

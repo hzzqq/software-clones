@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatDuration, incidentDurationSeconds, uptimePercentage, countByStatus, incidentSeverityLabel, uptimeColor, summarizeIncidents, formatIncidentWindow, formatUptime } from './format';
+import { formatDuration, incidentDurationSeconds, uptimePercentage, countByStatus, incidentSeverityLabel, uptimeColor, summarizeIncidents, formatIncidentWindow, formatUptime, meanResolveSeconds } from './format';
 import type { Incident } from '../types';
 
 describe('formatDuration', () => {
@@ -199,5 +199,59 @@ describe('formatUptime', () => {
   it('非法值回退 —', () => {
     expect(formatUptime(NaN)).toBe('—');
     expect(formatUptime(Infinity)).toBe('—');
+  });
+});
+
+describe('meanResolveSeconds', () => {
+  const mk = (resolvedAt: string | null): Incident => ({
+    id: 1,
+    serviceId: null,
+    title: 'x',
+    description: null,
+    status: resolvedAt == null ? 'open' : 'resolved',
+    severity: 'medium',
+    createdAt: '2026-01-01T00:00:00Z',
+    updatedAt: '2026-01-01T00:00:00Z',
+    resolvedAt,
+  });
+  const now = new Date('2026-01-01T10:00:00Z').getTime();
+  it('空列表返回 NaN（无数据，不应显示 0）', () => {
+    expect(Number.isNaN(meanResolveSeconds([], now))).toBe(true);
+  });
+  it('全部进行中返回 NaN（无法计算均值）', () => {
+    expect(Number.isNaN(meanResolveSeconds([mk(null), mk(null)], now))).toBe(true);
+  });
+  it('单个已解决事件：resolvedAt - createdAt', () => {
+    // 00:00 -> 00:30 = 1800s
+    expect(meanResolveSeconds([mk('2026-01-01T00:30:00Z')], now)).toBe(1800);
+  });
+  it('多个已解决事件取均值', () => {
+    const list = [
+      mk('2026-01-01T00:30:00Z'), // 1800s
+      mk('2026-01-01T01:00:00Z'), // 3600s
+      mk('2026-01-01T02:00:00Z'), // 7200s
+    ];
+    expect(meanResolveSeconds(list, now)).toBe(4200);
+  });
+  it('混合列表仅统计已解决事件', () => {
+    const list = [
+      mk(null), // 进行中，忽略
+      mk('2026-01-01T00:30:00Z'), // 1800s
+      mk('2026-01-01T01:00:00Z'), // 3600s
+    ];
+    expect(meanResolveSeconds(list, now)).toBe(2700);
+  });
+  it('已解决事件含非法 createdAt 不产生 NaN 均值', () => {
+    const list = [
+      { ...mk('2026-01-01T01:00:00Z'), createdAt: 'bad' }, // 时长按 0 计
+      mk('2026-01-01T00:30:00Z'), // 1800s
+    ];
+    expect(meanResolveSeconds(list, now)).toBe(900);
+  });
+  it('不修改入参', () => {
+    const list = [mk('2026-01-01T01:00:00Z')];
+    const before = JSON.stringify(list);
+    meanResolveSeconds(list, now);
+    expect(JSON.stringify(list)).toBe(before);
   });
 });

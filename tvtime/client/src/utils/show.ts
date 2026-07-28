@@ -140,3 +140,18 @@ export function episodesByStatus(episodes: Episode[]): EpisodeStatusCount {
   }
   return { watched, unwatched: episodes.length - watched, total: episodes.length };
 }
+
+/**
+ * 返回最近一次观看的剧集时间（ISO 字符串），未看任何剧集则返回 null。
+ * 仅统计已看且 watchedAt 可解析为有限时间的剧集，忽略 null / 非法值，
+ * 因此排序后的返回值可直接喂给 formatRelativeTime，不会渲染「Invalid Date」。
+ */
+export function lastWatchedAt(episodes: Episode[]): string | null {
+  let best = -Infinity;
+  for (const e of episodes) {
+    if (!e.watched || e.watchedAt == null) continue;
+    const t = Date.parse(e.watchedAt);
+    if (Number.isFinite(t) && t > best) best = t;
+  }
+  return Number.isFinite(best) ? new Date(best).toISOString() : null;
+}

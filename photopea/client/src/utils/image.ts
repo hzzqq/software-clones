@@ -81,7 +81,7 @@ export function saturate(data: Uint8ClampedArray, sat: number): void {
 /** 统一入口：按类型应用滤镜。 */
 export function applyFilter(
   data: Uint8ClampedArray,
-  kind: 'grayscale' | 'invert' | 'brightness' | 'sepia' | 'contrast' | 'saturate',
+  kind: 'grayscale' | 'invert' | 'brightness' | 'sepia' | 'contrast' | 'saturate' | 'hue',
   factor = 1
 ): void {
   if (kind === 'grayscale') grayscale(data);
@@ -89,7 +89,70 @@ export function applyFilter(
   else if (kind === 'sepia') sepia(data);
   else if (kind === 'contrast') contrast(data, factor);
   else if (kind === 'saturate') saturate(data, factor);
+  else if (kind === 'hue') hueRotate(data, factor);
   else brightness(data, factor);
+}
+
+/** RGB(0-255) → HSL，h/s/l 均落在 [0,1]。灰阶（s=0）的 hue 未定义，约定为 0。 */
+export function rgbToHsl(r: number, g: number, b: number): [number, number, number] {
+  r /= 255;
+  g /= 255;
+  b /= 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  const d = max - min;
+  let h = 0;
+  let s = 0;
+  if (d !== 0) {
+    s = d / (1 - Math.abs(2 * l - 1));
+    if (max === r) h = ((g - b) / d) % 6;
+    else if (max === g) h = (b - r) / d + 2;
+    else h = (r - g) / d + 4;
+    h /= 6;
+    if (h < 0) h += 1;
+  }
+  return [h, s, l];
+}
+
+/** HSL（h/s/l 均 [0,1]）→ RGB(0-255)。 */
+export function hslToRgb(h: number, s: number, l: number): [number, number, number] {
+  if (s === 0) {
+    const v = clamp(Math.round(l * 255), 0, 255);
+    return [v, v, v];
+  }
+  const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+  const p = 2 * l - q;
+  const hue2rgb = (t: number): number => {
+    if (t < 0) t += 1;
+    if (t > 1) t -= 1;
+    if (t < 1 / 6) return p + (q - p) * 6 * t;
+    if (t < 1 / 2) return q;
+    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+    return p;
+  };
+  const r = clamp(Math.round(hue2rgb(h + 1 / 3) * 255), 0, 255);
+  const g = clamp(Math.round(hue2rgb(h) * 255), 0, 255);
+  const b = clamp(Math.round(hue2rgb(h - 1 / 3) * 255), 0, 255);
+  return [r, g, b];
+}
+
+/**
+ * 原地色相旋转（degrees 任意实数，自动归一到 [0,360)）。
+ * 对每个像素做 RGB→HSL→（位移 H）→RGB；仅旋转色相，不改动饱和度/明度/alpha，
+ * 因此灰阶（s=0）与透明像素不会被染色。degrees=0 视为无操作直接返回。
+ * 该纯函数便于在 node 下做确定性单元测试（如红→绿 +120°、红→蓝 +240°）。
+ */
+export function hueRotate(data: Uint8ClampedArray, degrees: number): void {
+  const d = ((degrees % 360) + 360) % 360;
+  if (d === 0) return;
+  for (let i = 0; i < data.length; i += 4) {
+    const [h, s, l] = rgbToHsl(data[i], data[i + 1], data[i + 2]);
+    const [r, g, b] = hslToRgb((h + d / 360) % 1, s, l);
+    data[i] = r;
+    data[i + 1] = g;
+    data[i + 2] = b;
+  }
 }
 
 /** 滤镜中文标签映射。 */
@@ -100,6 +163,7 @@ export const FILTER_LABELS: Record<FilterKind, string> = {
   sepia: '复古',
   contrast: '对比度',
   saturate: '饱和度',
+  hue: '色相',
 };
 
 /** 返回滤镜的中文标签（未知 kind 退化为原名，避免界面显示空白）。 */

@@ -25,7 +25,7 @@ import { channelApi } from '../api/channels';
 import { postApi } from '../api/posts';
 import type { Channel, Post } from '../types';
 import PostCard from '../components/PostCard';
-import { parseTags, searchPosts, topPosts, summarizePosts, filterPostsByChannel, sortPosts } from '../utils/forum';
+import { parseTags, searchPosts, topPosts, summarizePosts, filterPostsByChannel, sortPosts, formatCompactNumber } from '../utils/forum';
 
 export default function HomePage(): JSX.Element {
   const [channels, setChannels] = useState<Channel[]>([]);
@@ -174,7 +174,7 @@ export default function HomePage(): JSX.Element {
                 <Typography variant="body2" noWrap sx={{ flex: 1, mr: 1 }}>
                   {i + 1}. {p.title}
                 </Typography>
-                <Typography variant="caption" color="text.secondary">♥ {p.likes}</Typography>
+                <Typography variant="caption" color="text.secondary">♥ {formatCompactNumber(p.likes)}</Typography>
               </Box>
             ))}
           </Stack>

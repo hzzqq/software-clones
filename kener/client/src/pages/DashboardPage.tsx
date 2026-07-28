@@ -21,7 +21,7 @@ import { useServices } from '../hooks/useServices';
 import ServiceCard from '../components/ServiceCard';
 import { servicesApi } from '../api/services';
 import { incidentsApi } from '../api/incidents';
-import { formatDuration, incidentDurationSeconds, uptimePercentage, uptimeColor, serviceHealthLabel, countByStatus, incidentSeverityLabel, summarizeIncidents, formatUptime } from '../utils/format';
+import { formatDuration, incidentDurationSeconds, uptimePercentage, uptimeColor, serviceHealthLabel, countByStatus, incidentSeverityLabel, summarizeIncidents, formatUptime, meanResolveSeconds } from '../utils/format';
 import { formatRelativeTime } from '../utils/time';
 import { overallStatus, statusLabel, ServiceStatus } from '../utils/status';
 import type { Incident } from '../types';
@@ -84,6 +84,7 @@ export default function DashboardPage() {
 
   const openIncidents = incidents.filter((i) => i.resolvedAt === null);
   const incidentSummary = useMemo(() => summarizeIncidents(incidents), [incidents]);
+  const meanResolve = useMemo(() => meanResolveSeconds(incidents, Date.now()), [incidents]);
 
   return (
     <Box>
@@ -144,6 +145,12 @@ export default function DashboardPage() {
               variant="outlined"
               color={incidentSummary.open > 0 ? 'error' : 'default'}
               label={`事件 进行中 ${incidentSummary.open} · 已解决 ${incidentSummary.resolved}`}
+            />
+            <Chip
+              size="small"
+              variant="outlined"
+              color="default"
+              label={`平均恢复时长 ${Number.isFinite(meanResolve) ? formatDuration(meanResolve) : '—'}`}
             />
           </Stack>
         </Paper>

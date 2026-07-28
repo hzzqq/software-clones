@@ -42,11 +42,17 @@ async function request<T>(method: string, path: string, options?: RequestOptions
     ...(options?.headers as Record<string, string> | undefined),
   };
 
-  const response: Response = await fetch(url, {
-    method,
-    headers,
-    body: options?.body !== undefined ? JSON.stringify(options.body) : undefined,
-  });
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      method,
+      headers,
+      body: options?.body !== undefined ? JSON.stringify(options.body) : undefined,
+    });
+  } catch {
+    // 网络层失败（断网 / CORS / 服务宕机）：转结构化为 ApiError，避免裸 TypeError 逃逸为未处理拒绝导致白屏。
+    throw new ApiError(50001, '网络请求失败，请检查网络连接后重试', 0);
+  }
 
   // Reserved hooks: surface 401/403 so the app can redirect to login later.
   if (response.status === 401 || response.status === 403) {

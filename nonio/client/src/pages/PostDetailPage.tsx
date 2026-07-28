@@ -17,7 +17,7 @@ import { commentApi } from '../api/comments';
 import type { Post, Comment, CommentNode } from '../types';
 import Composer from '../components/Composer';
 import CommentThread from '../components/CommentThread';
-import { buildCommentTree, formatDateTime, parseIdParam } from '../utils/forum';
+import { buildCommentTree, formatDateTime, parseIdParam, formatCompactNumber } from '../utils/forum';
 
 export default function PostDetailPage(): JSX.Element {
   const { id } = useParams<{ id: string }>();
@@ -115,7 +115,7 @@ export default function PostDetailPage(): JSX.Element {
         <FavoriteBorderIcon />
       </IconButton>
       <Typography component="span" variant="caption">
-        {post.likes}
+        {formatCompactNumber(post.likes)}
       </Typography>
 
       <Divider sx={{ my: 2 }} />

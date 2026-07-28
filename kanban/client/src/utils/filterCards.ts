@@ -1,4 +1,4 @@
-import type { Card } from '../types';
+import { type Card, PRIORITY_LABELS } from '../types';
 
 /** Case-insensitive filter across title and description. */
 export function filterCardsByQuery(query: string, cards: Card[]): Card[] {
@@ -40,6 +40,19 @@ export function sortCards(cards: Card[], by: CardSort = 'position'): Card[] {
     }
   });
   return arr;
+}
+
+/**
+ * 将任意数值夹取到合法的优先级区间 [0, maxPriority]。
+ * 非法 / 越界 / NaN 的优先级一律回落到 0（最低），避免
+ * PRIORITY_LABELS[p] / PRIORITY_COLOR[p] 取到 undefined 时渲染出空白标签或错误配色
+ * （与 safeDueTime 对截止日、parseIdParam 对 id 的防御思路一致）。
+ * 上界取自 PRIORITY_LABELS 的键，保证与类型定义同步。不修改入参。
+ */
+export function clampPriority(p: number): number {
+  if (!Number.isFinite(p) || p < 0) return 0;
+  const max = Math.max(...Object.keys(PRIORITY_LABELS).map(Number));
+  return p > max ? max : p;
 }
 
 /** 统计各优先级（数值）下的卡片数量，不修改入参。 */

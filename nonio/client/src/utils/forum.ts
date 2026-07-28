@@ -259,6 +259,33 @@ export function formatRelativeTime(input: Date | string | number, now: Date = ne
 }
 
 /**
+ * 将计数压缩为易读格式（社区点赞/评论数常用）：
+ * - < 1000 原样（如 42）；
+ * - ≥ 1000 用 k（千分）/ M（百万）/ B（十亿）后缀，保留至多 1 位小数，去掉多余的 .0；
+ * - 非有限数（NaN/Infinity）或负数回退安全值，避免渲染 NaN / -NaN。
+ * 纯函数，不修改入参。
+ */
+export function formatCompactNumber(input: number): string {
+  if (!Number.isFinite(input)) return '0';
+  const sign = input < 0 ? '-' : '';
+  const abs = Math.abs(input);
+  if (abs < 1000) return sign + String(abs);
+  const units: ReadonlyArray<readonly [number, string]> = [
+    [1e9, 'B'],
+    [1e6, 'M'],
+    [1e3, 'k'],
+  ];
+  for (const [threshold, suffix] of units) {
+    if (abs >= threshold) {
+      const value = abs / threshold;
+      const str = value >= 100 ? String(Math.round(value)) : value.toFixed(1).replace(/\.0$/, '');
+      return `${sign}${str}${suffix}`;
+    }
+  }
+  return sign + String(abs);
+}
+
+/**
  * 将时间格式化为绝对日期时间「YYYY-MM-DD HH:mm」。
  * 非法 / 空输入回退「时间未知」，避免向用户渲染 "Invalid Date"。
  * 纯函数，不修改入参；用于详情页等需要精确时刻的场景。

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { normalizeRect, distance, hitTest, elementBounds, uid, serializeScene, snapPoint, boundingBox, getCenter, getSelectionBox, translateElement, clampStrokeWidth } from './geometry';
+import { normalizeRect, distance, hitTest, elementBounds, uid, serializeScene, snapPoint, boundingBox, getCenter, getSelectionBox, translateElement, dragElement, clampStrokeWidth } from './geometry';
 import type { CanvasElement } from '../types';
 
 describe('normalizeRect', () => {
@@ -119,6 +119,30 @@ describe('translateElement', () => {
   });
   it('不修改入参', () => {
     translateElement(rect, 1, 1);
+    expect(rect.x).toBe(10);
+    expect(rect.y).toBe(20);
+  });
+});
+
+describe('dragElement', () => {
+  const rect = { id: '1', type: 'rect', stroke: '#000', strokeWidth: 2, x: 10, y: 20, w: 50, h: 30 } as CanvasElement;
+  it('矩形跟随抓取点移动', () => {
+    // 在 (40,50) 处抓取，拖到 (70,90) → 偏移 (30,40)
+    const moved = dragElement(rect, { x: 70, y: 90 }, { x: 40 - rect.x, y: 50 - rect.y });
+    expect(moved.x).toBe(40);
+    expect(moved.y).toBe(60);
+    expect(moved.w).toBe(50);
+    expect(moved.h).toBe(30);
+  });
+  it('钢笔点集随拖拽同步平移（修复墨迹不动的隐性 bug）', () => {
+    const pen = { id: '2', type: 'pen', stroke: '#000', strokeWidth: 2, x: 0, y: 0, w: 0, h: 0, points: [{ x: 0, y: 0 }, { x: 10, y: 20 }] } as CanvasElement;
+    const moved = dragElement(pen, { x: 100, y: 100 }, { x: 0, y: 0 });
+    expect(moved.points).toEqual([{ x: 100, y: 100 }, { x: 110, y: 120 }]);
+    expect(moved.x).toBe(100);
+    expect(moved.y).toBe(100);
+  });
+  it('不修改入参', () => {
+    dragElement(rect, { x: 70, y: 90 }, { x: 30, y: 30 });
     expect(rect.x).toBe(10);
     expect(rect.y).toBe(20);
   });

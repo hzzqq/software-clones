@@ -208,6 +208,7 @@ export default function NotesPage(): JSX.Element {
                     onUnpin={handleUnpin}
                     onDelete={handleDelete}
                     onTagClick={setActiveTag}
+                    highlight={q}
                   />
                 ))}
               </Stack>
@@ -227,6 +228,7 @@ export default function NotesPage(): JSX.Element {
               onUnpin={handleUnpin}
               onDelete={handleDelete}
               onTagClick={setActiveTag}
+              highlight={q}
             />
           ))}
           {visible.length > 0 && filtered.length === 0 && (

@@ -3,7 +3,7 @@ import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import CommentOutlinedIcon from '@mui/icons-material/CommentOutlined';
 import { Link as RouterLink } from 'react-router-dom';
 import type { Post } from '../types';
-import { excerpt, postReadingTime, formatRelativeTime } from '../utils/forum';
+import { excerpt, postReadingTime, formatRelativeTime, formatCompactNumber } from '../utils/forum';
 
 interface Props {
   post: Post;
@@ -46,11 +46,11 @@ export default function PostCard({ post, onLike }: Props): JSX.Element {
             <FavoriteBorderIcon fontSize="small" />
           </IconButton>
           <Typography component="span" variant="caption" sx={{ mr: 2 }}>
-            {post.likes}
+            {formatCompactNumber(post.likes)}
           </Typography>
           <CommentOutlinedIcon fontSize="small" />
           <Typography component="span" variant="caption" sx={{ ml: 0.5 }}>
-            {post.commentCount}
+            {formatCompactNumber(post.commentCount)}
           </Typography>
         </Box>
       </CardContent>

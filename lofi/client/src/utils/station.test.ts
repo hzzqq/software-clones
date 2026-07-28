@@ -26,6 +26,12 @@ describe('truncate', () => {
   it('appends an ellipsis when over the limit', () => {
     expect(truncate('abcdefghij', 5)).toBe('abcd…');
   });
+  it('null/undefined/空串 安全（避免 StationCard 渲染空描述崩溃）', () => {
+    expect(truncate(null)).toBe('');
+    expect(truncate(undefined)).toBe('');
+    expect(truncate('')).toBe('');
+    expect(truncate(null as unknown as string, 5)).toBe('');
+  });
 });
 
 describe('filterStations', () => {

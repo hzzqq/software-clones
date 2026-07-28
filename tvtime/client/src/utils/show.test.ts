@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { progressPercent, nextUnwatched, nextEpisode, isComplete, filterShows, sortShows, episodesLeft, remainingWatchTime, formatWatchTime, filterEpisodesByWatched, episodesByStatus, formatProgress, clampEpisodeCount, nextEpisodeLabel } from './show';
+import { progressPercent, nextUnwatched, nextEpisode, isComplete, filterShows, sortShows, episodesLeft, remainingWatchTime, formatWatchTime, filterEpisodesByWatched, episodesByStatus, formatProgress, clampEpisodeCount, nextEpisodeLabel, lastWatchedAt } from './show';
 import type { Episode, Show } from '../types';
 
 function mkShow(id: number, title: string, watchedCount: number, totalEpisodes: number, updatedAt: string): Show {
@@ -253,6 +253,38 @@ describe('nextEpisodeLabel', () => {
     nextEpisodeLabel(e, 10);
     expect(e.watched).toBe(false);
     expect(e.index).toBe(2);
+  });
+});
+
+describe('lastWatchedAt', () => {
+  it('返回最近一次已看剧集的 ISO 时间', () => {
+    const eps = [
+      ep(1, true, 1, 1),
+      ep(2, true, 1, 2),
+      ep(3, false, 1, 3),
+    ];
+    eps[0].watchedAt = '2025-01-01T08:00:00.000Z';
+    eps[1].watchedAt = '2025-03-15T20:00:00.000Z';
+    expect(lastWatchedAt(eps)).toBe('2025-03-15T20:00:00.000Z');
+  });
+  it('未看任何剧集返回 null', () => {
+    expect(lastWatchedAt([ep(1, false), ep(2, false)])).toBeNull();
+  });
+  it('watchedAt 为 null / 非法值被忽略', () => {
+    const eps = [ep(1, true, 1, 1), ep(2, true, 1, 2)];
+    eps[0].watchedAt = null;
+    eps[1].watchedAt = 'not-a-date';
+    expect(lastWatchedAt(eps)).toBeNull();
+  });
+  it('空列表返回 null', () => {
+    expect(lastWatchedAt([])).toBeNull();
+  });
+  it('不修改入参', () => {
+    const eps = [ep(1, true, 1, 1)];
+    eps[0].watchedAt = '2025-01-01T08:00:00.000Z';
+    lastWatchedAt(eps);
+    expect(eps).toHaveLength(1);
+    expect(eps[0].watchedAt).toBe('2025-01-01T08:00:00.000Z');
   });
 });
 

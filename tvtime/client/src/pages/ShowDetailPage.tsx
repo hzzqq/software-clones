@@ -10,7 +10,8 @@ import { showApi } from '../api/shows';
 import { episodeApi } from '../api/episodes';
 import type { Show, Episode } from '../types';
 import EpisodeGrid from '../components/EpisodeGrid';
-import { progressPercent, nextEpisode, isComplete, episodesLeft, remainingWatchTime, formatWatchTime, formatEpisodeCode, nextEpisodeLabel, filterEpisodesByWatched, episodesByStatus, formatProgress, type EpisodeFilter } from '../utils/show';
+import { progressPercent, nextEpisode, isComplete, episodesLeft, remainingWatchTime, formatWatchTime, formatEpisodeCode, nextEpisodeLabel, filterEpisodesByWatched, episodesByStatus, formatProgress, lastWatchedAt, type EpisodeFilter } from '../utils/show';
+import { formatRelativeTime } from '../utils/time';
 
 export default function ShowDetailPage(): JSX.Element {
   const { id } = useParams<{ id: string }>();
@@ -82,6 +83,8 @@ export default function ShowDetailPage(): JSX.Element {
   const visibleEps = filterEpisodesByWatched(episodes, epFilter);
   const epStatus = episodesByStatus(episodes);
   const nextEp = nextEpisode(episodes);
+  const lastWatched = lastWatchedAt(episodes);
+  const lastWatchedLabel = lastWatched ? formatRelativeTime(lastWatched) : null;
 
   return (
     <Box>
@@ -124,6 +127,10 @@ export default function ShowDetailPage(): JSX.Element {
           全部标记已看
         </Button>
       </Stack>
+
+      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+        {lastWatchedLabel ? `上次观看：${lastWatchedLabel}` : '尚未观看任何剧集'}
+      </Typography>
 
       <Divider sx={{ mb: 2 }} />
       <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>

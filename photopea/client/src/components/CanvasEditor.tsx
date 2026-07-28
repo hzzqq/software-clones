@@ -133,6 +133,7 @@ export default function CanvasEditor(): JSX.Element {
   const [brightnessVal, setBrightnessVal] = useState(1.2);
   const [contrastVal, setContrastVal] = useState(1.2);
   const [saturationVal, setSaturationVal] = useState(1);
+  const [hueVal, setHueVal] = useState(90);
 
   const selectLayer = useCallback((id: string): void => {
     selectedIdRef.current = id;
@@ -885,6 +886,27 @@ export default function CanvasEditor(): JSX.Element {
               }}
             >
               应用饱和度
+            </Button>
+          </Box>
+          <Box sx={{ px: 2, py: 1, minWidth: 200 }} onClick={(e) => e.stopPropagation()}>
+            <Typography variant="caption">色相旋转（{hueVal}°）</Typography>
+            <Slider
+              min={0}
+              max={360}
+              step={15}
+              value={hueVal}
+              onChange={(_e, v) => setHueVal(v as number)}
+            />
+            <Button
+              size="small"
+              fullWidth
+              variant="outlined"
+              onClick={() => {
+                applyImageFilter('hue', hueVal);
+                setFilterAnchor(null);
+              }}
+            >
+              应用色相
             </Button>
           </Box>
           <Divider />

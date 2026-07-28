@@ -10,7 +10,7 @@ import {
 } from '@mui/material';
 import EventIcon from '@mui/icons-material/Event';
 import { type Card, Tag, PRIORITY_LABELS } from '../types';
-import { formatDueLabel, type DueTone } from '../utils/filterCards';
+import { formatDueLabel, clampPriority, type DueTone } from '../utils/filterCards';
 import TagChip from './TagChip';
 
 interface CardProps {
@@ -82,13 +82,16 @@ export default function Card({
         </Box>
         {(card.priority > 0 || card.dueDate || cardTags.length > 0) && (
           <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-            {card.priority > 0 && (
-              <Chip
-                size="small"
-                label={PRIORITY_LABELS[card.priority]}
-                color={PRIORITY_COLOR[card.priority]}
-              />
-            )}
+            {card.priority > 0 && (() => {
+              const p = clampPriority(card.priority);
+              return (
+                <Chip
+                  size="small"
+                  label={PRIORITY_LABELS[p]}
+                  color={PRIORITY_COLOR[p]}
+                />
+              );
+            })()}
             {card.dueDate && (() => {
               const due = formatDueLabel(card.dueDate);
               return (

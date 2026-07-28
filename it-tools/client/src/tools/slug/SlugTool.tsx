@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Button, FormControl, InputLabel, MenuItem, Paper, Select, Stack, TextField } from '@mui/material';
 import { copyToClipboard } from '../../utils/format';
+import { slugify } from '../../utils/tools';
 
 type Separator = '-' | '_' | '.';
 
@@ -9,16 +10,6 @@ export default function SlugTool(): JSX.Element {
   const [input, setInput] = useState<string>('Hello World! 这是 Test 123');
   const [sep, setSep] = useState<Separator>('-');
   const [output, setOutput] = useState<string>('');
-
-  const slugify = (text: string, separator: string): string => {
-    return text
-      .toString()
-      .normalize('NFKD')
-      .replace(/[̀-ͯ]/g, '')
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, separator)
-      .replace(new RegExp(`^${separator}+|${separator}+$`, 'g'), '');
-  };
 
   const run = (): void => {
     setOutput(slugify(input, sep));

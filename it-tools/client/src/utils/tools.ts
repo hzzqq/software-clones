@@ -315,6 +315,28 @@ function parseCsvLine(line: string, delimiter: string): string[] {
   return result;
 }
 
+// ---------------------------------------------------------------------------
+// Slug
+// ---------------------------------------------------------------------------
+/**
+ * 将任意文本转换为 URL 友好的 slug。
+ * - Unicode 规范化（NFKD）并剥离变音符号，使 "Café" → "cafe"。
+ * - 连续的非 [a-z0-9] 字符被替换为分隔符。
+ * - 去除首尾分隔符；分隔符会被正确转义，因此 "."、"+" 等正则元字符
+ *   不会被误当作通配符（修复：分隔符为 "." 时原实现会清空整个字符串）。
+ * 纯函数，可单测。
+ */
+export function slugify(text: string, separator = '-'): string {
+  if (text == null) return '';
+  const escaped: string = separator.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return String(text)
+    .normalize('NFKD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, separator)
+    .replace(new RegExp(`^${escaped}+|${escaped}+$`, 'g'), '');
+}
+
 /**
  * 将较大数字压缩为紧凑可读形式：1500 → "1.5k"，2_500_000 → "2.5M"，< 1000 原样返回。
  * 用于工具抽屉统计等需要节省空间的场景。纯函数。

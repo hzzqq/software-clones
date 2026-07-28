@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseTags, slugify, buildCommentTree, countComments, searchPosts, excerpt, topPosts, summarizePosts, filterPostsByChannel, formatRelativeTime, formatDateTime, sortPosts, parseIdParam } from './forum';
+import { parseTags, slugify, buildCommentTree, countComments, searchPosts, excerpt, topPosts, summarizePosts, filterPostsByChannel, formatRelativeTime, formatDateTime, sortPosts, parseIdParam, formatCompactNumber } from './forum';
 import type { Comment, Post } from '../types';
 
 function mkComment(id: number, parentId: number | null): Comment {
@@ -278,6 +278,33 @@ describe('formatDateTime', () => {
     expect(formatDateTime('not-a-date')).toBe('时间未知');
     expect(formatDateTime('')).toBe('时间未知');
     expect(formatDateTime(NaN)).toBe('时间未知');
+  });
+});
+
+describe('formatCompactNumber', () => {
+  it('< 1000 原样返回', () => {
+    expect(formatCompactNumber(0)).toBe('0');
+    expect(formatCompactNumber(42)).toBe('42');
+    expect(formatCompactNumber(999)).toBe('999');
+  });
+  it('千分位用 k 后缀并去 .0', () => {
+    expect(formatCompactNumber(1000)).toBe('1k');
+    expect(formatCompactNumber(1200)).toBe('1.2k');
+    expect(formatCompactNumber(1500)).toBe('1.5k');
+    expect(formatCompactNumber(12340)).toBe('12.3k');
+  });
+  it('百万 / 十亿用 M / B 后缀', () => {
+    expect(formatCompactNumber(1000000)).toBe('1M');
+    expect(formatCompactNumber(2500000)).toBe('2.5M');
+    expect(formatCompactNumber(1200000000)).toBe('1.2B');
+  });
+  it('≥ 100 的千位取整去小数', () => {
+    expect(formatCompactNumber(123456)).toBe('123k');
+  });
+  it('负数保留符号，非有限数回退 0', () => {
+    expect(formatCompactNumber(-1500)).toBe('-1.5k');
+    expect(formatCompactNumber(NaN)).toBe('0');
+    expect(formatCompactNumber(Infinity)).toBe('0');
   });
 });
 

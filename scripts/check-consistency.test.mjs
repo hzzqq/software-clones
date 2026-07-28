@@ -13,7 +13,7 @@ import { join, resolve, dirname } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { findE2ESpecs, isAppDir, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, findClientTestFiles, missingEnvKeys, findAllMarkdownFiles, parseApps, findDuplicatePorts, findDuplicateNames, findDuplicateDirs, checkBuildConfig, missingSharedTemplateFiles, missingAppDirs, findUnregisteredApps, invalidEnvValues, hasClientIndexHtml, hasServerEntry, errorBoundaryWired, hasAppReadme, ciRunsUnitTests, hasLicenseFile, gitignoreCoversArtifacts, clientTestUsesVitest, readmeMentionsVerify, appReadmeMentionsRun, hasGitHook, hasNvmrc } from './consistency-rules.mjs';
+import { findE2ESpecs, isAppDir, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, findClientTestFiles, missingEnvKeys, findAllMarkdownFiles, parseApps, findDuplicatePorts, findDuplicateNames, findDuplicateDirs, checkBuildConfig, missingSharedTemplateFiles, missingAppDirs, findUnregisteredApps, invalidEnvValues, hasClientIndexHtml, hasServerEntry, errorBoundaryWired, hasAppReadme, ciRunsUnitTests, hasLicenseFile, gitignoreCoversArtifacts, clientTestUsesVitest, readmeMentionsVerify, appReadmeMentionsRun, hasGitHook, hasNvmrc, apiClientGuardsNetworkError } from './consistency-rules.mjs';
 
 const TEST_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -336,6 +336,19 @@ assert('hasNvmrc 缺失返回 false', hasNvmrc(sandbox) === false);
 writeFileSync(join(sandbox, '.nvmrc'), '22\n');
 assert('hasNvmrc 存在返回 true', hasNvmrc(sandbox) === true);
 rmSync(join(sandbox, '.nvmrc'));
+
+// apiClientGuardsNetworkError：API 客户端必须对 fetch 网络错误兜底为结构化 ApiError(50001)
+const netApp = join(sandbox, 'netapp');
+mkdirSync(join(netApp, 'client', 'src', 'api'), { recursive: true });
+// 未兜底：直接 await fetch(...)
+writeFileSync(join(netApp, 'client', 'src', 'api', 'client.ts'), `export class ApiError extends Error { constructor(c,m,h){super(m);this.code=c;this.httpStatus=h;} }\nasync function request(m,p){ const response = await fetch('x'); return response; }\n`);
+assert('apiClientGuardsNetworkError 未兜底返回问题', apiClientGuardsNetworkError(sandbox, 'netapp').length > 0);
+// 已兜底：try/catch 内含 ApiError(50001)
+writeFileSync(join(netApp, 'client', 'src', 'api', 'client.ts'), `export class ApiError extends Error { constructor(c,m,h){super(m);this.code=c;this.httpStatus=h;} }\ntry { await fetch('x'); } catch { throw new ApiError(50001, '网络请求失败，请检查网络连接后重试', 0); }\n`);
+assert('apiClientGuardsNetworkError 已兜底返回 []', apiClientGuardsNetworkError(sandbox, 'netapp').length === 0);
+// 缺文件：返回缺失问题
+rmSync(netApp, { recursive: true, force: true });
+assert('apiClientGuardsNetworkError 缺 client.ts 返回问题', apiClientGuardsNetworkError(sandbox, 'netapp').length > 0);
 
 console.log(`\n通过: ${passed}  失败: ${failed}`);
 if (failed > 0) {

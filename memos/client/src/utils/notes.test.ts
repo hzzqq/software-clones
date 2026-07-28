@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseTags, formatRelativeTime, visibilityLabel, groupNotesByTag, filterNotesByTag, pinnedNotes, sortNotesByPinned, summarizeNotes, groupNotesByMonth, monthKeyOf, formatCharCount, sortNotes, extractTitle, truncatePreview } from './notes';
+import { parseTags, formatRelativeTime, visibilityLabel, groupNotesByTag, filterNotesByTag, pinnedNotes, sortNotesByPinned, summarizeNotes, groupNotesByMonth, monthKeyOf, formatCharCount, sortNotes, extractTitle, truncatePreview, highlightSegments } from './notes';
 import { Visibility, Note } from '../types';
 
 describe('parseTags', () => {
@@ -310,5 +310,37 @@ describe('truncatePreview', () => {
   it('空/undefined 安全', () => {
     expect(truncatePreview('')).toBe('');
     expect(truncatePreview(undefined as unknown as string)).toBe('');
+  });
+});
+
+describe('highlightSegments', () => {
+  it('空查询返回单个非匹配片段', () => {
+    expect(highlightSegments('hello world', '')).toEqual([{ text: 'hello world', match: false }]);
+    expect(highlightSegments('hello world', '   ')).toEqual([{ text: 'hello world', match: false }]);
+  });
+  it('空原文返回空数组', () => {
+    expect(highlightSegments('', 'hi')).toEqual([]);
+  });
+  it('大小写不敏感命中并标记 match', () => {
+    expect(highlightSegments('Hello World', 'world')).toEqual([
+      { text: 'Hello ', match: false },
+      { text: 'World', match: true },
+    ]);
+  });
+  it('支持 CJK 子串多段命中', () => {
+    expect(highlightSegments('今天开会明天开会', '开会')).toEqual([
+      { text: '今天', match: false },
+      { text: '开会', match: true },
+      { text: '明天', match: false },
+      { text: '开会', match: true },
+    ]);
+  });
+  it('无命中返回单个非匹配片段', () => {
+    expect(highlightSegments('abcdef', 'xyz')).toEqual([{ text: 'abcdef', match: false }]);
+  });
+  it('不修改入参', () => {
+    const text = 'hello world';
+    highlightSegments(text, 'o');
+    expect(text).toBe('hello world');
   });
 });

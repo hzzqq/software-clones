@@ -128,17 +128,23 @@ export default function NotesPage(): JSX.Element {
     [active],
   );
 
-  // 内容变更自动保存（防抖 800ms）
+  // 用 ref 持有最新 persist，避免其作为 effect 依赖导致死循环：
+  // persist 依赖 [active]，每次保存后 setActive 会让其身份变化、effect 重跑、再次保存。
+  const persistRef = useRef(persist);
+  persistRef.current = persist;
+
+  // 内容变更自动保存（防抖 800ms）。仅依赖实际字段值，persist 走 ref，
+  // 避免保存后 setActive 触发 persist 身份变化而不断重跑、造成无限回写。
   useEffect(() => {
     if (!active || mode === 'preview') return;
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
-      persist({ content: active.content, title: active.title, folder: active.folder });
+      persistRef.current({ content: active.content, title: active.title, folder: active.folder });
     }, 800);
     return () => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
     };
-  }, [active?.content, active?.title, active?.folder, mode, persist]);
+  }, [active?.content, active?.title, active?.folder, mode]);
 
   const togglePin = () => {
     if (active) void persist({ pinned: !active.pinned });

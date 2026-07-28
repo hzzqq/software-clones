@@ -62,7 +62,14 @@ export function shuffleStations(stations: Station[], rng: () => number = Math.ra
   return arr;
 }
 
-export function truncate(text: string, max = 80): string {
+/**
+ * 截断文本并以省略号结尾（不修改入参）。
+ * - null/undefined/空串 → 返回 ''（避免 StationCard 渲染 null 描述时
+ *   text.length 抛 TypeError 的隐性崩溃，与 filterStations 的 `?? ''` 防御风格一致）。
+ * - 长度 ≤ max → 原样返回。
+ */
+export function truncate(text: string | null | undefined, max = 80): string {
+  if (!text) return '';
   if (text.length <= max) return text;
   return text.slice(0, max - 1) + '…';
 }

@@ -188,3 +188,14 @@ export function scaleElement(el: CanvasElement, factor: number, center: Point): 
     h: Math.abs(maxY - minY),
   };
 }
+
+/**
+ * 拖拽交互：保持抓取点（pointer - offset）跟随鼠标，返回「新」元素（不修改入参）。
+ * 内部复用 translateElement，因此对钢笔元素也会同步平移全部 points，
+ * 否则会出现「选框移动、墨迹不动」的隐性 bug（拖拽路径此前只改 x/y）。
+ * offset 为按下时记录的 pointer - el 原点偏移。 */
+export function dragElement(el: CanvasElement, pointer: Point, offset: Point): CanvasElement {
+  const dx = pointer.x - offset.x - el.x;
+  const dy = pointer.y - offset.y - el.y;
+  return translateElement(el, dx, dy);
+}

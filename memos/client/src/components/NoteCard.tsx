@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import {
   Card,
   CardContent,
@@ -15,7 +15,7 @@ import UnarchiveOutlinedIcon from '@mui/icons-material/UnarchiveOutlined';
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { Note } from '../types';
-import { visibilityLabel, formatRelativeTime, countChars, formatCharCount, extractTitle, truncatePreview } from '../utils/notes';
+import { visibilityLabel, formatRelativeTime, countChars, formatCharCount, extractTitle, truncatePreview, highlightSegments } from '../utils/notes';
 
 interface Props {
   note: Note;
@@ -26,6 +26,8 @@ interface Props {
   onUnpin: (note: Note) => void;
   onDelete: (note: Note) => void;
   onTagClick?: (tag: string) => void;
+  /** 高亮词（通常来自搜索框）：命中片段用 <mark> 包裹渲染，留空不高亮。 */
+  highlight?: string;
 }
 
 const visColor: Record<Note['visibility'], 'success' | 'warning' | 'default'> = {
@@ -33,6 +35,25 @@ const visColor: Record<Note['visibility'], 'success' | 'warning' | 'default'> = 
   protected: 'warning',
   private: 'default',
 };
+
+/** 安全渲染高亮：命中片段用 <mark> 包裹，避免 dangerouslySetInnerHTML 的 XSS 风险。 */
+function renderHighlighted(text: string, query: string): JSX.Element | string {
+  const segs = highlightSegments(text, query);
+  if (segs.length === 1 && !segs[0].match) return text;
+  return (
+    <>
+      {segs.map((s, i) =>
+        s.match ? (
+          <mark key={i} style={{ background: 'rgba(255,213,0,0.55)', padding: '0 1px', borderRadius: 2 }}>
+            {s.text}
+          </mark>
+        ) : (
+          <Fragment key={i}>{s.text}</Fragment>
+        )
+      )}
+    </>
+  );
+}
 
 export default function NoteCard(props: Props): JSX.Element {
   const { note } = props;
@@ -61,18 +82,19 @@ export default function NoteCard(props: Props): JSX.Element {
         {(() => {
           const title = extractTitle(note.content);
           const preview = truncatePreview(note.content);
+          const hl = props.highlight ?? '';
           return (
             <>
               {title && (
                 <Typography variant="subtitle2" fontWeight={700} sx={{ mt: 1 }}>
-                  {title}
+                  {renderHighlighted(title, hl)}
                 </Typography>
               )}
               <Typography
                 sx={{ whiteSpace: 'pre-wrap', mt: title ? 0.5 : 1 }}
                 color={preview ? 'text.primary' : 'text.secondary'}
               >
-                {preview || '（空笔记）'}
+                {preview ? renderHighlighted(preview, hl) : '（空笔记）'}
               </Typography>
             </>
           );

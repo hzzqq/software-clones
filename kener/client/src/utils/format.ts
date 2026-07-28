@@ -140,3 +140,21 @@ export function summarizeIncidents(incidents: Incident[]): IncidentSummary {
   }
   return { open, resolved, total: incidents.length };
 }
+
+/**
+ * 平均恢复时长（秒）：仅统计已解决事件(resolvedAt 非 null/undefined)，
+ * 各事件恢复秒数由 incidentDurationSeconds 计算（已含非法时间守卫，不会出现 NaN 时长）。
+ * - 无任何事件 → NaN（无数据，调用方应展示『—』而非 0）。
+ * - 有事件但全部进行中（无已解决）→ NaN（无法计算均值）。
+ * - 已解决事件列表为空同样返回 NaN。
+ * 入参来自 summarizeIncidents 的 resolved 计数；不修改入参。
+ */
+export function meanResolveSeconds(incidents: Incident[], nowMs: number): number {
+  const resolved = incidents.filter((i) => i.resolvedAt != null);
+  if (resolved.length === 0) return Number.NaN;
+  let total = 0;
+  for (const i of resolved) {
+    total += incidentDurationSeconds(i, nowMs);
+  }
+  return total / resolved.length;
+}

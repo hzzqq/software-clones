@@ -10,7 +10,7 @@ export interface Layer {
   canvas: HTMLCanvasElement;
 }
 
-export type FilterKind = 'grayscale' | 'invert' | 'brightness' | 'sepia' | 'contrast' | 'saturate';
+export type FilterKind = 'grayscale' | 'invert' | 'brightness' | 'sepia' | 'contrast' | 'saturate' | 'hue';
 
 export interface Design {
   id: number;

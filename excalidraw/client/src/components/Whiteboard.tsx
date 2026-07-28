@@ -19,7 +19,7 @@ import TitleIcon from '@mui/icons-material/Title';
 import rough from 'roughjs';
 import type { RoughCanvas } from 'roughjs/bin/canvas';
 import type { CanvasElement, Point, Scene, Tool } from '../types';
-import { normalizeRect, hitTest, uid, serializeScene, snapPoint, boundingBox, getCenter, getSelectionBox, translateElement, rotateElement, scaleElement, clampStrokeWidth } from '../utils/geometry';
+import { normalizeRect, hitTest, uid, serializeScene, snapPoint, boundingBox, getCenter, getSelectionBox, translateElement, dragElement, rotateElement, scaleElement, clampStrokeWidth } from '../utils/geometry';
 import { formatRelativeTime } from '../utils/time';
 import { sceneApi } from '../api/scenes';
 
@@ -152,7 +152,7 @@ export default function Whiteboard({ elements, setElements }: Props): JSX.Elemen
     const pos = getPos(e);
     if (dragInfo.current) {
       const { id, offset } = dragInfo.current;
-      setElements((prev) => prev.map((el) => (el.id === id ? { ...el, x: pos.x - offset.x, y: pos.y - offset.y } : el)));
+      setElements((prev) => prev.map((el) => (el.id === id ? dragElement(el, pos, offset) : el)));
       return;
     }
     if (!drawing.current) return;
