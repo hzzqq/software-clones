@@ -83,6 +83,19 @@ export function groupStationsByCategory(stations: Station[]): Record<string, Sta
   return map;
 }
 
+/**
+ * 按分类统计电台数量，返回 分类 -> 电台数 的映射（与 groupStationsByCategory 互补）。
+ * 纯函数，不修改入参；用于分类筛选 Chip 实时展示各分类电台数。
+ */
+export function countStationsByCategory(stations: Station[]): Record<string, number> {
+  const map: Record<string, number> = {};
+  for (const s of stations ?? []) {
+    if (typeof s.category !== 'string') continue;
+    map[s.category] = (map[s.category] ?? 0) + 1;
+  }
+  return map;
+}
+
 /** 按分类筛选（大小写不敏感）；分类为空或空白时返回全部。不修改入参。 */
 export function filterStationsByCategory(stations: Station[], category: string): Station[] {
   const cat = (category ?? '').trim().toLowerCase();

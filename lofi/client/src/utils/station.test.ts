@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { categoryLabel, truncate, filterStations, sortStations, shuffleStations, groupStationsByCategory, filterStationsByLikes, summarizeStations, formatCount, formatClock, validateStreamUrl, relativeTime } from './station';
+import { categoryLabel, truncate, filterStations, sortStations, shuffleStations, groupStationsByCategory, countStationsByCategory, filterStationsByLikes, summarizeStations, formatCount, formatClock, validateStreamUrl, relativeTime } from './station';
 import { Station } from '../types';
 
 const sample: Station[] = [
@@ -268,5 +268,25 @@ describe('validateStreamUrl', () => {
   });
   it('undefined 安全', () => {
     expect(validateStreamUrl(undefined as unknown as string)).toBe(false);
+  });
+});
+
+describe('countStationsByCategory', () => {
+  const stations: Station[] = [
+    { id: 1, name: 'a', streamUrl: '', description: '', category: 'lofi', likes: 0, createdAt: '' },
+    { id: 2, name: 'b', streamUrl: '', description: '', category: 'lofi', likes: 0, createdAt: '' },
+    { id: 3, name: 'c', streamUrl: '', description: '', category: 'jazz', likes: 0, createdAt: '' },
+    { id: 4, name: 'd', streamUrl: '', description: '', category: 'jazz', likes: 0, createdAt: '' },
+    { id: 5, name: 'e', streamUrl: '', description: '', category: 'jazz', likes: 0, createdAt: '' },
+  ];
+  it('按分类聚合数量', () => {
+    expect(countStationsByCategory(stations)).toEqual({ lofi: 2, jazz: 3 });
+  });
+  it('空列表返回空映射', () => {
+    expect(countStationsByCategory([])).toEqual({});
+  });
+  it('category 非字符串被忽略', () => {
+    const bad = [{ ...stations[0], category: null as unknown as string }];
+    expect(countStationsByCategory(bad)).toEqual({});
   });
 });

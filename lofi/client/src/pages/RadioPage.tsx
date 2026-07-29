@@ -26,7 +26,7 @@ import StationCard from '../components/StationCard';
 import CategoryFilter from '../components/CategoryFilter';
 import { Station } from '../types';
 import { stationApi } from '../api/stations';
-import { filterStations, sortStations, shuffleStations, groupStationsByCategory, categoryLabel, filterStationsByLikes, filterStationsByCategory, summarizeStations, formatCount, validateStreamUrl, type StationSort } from '../utils/station';
+import { filterStations, sortStations, shuffleStations, groupStationsByCategory, countStationsByCategory, categoryLabel, filterStationsByLikes, filterStationsByCategory, summarizeStations, formatCount, validateStreamUrl, type StationSort } from '../utils/station';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
 export default function RadioPage(): JSX.Element {
@@ -61,6 +61,7 @@ export default function RadioPage(): JSX.Element {
   }, [category]);
 
   const categories = useMemo(() => Array.from(new Set(stations.map((s) => s.category))), [stations]);
+  const categoryCounts = useMemo(() => countStationsByCategory(stations), [stations]);
 
   const filtered = useMemo(() => {
     const base = filterStationsByLikes(
@@ -288,7 +289,7 @@ export default function RadioPage(): JSX.Element {
         <Chip size="small" color="primary" variant="outlined" label={`共 ${formatCount(summary.total)} 个电台 · ${summary.categories} 类 · ❤ ${formatCount(summary.totalLikes)}`} />
       </Stack>
 
-      <CategoryFilter categories={categories} active={category} onSelect={setCategory} />
+      <CategoryFilter categories={categories} active={category} counts={categoryCounts} onSelect={setCategory} />
 
       {loading ? (
         <Typography color="text.secondary" sx={{ mt: 2 }}>
