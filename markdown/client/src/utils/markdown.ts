@@ -59,6 +59,21 @@ export function estimateReadingTime(text: string): number {
 }
 
 /**
+ * 统计可见文本中的句子数，用于写作统计（与 countWords / estimateReadingTime 互补）。
+ * 以中英文句末标点（。！？!?）及省略号（…/...）为分句信号，连续空白与换行不计入。
+ * 纯函数，不修改入参；空内容返回 0；一段无句末标点的文本（未完结）也计为 1 句。
+ */
+export function countSentences(text: string): number {
+  if (typeof text !== 'string' || text.trim() === '') return 0;
+  const cleaned = text
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/[#>*_`~]+/g, ' ')
+    .replace(/!?\[[^\]]*\]\([^)]*\)/g, ' ');
+  const sentences = cleaned.split(/[。！？!?.]+|…/).filter((s) => s.trim().length > 0);
+  return sentences.length;
+}
+
+/**
  * 将时间格式化为中文相对时间（"刚刚 / N 分钟前 / N 小时前 / N 天前 / N 周前"），
  * 超过约 5 周则退化为「M 月 D 日」。纯函数，不修改入参。
  * - `now` 可注入以便测试；默认取当前时间。

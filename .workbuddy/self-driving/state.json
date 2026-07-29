@@ -1,5 +1,5 @@
 {
-  "cycle": 226,
+  "cycle": 227,
   "max_cycles": 233,
   "phase": "polish",
   "paused": false,
@@ -2985,6 +2985,20 @@
       "verify": "client 71 passed + typecheck pass",
       "score": 80,
       "ts": 1785334051.813
+    },
+    {
+      "cycle": 227,
+      "app": "markdown",
+      "task_id": "count_sentences",
+      "new_requirement": "countSentences 纯函数(中英句末分句,互补字数与阅读时长)+测试;编辑器统计头部新增「句」",
+      "files": [
+        "client/src/utils/markdown.ts",
+        "client/src/utils/markdown.test.ts",
+        "client/src/pages/NotesPage.tsx"
+      ],
+      "verify": "client 86 passed + typecheck pass",
+      "score": 80,
+      "ts": 1785334335.325
     }
   ],
   "last_task_id": "server_security_headers",

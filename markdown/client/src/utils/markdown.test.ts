@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseTags, countWords, deriveTitle, countCodeBlocks, estimateReadingTime, extractHeadings, extractLinks, sortNotes, filterNotesByFolder, summarizeNotes, formatRelativeTime, searchNotes, stripInlineMarkdown } from './markdown';
+import { parseTags, countWords, deriveTitle, countCodeBlocks, estimateReadingTime, countSentences, extractHeadings, extractLinks, sortNotes, filterNotesByFolder, summarizeNotes, formatRelativeTime, searchNotes, stripInlineMarkdown } from './markdown';
 import type { Note } from '../types';
 
 describe('parseTags', () => {
@@ -258,5 +258,33 @@ describe('summarizeNotes', () => {
     const before = notes.map((n) => n.id);
     summarizeNotes(notes);
     expect(notes.map((n) => n.id)).toEqual(before);
+  });
+});
+
+describe('countSentences', () => {
+  it('空内容返回 0', () => {
+    expect(countSentences('')).toBe(0);
+    expect(countSentences('   \n  ')).toBe(0);
+    expect(countSentences(null as unknown as string)).toBe(0);
+  });
+  it('英文按句末标点分句', () => {
+    expect(countSentences('Hello world. How are you? Fine!')).toBe(3);
+  });
+  it('中文按句末标点分句', () => {
+    expect(countSentences('今天天气真好。我们去散步？好的！')).toBe(3);
+  });
+  it('省略号（… 与 ...）计为句末', () => {
+    expect(countSentences('他说了一句话…然后离开了')).toBe(2);
+    expect(countSentences('Loading... done.')).toBe(2);
+  });
+  it('无句末标点的整段文本计为 1 句', () => {
+    expect(countSentences('这是一段未完结的文字没有标点')).toBe(1);
+  });
+  it('忽略围栏代码块内的标点', () => {
+    const md = '```js\nconsole.log("hi");\n```\n真实句子。另一个。';
+    expect(countSentences(md)).toBe(2);
+  });
+  it('连续空白与换行不计入句数', () => {
+    expect(countSentences('第一句。\n\n   第二句。   ')).toBe(2);
   });
 });
