@@ -230,3 +230,30 @@ export function formatBytes(bytes: number): string {
   if (bytes < 1024 * 1024 * 1024) return `${trimZero(bytes / (1024 * 1024))} MB`;
   return `${trimZero(bytes / (1024 * 1024 * 1024))} GB`;
 }
+
+/**
+ * RGB(0-255) → #rrggbb。通道越界/非有限值按 0 处理并 clamp 到 [0,255]，
+ * 保证任何渲染来源的颜色都能安全落入合法 CSS 颜色区间。
+ */
+export function rgbToHex(r: number, g: number, b: number): string {
+  const toHex = (v: number): string => {
+    const n = Math.max(0, Math.min(255, Math.round(Number.isFinite(v) ? v : 0)));
+    return n.toString(16).padStart(2, '0');
+  };
+  return '#' + toHex(r) + toHex(g) + toHex(b);
+}
+
+/**
+ * #rgb / #rrggbb → [r,g,b]。非法输入（非字符串、长度不符、非 hex）返回 null，
+ * 调用方据此跳过渲染而非抛错，避免图层颜色解析导致白屏。
+ */
+export function hexToRgb(hex: string): [number, number, number] | null {
+  if (typeof hex !== 'string') return null;
+  let h = hex.trim().replace(/^#/, '');
+  if (h.length === 3) {
+    h = h.split('').map((ch) => ch + ch).join('');
+  }
+  if (!/^[0-9a-fA-F]{6}$/.test(h)) return null;
+  const n = parseInt(h, 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}

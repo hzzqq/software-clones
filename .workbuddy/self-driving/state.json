@@ -1,5 +1,5 @@
 {
-  "cycle": 223,
+  "cycle": 224,
   "max_cycles": 233,
   "phase": "polish",
   "paused": false,
@@ -2954,6 +2954,15 @@
       "system_gain": "图层面板可展示各类型数量",
       "score": 68,
       "implicit": "缺失/空 type 归入 unknown"
+    },
+    {
+      "cycle": 224,
+      "app": "photopea",
+      "task_id": "rgb_hex_convert",
+      "new_requirement": "RGB 与 HEX 颜色互转",
+      "system_gain": "图层颜色可安全显示/解析",
+      "score": 70,
+      "implicit": "非法 hex 返回 null 防白屏"
     }
   ],
   "last_task_id": "server_security_headers",

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { clamp, clampNumber, grayscale, invert, brightness, sepia, uid, applyFilter, contrast, saturate, getFilterLabel, FILTER_LABELS, formatPercent, blendOver, rgbToHsl, hslToRgb, hueRotate } from './image';
+import { clamp, clampNumber, grayscale, invert, brightness, sepia, uid, applyFilter, contrast, saturate, getFilterLabel, FILTER_LABELS, formatPercent, blendOver, rgbToHsl, hslToRgb, hueRotate, rgbToHex, hexToRgb } from './image';
 import type { FilterKind } from '../types';
 
 function makeData(): Uint8ClampedArray {
@@ -262,5 +262,26 @@ describe('blendOver', () => {
     expect(blendOver(RED, -1, BLUE, 2)).toEqual(BLUE);
     // topOpacity=NaN → 夹为 0 → 结果即底层
     expect(blendOver(RED, Number.NaN, BLUE, 1)).toEqual(BLUE);
+  });
+});
+
+describe('rgbToHex / hexToRgb', () => {
+  it('converts rgb to hex', () => {
+    expect(rgbToHex(255, 0, 0)).toBe('#ff0000');
+    expect(rgbToHex(0, 128, 255)).toBe('#0080ff');
+  });
+  it('clamps out-of-range channels', () => {
+    expect(rgbToHex(300, -5, 128)).toBe('#ff0080');
+  });
+  it('parses 6-digit hex', () => {
+    expect(hexToRgb('#0080ff')).toEqual([0, 128, 255]);
+  });
+  it('expands 3-digit hex', () => {
+    expect(hexToRgb('#f0a')).toEqual([255, 0, 170]);
+  });
+  it('returns null for invalid hex', () => {
+    expect(hexToRgb('nope')).toBeNull();
+    expect(hexToRgb('#12')).toBeNull();
+    expect(hexToRgb(123 as unknown as string)).toBeNull();
   });
 });
