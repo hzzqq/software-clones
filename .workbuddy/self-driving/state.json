@@ -1,5 +1,5 @@
 {
-  "cycle": 224,
+  "cycle": 225,
   "max_cycles": 233,
   "phase": "polish",
   "paused": false,
@@ -2963,6 +2963,15 @@
       "system_gain": "图层颜色可安全显示/解析",
       "score": 70,
       "implicit": "非法 hex 返回 null 防白屏"
+    },
+    {
+      "cycle": 225,
+      "app": "it-tools",
+      "task_id": "truncate_middle",
+      "new_requirement": "长文本中间截断显示",
+      "system_gain": "工具输出/历史可安全展示超长串",
+      "score": 66,
+      "implicit": "非字符串返回空防崩溃"
     }
   ],
   "last_task_id": "server_security_headers",

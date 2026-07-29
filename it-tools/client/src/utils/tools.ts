@@ -432,3 +432,17 @@ export function compactNumber(n: number): string {
   }
   return String(n);
 }
+
+/**
+ * 长文本中间截断（保留首尾），用于工具输出框/历史记录展示超长串（base64、uuid、URL 等）。
+ * 输入非字符串返回空串；max <= 省略符长度时直接硬截断；越界安全。
+ */
+export function truncateMiddle(text: string, max = 40, ellipsis = '…'): string {
+  if (typeof text !== 'string') return '';
+  if (text.length <= max) return text;
+  if (max <= ellipsis.length) return text.slice(0, max);
+  const keep = max - ellipsis.length;
+  const head = Math.ceil(keep / 2);
+  const tail = Math.floor(keep / 2);
+  return text.slice(0, head) + ellipsis + text.slice(text.length - tail);
+}

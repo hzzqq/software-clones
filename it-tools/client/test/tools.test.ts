@@ -17,6 +17,7 @@ import {
   urlDecode,
   timestampToIso,
   isoToTimestampSeconds,
+  truncateMiddle,
 } from '../src/utils/tools';
 
 describe('base64 helpers', () => {
@@ -181,5 +182,20 @@ describe('timestamp helpers', () => {
 
   it('throws on invalid date', () => {
     expect(() => isoToTimestampSeconds('not a date')).toThrow();
+  });
+});
+
+describe('truncateMiddle', () => {
+  it('returns short text unchanged', () => {
+    expect(truncateMiddle('hello', 40)).toBe('hello');
+  });
+  it('truncates long text in the middle', () => {
+    expect(truncateMiddle('abcdefghijklmnop', 10)).toBe('abcde…mnop');
+  });
+  it('returns empty for non-string input', () => {
+    expect(truncateMiddle(123 as unknown as string, 10)).toBe('');
+  });
+  it('hard-truncates when max too small for ellipsis', () => {
+    expect(truncateMiddle('abcdefghij', 3, '…')).toBe('a…j');
   });
 });
