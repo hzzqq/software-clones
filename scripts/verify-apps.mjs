@@ -54,6 +54,18 @@ function runSuite(appName, scope) {
   const raw = (r.stdout || '') + (r.stderr || '');
   const out = raw.replace(/\x1b\[[0-9;]*m/g, ''); // 去除 ANSI 颜色码，避免干扰解析
   const code = r.status ?? (r.error ? 1 : 0);
+  const errMsg = r.error ? `${r.error.code || ''} ${r.error.message || ''}`.trim() : '';
+
+  // 进程级失败（harness 自身出问题，而非用例失败）：明确分类，避免与「用例失败」混淆导致误判
+  if (r.error) {
+    if (r.error.code === 'ETIMEDOUT') {
+      return { scope, status: 'timeout', passed: 0, failed: 0, message: 'npm test 超时（默认 180s）', output: raw };
+    }
+    if (r.error.code === 'ENOENT') {
+      return { scope, status: 'error', passed: 0, failed: 0, message: `命令不可用: ${errMsg}`, output: raw };
+    }
+    return { scope, status: 'error', passed: 0, failed: 0, message: errMsg, output: raw };
+  }
 
   if (/No test files found/.test(out)) {
     return { scope, status: 'skipped', passed: 0, failed: 0, output: raw };
@@ -64,9 +76,10 @@ function runSuite(appName, scope) {
     return { scope, status: 'env', passed: 0, failed: 0, output: raw };
   }
 
-  const tests = out.match(/Tests\s+(?:(\d+)\s+failed\s*\|\s*)?(\d+)\s+passed/);
-  const failed = tests ? Number(tests[1] || 0) : code !== 0 ? -1 : 0;
-  const passed = tests ? Number(tests[2] || 0) : 0;
+  // 兼容 vitest 三种汇总格式：全过 / 部分失败 / 全失败（无 passed 段）
+  const m = out.match(/Tests\s+(\d+)\s+failed(?:\s*\|\s*(\d+)\s+passed)?|Tests\s+(\d+)\s+passed/);
+  const failed = m ? (m[1] ? Number(m[1]) : 0) : code !== 0 ? -1 : 0;
+  const passed = m ? (m[2] ? Number(m[2]) : m[3] ? Number(m[3]) : 0) : 0;
 
   const ok = code === 0 && failed === 0;
   return {
@@ -97,6 +110,10 @@ function main() {
   let totalFailedSuites = 0;
   let totalFailedTests = 0;
   let totalPassedTests = 0;
+  let cEnv = 0;
+  let cSkipped = 0;
+  let cTimeout = 0;
+  let cError = 0;
 
   for (const app of targets) {
     const scopes = scopeFilter === 'all' ? ['client', 'server'] : [scopeFilter];
@@ -109,31 +126,44 @@ function main() {
         if (typeof r.failed === 'number') totalFailedTests += r.failed;
       } else if (r.status === 'pass') {
         totalPassedTests += r.passed;
+      } else if (r.status === 'env') {
+        cEnv += 1;
+      } else if (r.status === 'skipped') {
+        cSkipped += 1;
+      } else if (r.status === 'timeout') {
+        cTimeout += 1;
+      } else if (r.status === 'error') {
+        cError += 1;
       }
     }
     results.push(appResult);
   }
 
   if (asJson) {
-    console.log(JSON.stringify({ results, totalFailedSuites, totalFailedTests, totalPassedTests }, null, 2));
+    console.log(JSON.stringify({ results, totalFailedSuites, totalFailedTests, totalPassedTests, cEnv, cSkipped, cTimeout, cError }, null, 2));
   } else {
     console.log('\n软件克隆单测真实回归 — 共 ' + targets.length + ' 个 App\n');
     for (const appResult of results) {
       const parts = appResult.suites.map((s) => {
-        const tag = { pass: '✅', fail: '❌', absent: '➖', 'no-script': '➖', skipped: '⚠️', env: '⚙️' }[s.status] || '?';
+        const tag = { pass: '✅', fail: '❌', absent: '➖', 'no-script': '➖', skipped: '⚠️', env: '⚙️', timeout: '⏱️', error: '💥' }[s.status] || '?';
         if (s.status === 'pass') return `${s.scope}:${tag}${s.passed}`;
         if (s.status === 'fail') return `${s.scope}:${tag}${s.passed}/${s.failed}`;
         return `${s.scope}:${tag}`;
       });
       console.log(`  ${appResult.app.padEnd(12)} ${parts.join('  ')}`);
-      if (appResult.suites.some((s) => s.status === 'fail')) {
-        const failed = appResult.suites.find((s) => s.status === 'fail');
-        const lines = failed.output.split('\n').filter((l) => /fail|Error|✗|×/.test(l)).slice(0, 6);
+      const problem = appResult.suites.find((s) => s.status === 'fail' || s.status === 'timeout' || s.status === 'error');
+      if (problem) {
+        const lines = problem.output.split('\n').filter((l) => /fail|Error|✗|×/.test(l)).slice(0, 6);
         for (const l of lines) console.log('     ' + l.trim());
+        if (problem.message) console.log('     ↳ ' + problem.message);
       }
     }
     console.log(
-      `\n汇总：通过用例 ${totalPassedTests} · 失败 suite ${totalFailedSuites} · 失败用例 ${totalFailedTests}`
+      `\n汇总：通过用例 ${totalPassedTests} · 失败 suite ${totalFailedSuites} · 失败用例 ${totalFailedTests}` +
+      (cEnv ? ` · 环境跳过 ${cEnv}` : '') +
+      (cSkipped ? ` · 无测试 ${cSkipped}` : '') +
+      (cTimeout ? ` · 超时 ${cTimeout}` : '') +
+      (cError ? ` · harness错误 ${cError}` : '')
     );
   }
 

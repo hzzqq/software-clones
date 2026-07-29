@@ -642,3 +642,25 @@ export function apiClientGuardsNetworkError(
   }
   return [];
 }
+
+/**
+ * 校验某 App 是否在入口 main.tsx 注册了全局异步错误兜底。
+ * React ErrorBoundary 仅能捕获「渲染 / 生命周期」期错误，无法捕获事件回调或异步
+ * (fetch / setTimeout) 中未处理的 Promise 拒绝——这类错误会静默逃逸、表现为白屏或 UI 冻结。
+ * 本规则要求 main.tsx 注册 `unhandledrejection` 监听（并给出可见兜底），把异步错误也纳入兜底网。
+ * @returns {string[]} 问题列表（空数组表示达标）
+ */
+export function globalErrorHandlerWired(root, app) {
+  const p = join(root, app, 'client', 'src', 'main.tsx');
+  if (!existsSync(p)) return ['缺少 client/src/main.tsx（无法校验全局错误兜底）'];
+  let text = '';
+  try {
+    text = readFileSync(p, 'utf8');
+  } catch {
+    return ['client/src/main.tsx 无法读取'];
+  }
+  if (!/addEventListener\(\s*['"]unhandledrejection['"]/.test(text)) {
+    return ['main.tsx 未注册全局 unhandledrejection 兜底（异步错误将静默逃逸）'];
+  }
+  return [];
+}

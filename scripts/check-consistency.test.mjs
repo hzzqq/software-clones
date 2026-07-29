@@ -13,7 +13,7 @@ import { join, resolve, dirname } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { findE2ESpecs, isAppDir, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, findClientTestFiles, missingEnvKeys, findAllMarkdownFiles, parseApps, findDuplicatePorts, findDuplicateNames, findDuplicateDirs, checkBuildConfig, missingSharedTemplateFiles, missingAppDirs, findUnregisteredApps, invalidEnvValues, hasClientIndexHtml, hasServerEntry, errorBoundaryWired, hasAppReadme, ciRunsUnitTests, hasLicenseFile, gitignoreCoversArtifacts, clientTestUsesVitest, readmeMentionsVerify, appReadmeMentionsRun, hasGitHook, hasNvmrc, apiClientGuardsNetworkError } from './consistency-rules.mjs';
+import { findE2ESpecs, isAppDir, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, findClientTestFiles, missingEnvKeys, findAllMarkdownFiles, parseApps, findDuplicatePorts, findDuplicateNames, findDuplicateDirs, checkBuildConfig, missingSharedTemplateFiles, missingAppDirs, findUnregisteredApps, invalidEnvValues, hasClientIndexHtml, hasServerEntry, errorBoundaryWired, hasAppReadme, ciRunsUnitTests, hasLicenseFile, gitignoreCoversArtifacts, clientTestUsesVitest, readmeMentionsVerify, appReadmeMentionsRun, hasGitHook, hasNvmrc, apiClientGuardsNetworkError, globalErrorHandlerWired } from './consistency-rules.mjs';
 
 const TEST_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -349,6 +349,15 @@ assert('apiClientGuardsNetworkError 已兜底返回 []', apiClientGuardsNetworkE
 // 缺文件：返回缺失问题
 rmSync(netApp, { recursive: true, force: true });
 assert('apiClientGuardsNetworkError 缺 client.ts 返回问题', apiClientGuardsNetworkError(sandbox, 'netapp').length > 0);
+
+// globalErrorHandlerWired：入口 main.tsx 必须注册全局 unhandledrejection 兜底
+const geApp = join(sandbox, 'geapp', 'client', 'src');
+mkdirSync(geApp, { recursive: true });
+writeFileSync(join(geApp, 'main.tsx'), `import React from 'react';\nconst rootElement = document.getElementById('root');\nconsole.log(rootElement);\n`);
+assert('globalErrorHandlerWired 未注册返回问题', globalErrorHandlerWired(sandbox, 'geapp').length > 0);
+writeFileSync(join(geApp, 'main.tsx'), `import React from 'react';\nwindow.addEventListener('unhandledrejection', (e) => { console.error(e); });\nconst rootElement = document.getElementById('root');\nconsole.log(rootElement);\n`);
+assert('globalErrorHandlerWired 已注册返回 []', globalErrorHandlerWired(sandbox, 'geapp').length === 0);
+rmSync(join(sandbox, 'geapp'), { recursive: true, force: true });
 
 console.log(`\n通过: ${passed}  失败: ${failed}`);
 if (failed > 0) {
