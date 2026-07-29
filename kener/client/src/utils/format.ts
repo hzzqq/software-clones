@@ -90,6 +90,17 @@ export function incidentSeverityLabel(severity: string): string {
 }
 
 /**
+ * 事件严重度 → MUI Chip 语义色，与 incidentSeverityLabel 配套。
+ * high → error（红）/ medium → warning（黄）/ low → default；未知严重度按 default。
+ * 纯函数，供事件面板严重度 Chip 统一着色（取代组件内联三元）。
+ */
+export function incidentSeverityColor(severity: string): 'error' | 'warning' | 'default' {
+  if (severity === 'high') return 'error';
+  if (severity === 'medium') return 'warning';
+  return 'default';
+}
+
+/**
  * 格式化事件时间窗口摘要：已解决显示「持续 X」，未解决显示「进行中」，
  * createdAt 不可解析时返回「时间未知」。纯函数，便于组件直接展示与测试。
  */

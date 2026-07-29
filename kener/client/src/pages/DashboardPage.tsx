@@ -21,7 +21,7 @@ import { useServices } from '../hooks/useServices';
 import ServiceCard from '../components/ServiceCard';
 import { servicesApi } from '../api/services';
 import { incidentsApi } from '../api/incidents';
-import { formatDuration, incidentDurationSeconds, uptimePercentage, uptimeColor, serviceHealthLabel, countByStatus, incidentSeverityLabel, summarizeIncidents, formatUptime, meanResolveSeconds } from '../utils/format';
+import { formatDuration, incidentDurationSeconds, uptimePercentage, uptimeColor, serviceHealthLabel, countByStatus, incidentSeverityLabel, incidentSeverityColor, summarizeIncidents, formatUptime, meanResolveSeconds } from '../utils/format';
 import { formatRelativeTime } from '../utils/time';
 import { overallStatus, statusLabel, ServiceStatus } from '../utils/status';
 import type { Incident } from '../types';
@@ -176,9 +176,7 @@ export default function DashboardPage() {
                   <Typography variant="body2">{inc.title}</Typography>
                   <Chip
                     size="small"
-                    color={
-                      inc.severity === 'high' ? 'error' : inc.severity === 'medium' ? 'warning' : 'default'
-                    }
+                    color={incidentSeverityColor(inc.severity)}
                     label={`严重度：${incidentSeverityLabel(inc.severity)}`}
                   />
                 </Stack>

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatDuration, incidentDurationSeconds, uptimePercentage, countByStatus, incidentSeverityLabel, uptimeColor, summarizeIncidents, formatIncidentWindow, formatUptime, meanResolveSeconds } from './format';
+import { formatDuration, incidentDurationSeconds, uptimePercentage, countByStatus, incidentSeverityLabel, incidentSeverityColor, uptimeColor, summarizeIncidents, formatIncidentWindow, formatUptime, meanResolveSeconds } from './format';
 import type { Incident } from '../types';
 
 describe('formatDuration', () => {
@@ -157,6 +157,20 @@ describe('incidentSeverityLabel', () => {
   it('未知值原样透传', () => {
     expect(incidentSeverityLabel('critical')).toBe('critical');
     expect(incidentSeverityLabel('')).toBe('');
+  });
+});
+
+describe('incidentSeverityColor', () => {
+  it('high → error', () => {
+    expect(incidentSeverityColor('high')).toBe('error');
+  });
+  it('medium → warning', () => {
+    expect(incidentSeverityColor('medium')).toBe('warning');
+  });
+  it('low 与未知 → default', () => {
+    expect(incidentSeverityColor('low')).toBe('default');
+    expect(incidentSeverityColor('critical')).toBe('default');
+    expect(incidentSeverityColor('')).toBe('default');
   });
 });
 
