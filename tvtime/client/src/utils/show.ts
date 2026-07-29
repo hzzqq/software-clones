@@ -192,3 +192,16 @@ export function lastWatchedAt(episodes: Episode[]): string | null {
   }
   return Number.isFinite(best) ? new Date(best).toISOString() : null;
 }
+
+/**
+ * 按季统计集数分布，供剧集详情页展示「第 N 季 M 集」式的概览。
+ * 对 season 做 Number.isFinite 防护，非有限值归入 0 季，避免 NaN 键污染统计。
+ */
+export function seasonEpisodeCount(episodes: Episode[]): Record<number, number> {
+  const counts: Record<number, number> = {};
+  for (const ep of episodes) {
+    const season = Number.isFinite(ep?.season) ? ep.season : 0;
+    counts[season] = (counts[season] ?? 0) + 1;
+  }
+  return counts;
+}

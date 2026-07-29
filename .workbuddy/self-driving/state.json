@@ -1,5 +1,5 @@
 {
-  "cycle": 221,
+  "cycle": 222,
   "max_cycles": 233,
   "phase": "polish",
   "paused": false,
@@ -2936,6 +2936,15 @@
       "verify": "consistency 0错；规则单测 97/97(含 serverSecurityHeaders 3 例)；10/12 server tsc --noEmit 通过(it-tools/kener 因沙箱缺 @types/node 预存失败，与本改动无关，中间件文件与其余 10 个一致已验证可编译)",
       "score": 82,
       "ts": "2026-07-29T12:05:00+0800"
+    },
+    {
+      "cycle": 222,
+      "app": "tvtime",
+      "task_id": "season_episode_count",
+      "new_requirement": "按季统计集数分布供详情页概览",
+      "system_gain": "剧集详情可展示每季集数",
+      "score": 72,
+      "implicit": "NaN season 归入 0 季防护"
     }
   ],
   "last_task_id": "server_security_headers",

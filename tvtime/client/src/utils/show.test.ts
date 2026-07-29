@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { progressPercent, nextUnwatched, nextEpisode, isComplete, filterShows, sortShows, episodesLeft, remainingWatchTime, formatWatchTime, filterEpisodesByWatched, episodesByStatus, formatProgress, clampEpisodeCount, nextEpisodeLabel, lastWatchedAt, summarizeLibrary } from './show';
+import { progressPercent, nextUnwatched, nextEpisode, isComplete, filterShows, sortShows, episodesLeft, remainingWatchTime, formatWatchTime, filterEpisodesByWatched, episodesByStatus, formatProgress, clampEpisodeCount, nextEpisodeLabel, lastWatchedAt, summarizeLibrary, seasonEpisodeCount } from './show';
 import type { Episode, Show } from '../types';
 
 function mkShow(id: number, title: string, watchedCount: number, totalEpisodes: number, updatedAt: string): Show {
@@ -335,3 +335,16 @@ describe('lastWatchedAt', () => {
   });
 });
 
+
+describe('seasonEpisodeCount', () => {
+  const mk = (season: number, episode: number) => ({ season, episode } as Episode);
+  it('counts episodes per season', () => {
+    expect(seasonEpisodeCount([mk(1, 1), mk(1, 2), mk(2, 1)])).toEqual({ 1: 2, 2: 1 });
+  });
+  it('treats non-finite season as 0', () => {
+    expect(seasonEpisodeCount([{ season: NaN, episode: 1 } as unknown as Episode])).toEqual({ 0: 1 });
+  });
+  it('returns empty for empty input', () => {
+    expect(seasonEpisodeCount([])).toEqual({});
+  });
+});
