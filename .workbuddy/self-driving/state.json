@@ -1,5 +1,5 @@
 {
-  "cycle": 231,
+  "cycle": 232,
   "max_cycles": 233,
   "phase": "polish",
   "paused": false,
@@ -3056,6 +3056,18 @@
       "verify": "client 68 passed + typecheck pass",
       "score": 80,
       "ts": 1785335350.427
+    },
+    {
+      "cycle": 232,
+      "app": "glance",
+      "task_id": "widget_type_label_test",
+      "new_requirement": "补齐 widgetTypeLabel 纯函数单测(此前缺覆盖)",
+      "files": [
+        "client/src/utils/filterWidgets.test.ts"
+      ],
+      "verify": "client 45 passed + typecheck pass",
+      "score": 76,
+      "ts": 1785335483.365
     }
   ],
   "last_task_id": "server_security_headers",

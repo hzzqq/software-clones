@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { filterWidgets, sortWidgets, countWidgetsByType, filterWidgetsByType, summarizeWidgets } from './filterWidgets';
+import { filterWidgets, sortWidgets, countWidgetsByType, filterWidgetsByType, summarizeWidgets, widgetTypeLabel } from './filterWidgets';
 import type { Widget } from '../types';
 
 function mk(id: number, title: string, type: Widget['type']): Widget {
@@ -108,5 +108,17 @@ describe('summarizeWidgets', () => {
     const before = ws.map((w) => w.id);
     summarizeWidgets(ws);
     expect(ws.map((w) => w.id)).toEqual(before);
+  });
+});
+
+describe('widgetTypeLabel', () => {
+  it('已知类型返回中文标签', () => {
+    expect(widgetTypeLabel('clock')).toBe('时钟');
+    expect(widgetTypeLabel('weather')).toBe('天气');
+    expect(widgetTypeLabel('notes')).toBe('便签');
+    expect(widgetTypeLabel('rss')).toBe('RSS 订阅');
+  });
+  it('未知类型原样透传', () => {
+    expect(widgetTypeLabel('unknown-type' as unknown as Widget['type'])).toBe('unknown-type');
   });
 });
