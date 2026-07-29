@@ -180,6 +180,21 @@ export function filterPostsByChannel(
   return posts.filter((p) => String(p.channelId) === norm);
 }
 
+/**
+ * 按频道统计帖子数量，返回 channelId → 帖子数的映射。
+ * 与 filterPostsByChannel 共用归一化逻辑（'' / 0 / null 视为无效频道，单独计数）。
+ * 纯函数，不修改入参；用于频道筛选下拉中实时展示各频道发帖数。
+ */
+export function countPostsByChannel(posts: Post[]): Record<number, number> {
+  const map: Record<number, number> = {};
+  for (const p of posts ?? []) {
+    const id = Number(p.channelId);
+    if (!Number.isFinite(id)) continue;
+    map[id] = (map[id] ?? 0) + 1;
+  }
+  return map;
+}
+
 /** 帖子统计概览。 */
 export interface PostsSummary {
   total: number;

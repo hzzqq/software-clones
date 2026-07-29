@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseTags, slugify, buildCommentTree, countComments, searchPosts, excerpt, topPosts, summarizePosts, filterPostsByChannel, formatRelativeTime, formatDateTime, sortPosts, parseIdParam, formatCompactNumber, stripMarkdown } from './forum';
+import { parseTags, slugify, buildCommentTree, countComments, searchPosts, excerpt, topPosts, summarizePosts, filterPostsByChannel, countPostsByChannel, formatRelativeTime, formatDateTime, sortPosts, parseIdParam, formatCompactNumber, stripMarkdown } from './forum';
 import type { Comment, Post } from '../types';
 
 function mkComment(id: number, parentId: number | null): Comment {
@@ -348,5 +348,29 @@ describe('parseIdParam', () => {
     expect(parseIdParam('12.5')).toBeNull();
     expect(parseIdParam('0')).toBeNull();
     expect(parseIdParam('-3')).toBeNull();
+  });
+});
+
+describe('countPostsByChannel', () => {
+  const base = { channelName: '', body: '', authorName: '', tags: [], commentCount: 0, updatedAt: '' };
+  const posts: Post[] = [
+    { id: 1, channelId: 2, title: 'a', likes: 0, createdAt: '', ...base },
+    { id: 2, channelId: 2, title: 'b', likes: 0, createdAt: '', ...base },
+    { id: 3, channelId: 5, title: 'c', likes: 0, createdAt: '', ...base },
+    { id: 4, channelId: 5, title: 'd', likes: 0, createdAt: '', ...base },
+    { id: 5, channelId: 5, title: 'e', likes: 0, createdAt: '', ...base },
+  ];
+  it('按频道聚合数量', () => {
+    expect(countPostsByChannel(posts)).toEqual({ 2: 2, 5: 3 });
+  });
+  it('空列表返回空映射', () => {
+    expect(countPostsByChannel([])).toEqual({});
+  });
+  it('非法 channelId 被忽略', () => {
+    const bad: Post[] = [
+      { id: 1, channelId: NaN as unknown as number, title: 'x', likes: 0, createdAt: '', ...base },
+      { id: 2, channelId: 3, title: 'y', likes: 0, createdAt: '', ...base },
+    ];
+    expect(countPostsByChannel(bad)).toEqual({ 3: 1 });
   });
 });

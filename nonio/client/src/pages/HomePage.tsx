@@ -25,7 +25,7 @@ import { channelApi } from '../api/channels';
 import { postApi } from '../api/posts';
 import type { Channel, Post } from '../types';
 import PostCard from '../components/PostCard';
-import { parseTags, searchPosts, topPosts, summarizePosts, filterPostsByChannel, sortPosts, formatCompactNumber } from '../utils/forum';
+import { parseTags, searchPosts, topPosts, summarizePosts, filterPostsByChannel, countPostsByChannel, sortPosts, formatCompactNumber } from '../utils/forum';
 
 export default function HomePage(): JSX.Element {
   const [channels, setChannels] = useState<Channel[]>([]);
@@ -59,6 +59,7 @@ export default function HomePage(): JSX.Element {
   }, []);
 
   const channelFiltered = useMemo(() => filterPostsByChannel(posts, activeChannel), [posts, activeChannel]);
+  const channelPostCounts = useMemo(() => countPostsByChannel(posts), [posts]);
 
   const filtered = useMemo(() => searchPosts(query, null, channelFiltered), [channelFiltered, query]);
 
@@ -117,7 +118,7 @@ export default function HomePage(): JSX.Element {
           <MenuItem value="">全部频道</MenuItem>
           {channels.map((c) => (
             <MenuItem key={c.id} value={c.id}>
-              {c.name}
+              {c.name}（{channelPostCounts[c.id] ?? 0}）
             </MenuItem>
           ))}
         </Select>
