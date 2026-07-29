@@ -1,7 +1,7 @@
 {
-  "cycle": 232,
+  "cycle": 233,
   "max_cycles": 233,
-  "phase": "polish",
+  "phase": "done",
   "paused": false,
   "log": [
     {
@@ -3068,6 +3068,20 @@
       "verify": "client 45 passed + typecheck pass",
       "score": 76,
       "ts": 1785335483.365
+    },
+    {
+      "cycle": 233,
+      "app": "apiclient",
+      "task_id": "method_color_extract",
+      "new_requirement": "methodColor 从 ApiClientPage 内联函数提取为共享纯函数+测试;请求/历史方法标签统一着色",
+      "files": [
+        "client/src/utils/http.ts",
+        "client/src/utils/http.test.ts",
+        "client/src/pages/ApiClientPage.tsx"
+      ],
+      "verify": "client 89 passed + typecheck pass",
+      "score": 80,
+      "ts": 1785335668.455
     }
   ],
   "last_task_id": "server_security_headers",

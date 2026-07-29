@@ -38,7 +38,7 @@ import { historyApi } from '../api/history';
 import type { HttpMethod, ProxyResponse, SavedRequest, HistoryItem } from '../types';
 import RequestBuilder from '../components/RequestBuilder';
 import ResponseViewer from '../components/ResponseViewer';
-import { parseHeadersText, parseKeyValueText, headersToText as h2t, matchRequest, matchHistory, buildCurlCommand, sortRequests, groupByMethod, buildUrlWithQuery, statusText, statusFamily, type RequestSort } from '../utils/http';
+import { parseHeadersText, parseKeyValueText, headersToText as h2t, matchRequest, matchHistory, buildCurlCommand, sortRequests, groupByMethod, buildUrlWithQuery, statusText, statusFamily, methodColor, type RequestSort } from '../utils/http';
 
 interface Draft {
   method: HttpMethod;
@@ -49,22 +49,6 @@ interface Draft {
 }
 
 const EMPTY: Draft = { method: 'GET', url: '', paramsText: '', headersText: '', body: '' };
-
-function methodColor(m: HttpMethod): 'success' | 'info' | 'warning' | 'error' | 'primary' {
-  switch (m) {
-    case 'GET':
-      return 'success';
-    case 'POST':
-      return 'info';
-    case 'PUT':
-    case 'PATCH':
-      return 'warning';
-    case 'DELETE':
-      return 'error';
-    default:
-      return 'primary';
-  }
-}
 
 export default function ApiClientPage(): JSX.Element {
   const [draft, setDraft] = useState<Draft>(EMPTY);

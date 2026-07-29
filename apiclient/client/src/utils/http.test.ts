@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseHeadersText, headersToText, parseKeyValueText, statusKind, tryPrettyJson, matchRequest, matchHistory, buildCurlCommand, sortRequests, groupByMethod, buildUrlWithQuery, statusText, byteLengthOf, formatBytes, getResponseMediaType, formatResponseBody } from './http';
+import { parseHeadersText, headersToText, parseKeyValueText, statusKind, tryPrettyJson, matchRequest, matchHistory, buildCurlCommand, sortRequests, groupByMethod, buildUrlWithQuery, statusText, byteLengthOf, formatBytes, getResponseMediaType, formatResponseBody, methodColor } from './http';
 
 describe('parseHeadersText', () => {
   it('解析多行 header', () => {
@@ -280,5 +280,26 @@ describe('formatResponseBody', () => {
     const copy = JSON.parse(JSON.stringify(h));
     formatResponseBody('{"a":1}', h);
     expect(h).toEqual(copy);
+  });
+});
+
+describe('methodColor', () => {
+  it('GET → success', () => {
+    expect(methodColor('GET')).toBe('success');
+  });
+  it('POST → info', () => {
+    expect(methodColor('POST')).toBe('info');
+  });
+  it('PUT / PATCH → warning', () => {
+    expect(methodColor('PUT')).toBe('warning');
+    expect(methodColor('PATCH')).toBe('warning');
+  });
+  it('DELETE → error', () => {
+    expect(methodColor('DELETE')).toBe('error');
+  });
+  it('其余方法(HEAD/OPTIONS/未知) → primary', () => {
+    expect(methodColor('HEAD')).toBe('primary');
+    expect(methodColor('OPTIONS')).toBe('primary');
+    expect(methodColor('FOO')).toBe('primary');
   });
 });

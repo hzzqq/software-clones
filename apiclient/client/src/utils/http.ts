@@ -329,3 +329,26 @@ export function formatBytes(bytes: number): string {
   const text = String(parseFloat(rounded.toFixed(2)));
   return `${text} ${units[unit]}`;
 }
+
+/**
+ * HTTP 方法 → MUI Chip 语义色，用于请求/历史列表中方法标签着色（与主流 API 客户端一致）。
+ * GET→success / POST→info / PUT·PATCH→warning / DELETE→error / 其余(HEAD·OPTIONS 等)→primary。
+ * 纯函数，不修改入参。从 ApiClientPage 内联三元提取为共享工具以便复用与测试。
+ */
+export function methodColor(
+  method: string,
+): 'success' | 'info' | 'warning' | 'error' | 'primary' {
+  switch (method) {
+    case 'GET':
+      return 'success';
+    case 'POST':
+      return 'info';
+    case 'PUT':
+    case 'PATCH':
+      return 'warning';
+    case 'DELETE':
+      return 'error';
+    default:
+      return 'primary';
+  }
+}
