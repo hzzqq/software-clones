@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { filterCardsByQuery, sortCards, countCardsByPriority, dueSoonCards, overdueCards, filterCardsByPriority, filterCardsByCompleted, formatDueLabel, countCardsByTag } from '../src/utils/filterCards';
+import { filterCardsByQuery, sortCards, countCardsByPriority, dueSoonCards, overdueCards, filterCardsByPriority, filterCardsByCompleted, formatDueLabel, countCardsByTag, priorityColor } from '../src/utils/filterCards';
 import type { Card } from '../src/types';
 
 function mk(id: number, title: string, description = ''): Card {
@@ -248,5 +248,21 @@ describe('dueSoonCards / overdueCards 空串截止日', () => {
   });
   it('已逾期未完成 → 计入逾期', () => {
     expect(overdueCards([base(true)])).toHaveLength(1);
+  });
+});
+
+describe('priorityColor', () => {
+  it('非有限 / 负值 → default', () => {
+    expect(priorityColor(0)).toBe('default');
+    expect(priorityColor(-1)).toBe('default');
+    expect(priorityColor(NaN)).toBe('default');
+  });
+  it('低 / 中优先级 → info / warning', () => {
+    expect(priorityColor(1)).toBe('info');
+    expect(priorityColor(2)).toBe('warning');
+  });
+  it('高优先级 → error', () => {
+    expect(priorityColor(3)).toBe('error');
+    expect(priorityColor(99)).toBe('error');
   });
 });

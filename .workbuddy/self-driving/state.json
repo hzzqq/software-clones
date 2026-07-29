@@ -1,5 +1,5 @@
 {
-  "cycle": 225,
+  "cycle": 226,
   "max_cycles": 233,
   "phase": "polish",
   "paused": false,
@@ -2972,6 +2972,19 @@
       "system_gain": "工具输出/历史可安全展示超长串",
       "score": 66,
       "implicit": "非字符串返回空防崩溃"
+    },
+    {
+      "cycle": 226,
+      "app": "kanban",
+      "task_id": "priority_color",
+      "new_requirement": "priorityColor 纯函数(优先级→MUI语义色)+测试;卡片优先级标签统一着色",
+      "files": [
+        "client/src/utils/filterCards.ts",
+        "client/test/filterCards.test.ts"
+      ],
+      "verify": "client 71 passed + typecheck pass",
+      "score": 80,
+      "ts": 1785334051.813
     }
   ],
   "last_task_id": "server_security_headers",

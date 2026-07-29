@@ -176,3 +176,15 @@ export function countCardsByTag(cards: Card[]): Record<number, number> {
   }
   return map;
 }
+
+/**
+ * 优先级 → MUI Chip 语义色。非有限/负值按 default；数值区间映射为
+ * info(低) / warning(中) / error(高)，供卡片优先级标签统一着色。
+ */
+export type PriorityColor = 'default' | 'info' | 'warning' | 'error';
+export function priorityColor(p: number): PriorityColor {
+  if (!Number.isFinite(p) || p <= 0) return 'default';
+  if (p === 1) return 'info';
+  if (p === 2) return 'warning';
+  return 'error';
+}
