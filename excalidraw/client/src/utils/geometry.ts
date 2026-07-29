@@ -219,3 +219,16 @@ export function dragElement(el: CanvasElement, pointer: Point, offset: Point): C
   const dy = pointer.y - offset.y - el.y;
   return translateElement(el, dx, dy);
 }
+
+/**
+ * 统计场景内各类型元素的数量分布，供图层面板/概览展示「矩形 3 · 椭圆 2」。
+ * 对非有限或缺失 type 的元素归入 'unknown'，保证统计键始终为字符串。
+ */
+export function countElementsByType(els: CanvasElement[]): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const el of els) {
+    const t = typeof el?.type === 'string' && el.type.length > 0 ? el.type : 'unknown';
+    counts[t] = (counts[t] ?? 0) + 1;
+  }
+  return counts;
+}

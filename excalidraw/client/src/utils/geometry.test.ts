@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { normalizeRect, distance, hitTest, elementBounds, uid, serializeScene, snapPoint, boundingBox, getCenter, getSelectionBox, translateElement, dragElement, clampStrokeWidth } from './geometry';
+import { normalizeRect, distance, hitTest, elementBounds, uid, serializeScene, snapPoint, boundingBox, getCenter, getSelectionBox, translateElement, dragElement, clampStrokeWidth, countElementsByType } from './geometry';
 import type { CanvasElement } from '../types';
 
 describe('normalizeRect', () => {
@@ -197,5 +197,18 @@ describe('clampStrokeWidth', () => {
     expect(clampStrokeWidth(0.5, 1, 10, 3)).toBe(1);
     expect(clampStrokeWidth(20, 1, 10, 3)).toBe(10);
     expect(clampStrokeWidth(NaN, 1, 10, 5)).toBe(5);
+  });
+});
+
+describe('countElementsByType', () => {
+  const mk = (type: string) => ({ type } as CanvasElement);
+  it('counts elements by type', () => {
+    expect(countElementsByType([mk('rect'), mk('rect'), mk('ellipse')])).toEqual({ rect: 2, ellipse: 1 });
+  });
+  it('groups missing/empty type as unknown', () => {
+    expect(countElementsByType([{ } as CanvasElement, mk('')])).toEqual({ unknown: 2 });
+  });
+  it('returns empty for empty input', () => {
+    expect(countElementsByType([])).toEqual({});
   });
 });
