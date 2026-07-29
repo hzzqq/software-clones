@@ -69,6 +69,22 @@ export function estimateReading(content: string): number {
 }
 
 /**
+ * CJK 感知的词数统计（与 countChars 互补）：中日韩字符按字符计，
+ * 其余按空白分词，避免中文被算成「1 个词」。空内容返回 0。
+ * 纯函数，不修改入参。用于笔记卡片/汇总中展示「词」维度。
+ */
+export function countWords(content: string): number {
+  if (typeof content !== 'string' || content.trim() === '') return 0;
+  const cjk = (content.match(/[㐀-䶿一-鿿぀-ヿ가-힯]/g) ?? []).length;
+  const nonCjk = content
+    .replace(/[㐀-䶿一-鿿぀-ヿ가-힯]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  const words = nonCjk ? nonCjk.split(' ').length : 0;
+  return cjk + words;
+}
+
+/**
  * 按标签聚合笔记数量（标签小写去重），返回 标签 -> 数量 的映射。
  * 笔记若没有标签则不计入；同一标签出现在多篇笔记则累加。
  */
