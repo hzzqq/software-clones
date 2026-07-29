@@ -35,9 +35,13 @@ export function elementBounds(el: CanvasElement) {
   return { minX: n.x, minY: n.y, maxX: n.x + n.w, maxY: n.y + n.h, w: n.w, h: n.h };
 }
 
-/** 命中测试：点是否落在元素内（用于 select 工具）。 */
+/**
+ * 命中测试：点是否落在元素内（用于 select 工具）。
+ * 矩形/文字走包围盒（AABB）；钢笔、箭头走「到线段距离 <= pad」的精确判定；
+ * 椭圆走椭圆方程（含 pad 膨胀），避免点中椭圆四角或对角线箭头远端的空白区却误选
+ * （此前箭头/椭圆共用 AABB，点击包围盒内任意位置都会命中，是隐性选择 bug）。
+ */
 export function hitTest(el: CanvasElement, pt: Point): boolean {
-  const b = elementBounds(el);
   const pad = 6;
   if (el.type === 'pen') {
     // 任意线段距离 < pad 即命中
@@ -47,6 +51,22 @@ export function hitTest(el: CanvasElement, pt: Point): boolean {
     }
     return false;
   }
+  if (el.type === 'arrow') {
+    // 箭头的几何形状是线段，用「到线段距离」判定，而非其矩形包围盒
+    return distanceToSegment(pt, { x: el.x, y: el.y }, { x: el.x + el.w, y: el.y + el.h }) <= pad;
+  }
+  if (el.type === 'ellipse') {
+    const b = elementBounds(el);
+    const rx = b.w / 2 + pad;
+    const ry = b.h / 2 + pad;
+    if (rx <= 0 || ry <= 0) return false;
+    const cx = (b.minX + b.maxX) / 2;
+    const cy = (b.minY + b.maxY) / 2;
+    const nx = (pt.x - cx) / rx;
+    const ny = (pt.y - cy) / ry;
+    return nx * nx + ny * ny <= 1;
+  }
+  const b = elementBounds(el);
   return pt.x >= b.minX - pad && pt.x <= b.maxX + pad && pt.y >= b.minY - pad && pt.y <= b.maxY + pad;
 }
 

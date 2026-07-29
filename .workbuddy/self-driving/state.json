@@ -1,5 +1,5 @@
 {
-  "cycle": 219,
+  "cycle": 221,
   "max_cycles": 233,
   "phase": "polish",
   "paused": false,
@@ -2890,11 +2890,57 @@
       "verify": "consistency 0错 + 规则单测 89/89(含 apiClientGuardsNetworkError 3 例)",
       "score": 85,
       "ts": "2026-07-29T02:04:40+0800"
+    },
+    {
+      "cycle": 220,
+      "app": "tooling+12apps",
+      "task_id": "api_client_request_timeout",
+      "new_requirement": "所有 API 客户端对请求设置超时(AbortController, 30s)，避免后端挂起导致 UI 永久转圈",
+      "implicit_fix": "此前 fetch 仅兜底断网(CORS/宕机)的裸 TypeError，未处理「已连接但后端无响应」的悬挂请求；新增调用方 signal 联动与中断独立错误码 50002(区别于 50001 断网)，并加一致性规则 api-timeout-guard 锁为不变量防回归",
+      "files": [
+        "shared/frontend-template/src/api/client.ts",
+        "apiclient/client/src/api/client.ts",
+        "excalidraw/client/src/api/client.ts",
+        "glance/client/src/api/client.ts",
+        "it-tools/client/src/api/client.ts",
+        "kanban/client/src/api/client.ts",
+        "kener/client/src/api/client.ts",
+        "lofi/client/src/api/client.ts",
+        "markdown/client/src/api/client.ts",
+        "memos/client/src/api/client.ts",
+        "nonio/client/src/api/client.ts",
+        "photopea/client/src/api/client.ts",
+        "tvtime/client/src/api/client.ts",
+        "scripts/consistency-rules.mjs",
+        "scripts/check-consistency.mjs",
+        "scripts/check-consistency.test.mjs",
+        "apiclient/client/src/api/client.test.ts"
+      ],
+      "verify": "consistency 0错；规则单测 94/94(含 apiClientHasTimeout 3 例)；apiclient client 84 passed + tsc --noEmit 通过；glance/nonio tsc 通过",
+      "score": 86,
+      "ts": "2026-07-29T12:01:00+0800"
+    },
+    {
+      "cycle": 221,
+      "app": "tooling+12servers",
+      "task_id": "server_security_headers",
+      "new_requirement": "12 个 server 统一设置基础安全响应头(X-Content-Type-Options/X-Frame-Options/Referrer-Policy)，防御 MIME 嗅探 XSS 与点击劫持",
+      "implicit_fix": "此前 12 个 server 虽已有 errorHandler/notFound/body-limit，但均未设置任何安全响应头；新增 securityHeaders 中间件并注册，且加一致性规则 server-security-headers(文件存在+已注册双校验)锁死",
+      "files": [
+        "12x server/src/middleware/securityHeaders.ts",
+        "12x server/src/app.ts",
+        "scripts/consistency-rules.mjs",
+        "scripts/check-consistency.mjs",
+        "scripts/check-consistency.test.mjs"
+      ],
+      "verify": "consistency 0错；规则单测 97/97(含 serverSecurityHeaders 3 例)；10/12 server tsc --noEmit 通过(it-tools/kener 因沙箱缺 @types/node 预存失败，与本改动无关，中间件文件与其余 10 个一致已验证可编译)",
+      "score": 82,
+      "ts": "2026-07-29T12:05:00+0800"
     }
   ],
-  "last_task_id": "api_client_network_guard",
+  "last_task_id": "server_security_headers",
   "repeat_count": 0,
-  "last_score": 85,
+  "last_score": 82,
   "coverage": {
     "B1": {
       "it-tools": "optimized",

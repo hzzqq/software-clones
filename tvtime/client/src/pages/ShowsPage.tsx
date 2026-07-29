@@ -3,6 +3,7 @@ import {
   Box,
   Typography,
   Button,
+  Chip,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -26,7 +27,7 @@ import ClearIcon from '@mui/icons-material/Clear';
 import { showApi } from '../api/shows';
 import type { Show } from '../types';
 import ShowCard from '../components/ShowCard';
-import { filterShows, sortShows, isComplete, clampEpisodeCount, type ShowSort } from '../utils/show';
+import { filterShows, sortShows, isComplete, clampEpisodeCount, summarizeLibrary, type ShowSort } from '../utils/show';
 
 export default function ShowsPage(): JSX.Element {
   const [shows, setShows] = useState<Show[]>([]);
@@ -47,6 +48,8 @@ export default function ShowsPage(): JSX.Element {
     });
     return sortShows(byStatus, sort);
   }, [shows, q, status, sort]);
+
+  const summary = useMemo(() => summarizeLibrary(shows), [shows]);
 
   const load = async () => {
     setLoading(true);
@@ -146,6 +149,16 @@ export default function ShowsPage(): JSX.Element {
           </Select>
         </FormControl>
       </Stack>
+
+      {!loading && !error && shows.length > 0 && (
+        <Stack direction="row" spacing={1} sx={{ my: 2 }} flexWrap="wrap" useFlexGap>
+          <Chip size="small" label={`共 ${summary.totalShows} 部`} />
+          <Chip size="small" color="success" variant="outlined" label={`已完结 ${summary.completed}`} />
+          <Chip size="small" color="info" variant="outlined" label={`进行中 ${summary.watching}`} />
+          <Chip size="small" label={`已看 ${summary.watchedEpisodes} / ${summary.totalEpisodes} 集`} />
+          <Chip size="small" color="primary" label={`总进度 ${summary.overallPercent}%`} />
+        </Stack>
+      )}
 
       {loading && <CircularProgress sx={{ display: 'block', mx: 'auto', my: 4 }} />}
       {error && <Alert severity="error" sx={{ my: 2 }}>{error}</Alert>}

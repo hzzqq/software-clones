@@ -316,6 +316,79 @@ function parseCsvLine(line: string, delimiter: string): string[] {
 }
 
 // ---------------------------------------------------------------------------
+// HTML entities (safe, DOM-free)
+// ---------------------------------------------------------------------------
+const HTML_ENTITY_MAP: Record<string, string> = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&#39;',
+};
+
+/**
+ * 将文本编码为 HTML 实体。
+ * - 5 个结构性字符（& < > " '）转为命名/数字实体；
+ * - 其余非 ASCII 字符转为数字实体（&#NNN;），使输出为纯 ASCII、可安全嵌入 HTML。
+ * 纯函数，不依赖 DOM，可单测。
+ */
+export function encodeHtmlEntities(text: string): string {
+  return String(text)
+    .replace(/[&<>"']/g, (c) => HTML_ENTITY_MAP[c] ?? c)
+    .replace(/[^\x00-\x7F]/g, (c) => `&#${c.charCodeAt(0)};`);
+}
+
+// 常用命名实体子集（覆盖绝大多数真实场景；`&amp;` 等由命名分支命中）。
+const NAMED_HTML_ENTITIES: Record<string, string> = {
+  '&amp;': '&',
+  '&lt;': '<',
+  '&gt;': '>',
+  '&quot;': '"',
+  '&apos;': "'",
+  '&nbsp;': ' ',
+  '&copy;': '©',
+  '&reg;': '®',
+  '&trade;': '™',
+  '&deg;': '°',
+  '&euro;': '€',
+  '&pound;': '£',
+  '&cent;': '¢',
+  '&hellip;': '…',
+  '&mdash;': '—',
+  '&ndash;': '–',
+  '&laquo;': '«',
+  '&raquo;': '»',
+  '&plusmn;': '±',
+  '&times;': '×',
+  '&divide;': '÷',
+  '&sect;': '§',
+  '&para;': '¶',
+};
+
+/**
+ * 将 HTML 实体解码为文本（命名实体子集 + 数字实体）。
+ * 完全基于纯字符串替换实现，**不使用 innerHTML / DOM**，从根本上规避
+ * `dangerouslySetInnerHTML` 类的 XSS 面（输入中的 <script>/<img onerror> 等不会被执行或注入）。
+ * 无法识别的实体原样保留。纯函数，可单测。
+ */
+export function decodeHtmlEntities(text: string): string {
+  return String(text).replace(/&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g, (m, body: string) => {
+    if (body[0] === '#') {
+      const code: number = body[1] === 'x' || body[1] === 'X'
+        ? parseInt(body.slice(2), 16)
+        : parseInt(body.slice(1), 10);
+      if (Number.isFinite(code) && code >= 0) {
+        return String.fromCharCode(code);
+      }
+    } else {
+      const hit: string | undefined = NAMED_HTML_ENTITIES[m.toLowerCase()];
+      if (hit !== undefined) return hit;
+    }
+    return m;
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Slug
 // ---------------------------------------------------------------------------
 /**

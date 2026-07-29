@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import { securityHeaders } from './middleware/securityHeaders';
 import { CORS_ORIGIN } from './config';
 import { errorHandler } from './middleware/errorHandler';
 import { notFound } from './middleware/notFound';
@@ -14,6 +15,7 @@ import scenesRouter from './routes/scenes';
 export const app = express();
 
 app.use(cors({ origin: CORS_ORIGIN }));
+app.use(securityHeaders);
 app.use(express.json({ limit: '8mb' }));
 
 // Mount API routes under the shared `/api` prefix.

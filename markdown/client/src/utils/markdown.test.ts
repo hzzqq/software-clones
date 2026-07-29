@@ -9,6 +9,17 @@ describe('parseTags', () => {
   it('空文本返回空', () => {
     expect(parseTags('no tags here')).toEqual([]);
   });
+  it('跳过围栏代码块内的 #（避免误把 shell 注释当标签）', () => {
+    const md = '```sh\n# 安装依赖\nnpm install\n```\n#真实标签';
+    expect(parseTags(md)).toEqual(['真实标签']);
+  });
+  it('跳过行内代码中的 #', () => {
+    expect(parseTags('正文 `#假标签` 与 #真标签')).toEqual(['真标签']);
+  });
+  it('代码块内的 # 不污染标签且不影响块外标签', () => {
+    const md = '#标题一\n```\n# 注释\n```\n#标签二 #标签一';
+    expect(parseTags(md)).toEqual(['标题一', '标签二', '标签一']);
+  });
 });
 
 describe('countWords', () => {

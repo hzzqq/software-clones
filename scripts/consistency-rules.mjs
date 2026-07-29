@@ -644,6 +644,60 @@ export function apiClientGuardsNetworkError(
 }
 
 /**
+ * 校验某 App 的 API 客户端是否对请求设置了超时（AbortController + 超时中断），
+ * 避免「后端已连接但挂起 / 极慢」时 UI 永久转圈、用户无反馈。
+ * 同时要求对中断（超时 / 调用方取消）给出独立错误码 50002，便于 UI 区分「超时」与「断网」。
+ * @returns {string[]} 问题列表（空数组表示达标）
+ */
+export function apiClientHasTimeout(
+  root,
+  app,
+  clientRel = join('client', 'src', 'api', 'client.ts')
+) {
+  const p = join(root, app, clientRel);
+  if (!existsSync(p)) return [`缺少 ${clientRel}（无法校验请求超时兜底）`];
+  let text = '';
+  try {
+    text = readFileSync(p, 'utf8');
+  } catch {
+    return [`${clientRel} 无法读取`];
+  }
+  const problems = [];
+  if (!/AbortController/.test(text)) {
+    problems.push(
+      `${clientRel} 未对请求设置超时（应基于 AbortController 在超时后中断 fetch）`
+    );
+  }
+  if (!/50002/.test(text)) {
+    problems.push(`${clientRel} 未对中断（超时 / 取消）给出独立错误码 50002`);
+  }
+  return problems;
+}
+
+/**
+ * 校验某 App 的 server 是否设置了基础安全响应头（X-Content-Type-Options / X-Frame-Options 等），
+ * 防止 MIME 嗅探 XSS 与被 iframe 嵌套的点击劫持。采用「中间件文件存在且被注册」双校验。
+ * @returns {string[]} 问题列表（空数组表示达标）
+ */
+export function serverSecurityHeaders(root, app) {
+  const mwPath = join(root, app, 'server', 'src', 'middleware', 'securityHeaders.ts');
+  const appPath = join(root, app, 'server', 'src', 'app.ts');
+  if (!existsSync(mwPath)) {
+    return [`server/src/middleware/securityHeaders.ts 缺失（未设置基础安全响应头）`];
+  }
+  let appText = '';
+  try {
+    appText = readFileSync(appPath, 'utf8');
+  } catch {
+    return [`server/src/app.ts 无法读取`];
+  }
+  if (!/securityHeaders/.test(appText)) {
+    return [`server/src/app.ts 未注册 securityHeaders 中间件`];
+  }
+  return [];
+}
+
+/**
  * 校验某 App 是否在入口 main.tsx 注册了全局异步错误兜底。
  * React ErrorBoundary 仅能捕获「渲染 / 生命周期」期错误，无法捕获事件回调或异步
  * (fetch / setTimeout) 中未处理的 Promise 拒绝——这类错误会静默逃逸、表现为白屏或 UI 冻结。

@@ -18,6 +18,8 @@ import {
   parseJson,
   compactNumber,
   slugify,
+  encodeHtmlEntities,
+  decodeHtmlEntities,
 } from './tools';
 
 describe('base64', () => {
@@ -159,6 +161,40 @@ describe('compactNumber', () => {
   it('非有限值回退 0', () => {
     expect(compactNumber(NaN)).toBe('0');
     expect(compactNumber(Infinity)).toBe('0');
+  });
+});
+
+describe('html entities', () => {
+  it('encodeHtmlEntities 转义结构字符并 ASCII 化非 ASCII', () => {
+    expect(encodeHtmlEntities('<div>"A" & B\'s</div>')).toBe('&lt;div&gt;&quot;A&quot; &amp; B&#39;s&lt;/div&gt;');
+    expect(encodeHtmlEntities('©')).toBe('&#169;');
+    expect(encodeHtmlEntities('café')).toBe('caf&#233;');
+    expect(encodeHtmlEntities('')).toBe('');
+  });
+
+  it('decodeHtmlEntities 还原命名与数字实体', () => {
+    expect(decodeHtmlEntities('&lt;div&gt;&amp; &quot;x&quot;&#39;s')).toBe('<div>& "x\'s');
+    expect(decodeHtmlEntities('&#169;')).toBe('©');
+    expect(decodeHtmlEntities('&#x00A9;')).toBe('©');
+    expect(decodeHtmlEntities('&copy;')).toBe('©');
+    expect(decodeHtmlEntities('&AMP;')).toBe('&');
+  });
+
+  it('decodeHtmlEntities 对未知实体原样保留', () => {
+    expect(decodeHtmlEntities('&zzz;')).toBe('&zzz;');
+  });
+
+  it('encode/decode 往返一致', () => {
+    const original = 'a&b<c>"d"\'é ©';
+    expect(decodeHtmlEntities(encodeHtmlEntities(original))).toBe(original);
+  });
+
+  it('解码不触发脚本/事件处理器执行（无 innerHTML 依赖）', () => {
+    const malicious = '<img src=x onerror=alert(1)>&lt;script&gt;x&lt;/script&gt;';
+    const out = decodeHtmlEntities(malicious);
+    expect(out).toContain('<img');
+    expect(out).not.toContain('alert(1)');
+    expect(out).toContain('<script>');
   });
 });
 

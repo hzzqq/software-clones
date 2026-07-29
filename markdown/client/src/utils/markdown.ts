@@ -4,16 +4,32 @@
  */
 import type { Note } from '../types';
 
-/** 从文本提取 #标签。 */
+/**
+ * 从文本提取 #标签。
+ * 跳过围栏代码块（```...```）与行内代码（`...`）内的 #，
+ * 避免把 shell 注释（如 `# 安装依赖`）、代码片段或行内代码中的 # 误判为标签。
+ * 纯函数，不修改入参。
+ */
 export function parseTags(text: string): string[] {
-  const matches = text.match(/#([\p{L}\p{N}_-]+)/gu) ?? [];
+  const lines = text.split('\n');
   const seen = new Set<string>();
   const out: string[] = [];
-  for (const m of matches) {
-    const tag = m.slice(1).toLowerCase();
-    if (tag && !seen.has(tag)) {
-      seen.add(tag);
-      out.push(tag);
+  let inFence = false;
+  for (const line of lines) {
+    if (/^\s*```/.test(line)) {
+      inFence = !inFence;
+      continue;
+    }
+    if (inFence) continue;
+    // 行内代码（如 `#fake`）中的 # 不作为标签，先剥离再扫描。
+    const withoutInlineCode = line.replace(/`[^`]*`/g, ' ');
+    const matches = withoutInlineCode.match(/#([\p{L}\p{N}_-]+)/gu) ?? [];
+    for (const m of matches) {
+      const tag = m.slice(1).toLowerCase();
+      if (tag && !seen.has(tag)) {
+        seen.add(tag);
+        out.push(tag);
+      }
     }
   }
   return out;

@@ -141,6 +141,43 @@ export function episodesByStatus(episodes: Episode[]): EpisodeStatusCount {
   return { watched, unwatched: episodes.length - watched, total: episodes.length };
 }
 
+/** 整个片库的聚合观看统计，不修改入参。 */
+export interface LibrarySummary {
+  totalShows: number;
+  watching: number;
+  completed: number;
+  totalEpisodes: number;
+  watchedEpisodes: number;
+  /** 整体完成度百分比（0-100，越界会被夹回）。 */
+  overallPercent: number;
+}
+
+/**
+ * 聚合整个片库的观看统计：剧集总数、进行中 / 已完结数量、累计集数与已看集数、
+ * 以及整体完成度百分比。所有计数按非负处理，整体百分比交由 progressPercent 夹回，
+ * 因此即使服务端返回了负的 watchedCount / totalEpisodes 也不会产生 NaN 或负占比。
+ */
+export function summarizeLibrary(shows: Show[]): LibrarySummary {
+  let totalEpisodes = 0;
+  let watchedEpisodes = 0;
+  let completed = 0;
+  let watching = 0;
+  for (const s of shows) {
+    totalEpisodes += Math.max(0, s.totalEpisodes);
+    watchedEpisodes += Math.max(0, s.watchedCount);
+    if (isComplete(s.watchedCount, s.totalEpisodes)) completed += 1;
+    else watching += 1;
+  }
+  return {
+    totalShows: shows.length,
+    watching,
+    completed,
+    totalEpisodes,
+    watchedEpisodes,
+    overallPercent: progressPercent(watchedEpisodes, totalEpisodes),
+  };
+}
+
 /**
  * 返回最近一次观看的剧集时间（ISO 字符串），未看任何剧集则返回 null。
  * 仅统计已看且 watchedAt 可解析为有限时间的剧集，忽略 null / 非法值，

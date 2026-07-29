@@ -19,6 +19,8 @@ export class ApiError extends Error {
 const BASE_URL: string =
   import.meta.env.VITE_API_BASE ?? 'http://localhost:4101/api';
 
+const DEFAULT_TIMEOUT_MS = 30000;
+
 type RequestOptions = Omit<RequestInit, 'body'> & {
   body?: unknown;
 };
@@ -34,16 +36,34 @@ async function request<T>(
     ...(options?.headers as Record<string, string> | undefined),
   };
 
+  // 请求超时防护：避免「已连接但后端挂起 / 极慢」导致 UI 永久转圈、用户无反馈。
+  // 内部 AbortController 在 DEFAULT_TIMEOUT_MS 后主动中断 fetch；
+  // 若调用方已传入 signal，则与其联动（任一方 abort 都会触发中断）。
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS);
+  const onCallerAbort = () => controller.abort();
+  if (options?.signal) {
+    if (options.signal.aborted) controller.abort();
+    else options.signal.addEventListener('abort', onCallerAbort);
+  }
+
   let response: Response;
   try {
     response = await fetch(url, {
       method,
       headers,
       body: options?.body !== undefined ? JSON.stringify(options.body) : undefined,
+      signal: controller.signal,
     });
-  } catch {
-    // 网络层失败（断网 / CORS / 服务宕机）：转结构化为 ApiError，避免裸 TypeError 逃逸为未处理拒绝导致白屏。
+  } catch (err) {
+    // 中断（超时 / 调用方取消）→ 50002；其余网络层失败（断网 / CORS / 服务宕机）→ 50001。
+    if (err instanceof DOMException && err.name === 'AbortError') {
+      throw new ApiError(50002, '请求超时，请稍后重试', 0);
+    }
     throw new ApiError(50001, '网络请求失败，请检查网络连接后重试', 0);
+  } finally {
+    clearTimeout(timer);
+    if (options?.signal) options.signal.removeEventListener('abort', onCallerAbort);
   }
 
   if (response.status === 401 || response.status === 403) {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseTags, slugify, buildCommentTree, countComments, searchPosts, excerpt, topPosts, summarizePosts, filterPostsByChannel, formatRelativeTime, formatDateTime, sortPosts, parseIdParam, formatCompactNumber } from './forum';
+import { parseTags, slugify, buildCommentTree, countComments, searchPosts, excerpt, topPosts, summarizePosts, filterPostsByChannel, formatRelativeTime, formatDateTime, sortPosts, parseIdParam, formatCompactNumber, stripMarkdown } from './forum';
 import type { Comment, Post } from '../types';
 
 function mkComment(id: number, parentId: number | null): Comment {
@@ -118,6 +118,30 @@ describe('excerpt', () => {
   });
   it('空串返回空串', () => {
     expect(excerpt('')).toBe('');
+  });
+});
+
+describe('stripMarkdown', () => {
+  it('去除代码块/行内代码/图片/链接/标题/加粗/斜体/引用/列表并折叠空白', () => {
+    const md = '# 标题\n\n这是 **加粗** 和 `代码` 与 [链接](http://x.com) 以及 ![图](a.png)。\n\n> 引用一行\n\n- 列表项';
+    // 紧凑模式：图片整体删除（含 alt），与 excerpt 历史行为一致
+    expect(stripMarkdown(md)).toBe('标题 这是 加粗 和 代码 与 链接 以及 。 引用一行 列表项');
+  });
+  it('keepSpacing=false 时行内标记内联（与 excerpt 一致）', () => {
+    expect(stripMarkdown('看 `code` 与 [文字](http://x.com)')).toBe('看 code 与 文字');
+  });
+  it('keepSpacing=true 时在标记两侧保留空格，便于分词', () => {
+    expect(stripMarkdown('看 `code` 与 [文字](http://x.com)', { keepSpacing: true })).toBe('看 code 与 文字');
+  });
+  it('图片在紧凑模式下直接删除，在分词模式下留空格', () => {
+    expect(stripMarkdown('前缀![图](a.png)后缀')).toBe('前缀后缀');
+    expect(stripMarkdown('前缀![图](a.png)后缀', { keepSpacing: true })).toBe('前缀 后缀');
+  });
+  it('多行与多余空白折叠为单个空格', () => {
+    expect(stripMarkdown('a\n\n\n   b    c')).toBe('a b c');
+  });
+  it('空串返回空串', () => {
+    expect(stripMarkdown('')).toBe('');
   });
 });
 

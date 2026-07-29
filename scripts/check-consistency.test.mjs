@@ -13,7 +13,7 @@ import { join, resolve, dirname } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { findE2ESpecs, isAppDir, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, findClientTestFiles, missingEnvKeys, findAllMarkdownFiles, parseApps, findDuplicatePorts, findDuplicateNames, findDuplicateDirs, checkBuildConfig, missingSharedTemplateFiles, missingAppDirs, findUnregisteredApps, invalidEnvValues, hasClientIndexHtml, hasServerEntry, errorBoundaryWired, hasAppReadme, ciRunsUnitTests, hasLicenseFile, gitignoreCoversArtifacts, clientTestUsesVitest, readmeMentionsVerify, appReadmeMentionsRun, hasGitHook, hasNvmrc, apiClientGuardsNetworkError, globalErrorHandlerWired } from './consistency-rules.mjs';
+import { findE2ESpecs, isAppDir, parsePlaywrightApps, parseYamlMatrixApps, findBrokenDocLinks, hasClientTestScript, hasClientTestFile, findClientTestFiles, missingEnvKeys, findAllMarkdownFiles, parseApps, findDuplicatePorts, findDuplicateNames, findDuplicateDirs, checkBuildConfig, missingSharedTemplateFiles, missingAppDirs, findUnregisteredApps, invalidEnvValues, hasClientIndexHtml, hasServerEntry, errorBoundaryWired, hasAppReadme, ciRunsUnitTests, hasLicenseFile, gitignoreCoversArtifacts, clientTestUsesVitest, readmeMentionsVerify, appReadmeMentionsRun, hasGitHook, hasNvmrc, apiClientGuardsNetworkError, apiClientHasTimeout, serverSecurityHeaders, globalErrorHandlerWired } from './consistency-rules.mjs';
 
 const TEST_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -349,6 +349,30 @@ assert('apiClientGuardsNetworkError 已兜底返回 []', apiClientGuardsNetworkE
 // 缺文件：返回缺失问题
 rmSync(netApp, { recursive: true, force: true });
 assert('apiClientGuardsNetworkError 缺 client.ts 返回问题', apiClientGuardsNetworkError(sandbox, 'netapp').length > 0);
+
+// apiClientHasTimeout：API 客户端必须对请求设置超时（AbortController）并对中断给出 50002
+const toApp = join(sandbox, 'toapp');
+mkdirSync(join(toApp, 'client', 'src', 'api'), { recursive: true });
+// 无超时：直接 await fetch(...) 且无 50002
+writeFileSync(join(toApp, 'client', 'src', 'api', 'client.ts'), `export class ApiError extends Error { constructor(c,m,h){super(m);this.code=c;this.httpStatus=h;} }\nasync function request(m,p){ const response = await fetch('x'); return response; }\n`);
+assert('apiClientHasTimeout 无超时返回问题', apiClientHasTimeout(sandbox, 'toapp').length > 0);
+// 有超时：含 AbortController 与 50002
+writeFileSync(join(toApp, 'client', 'src', 'api', 'client.ts'), `export class ApiError extends Error { constructor(c,m,h){super(m);this.code=c;this.httpStatus=h;} }\nconst c = new AbortController();\nthrow new ApiError(50002, '请求超时', 0);\n`);
+assert('apiClientHasTimeout 含超时返回 []', apiClientHasTimeout(sandbox, 'toapp').length === 0);
+// 缺文件：返回缺失问题
+rmSync(toApp, { recursive: true, force: true });
+assert('apiClientHasTimeout 缺 client.ts 返回问题', apiClientHasTimeout(sandbox, 'toapp').length > 0);
+
+// serverSecurityHeaders：server 必须设置基础安全响应头（中间件文件 + 注册）
+const shApp = join(sandbox, 'shapp');
+mkdirSync(join(shApp, 'server', 'src', 'middleware'), { recursive: true });
+mkdirSync(join(shApp, 'server', 'src'), { recursive: true });
+writeFileSync(join(shApp, 'server', 'src', 'app.ts'), `app.use(cors());\n`);
+assert('serverSecurityHeaders 缺中间件文件返回问题', serverSecurityHeaders(sandbox, 'shapp').length > 0);
+writeFileSync(join(shApp, 'server', 'src', 'middleware', 'securityHeaders.ts'), `export const securityHeaders = 1;`);
+assert('serverSecurityHeaders 有文件未注册返回问题', serverSecurityHeaders(sandbox, 'shapp').length > 0);
+writeFileSync(join(shApp, 'server', 'src', 'app.ts'), `import { securityHeaders } from './middleware/securityHeaders';\napp.use(securityHeaders);\n`);
+assert('serverSecurityHeaders 已注册返回 []', serverSecurityHeaders(sandbox, 'shapp').length === 0);
 
 // globalErrorHandlerWired：入口 main.tsx 必须注册全局 unhandledrejection 兜底
 const geApp = join(sandbox, 'geapp', 'client', 'src');

@@ -113,23 +113,43 @@ export function searchPosts(query: string, channelId: number | null, posts: Post
 }
 
 /**
- * 生成帖子正文预览：去除 Markdown 标记（代码块/行内代码/图片/链接/标题/加粗/斜体/
- * 引用/列表符号），折叠多余空白，并截断到 max 个字符（末尾加省略号）。
+ * 去除 Markdown 标记，返回适合展示 / 统计的纯文本。
+ *
+ * 同一套正则被 `excerpt`（正文预览）与 `postReadingTime`（阅读时长估算）复用，
+ * 避免两份近似的清洗逻辑逐步漂移、产生行为不一致。
+ *
+ * - keepSpacing=false（默认）：行内代码 / 链接 / 图片 / 加粗 / 斜体直接内联替换，
+ *   结果更紧凑，用于卡片预览；
+ * - keepSpacing=true：在上述标记两侧保留空格，避免相邻中英文被误判为同一「词」，
+ *   用于阅读时长的分词统计。
+ * 末尾统一折叠多余空白并 trim。纯函数，不修改入参。
  */
-export function excerpt(text: string, max = 180): string {
-  const stripped = text
+export function stripMarkdown(text: string, opts: { keepSpacing?: boolean } = {}): string {
+  const keep = opts.keepSpacing === true;
+  const inline = keep ? ' $1 ' : '$1';
+  const emphasis = keep ? ' $2 ' : '$2';
+  const image = keep ? ' ' : '';
+  return text
     .replace(/```[\s\S]*?```/g, ' ')
-    .replace(/`([^`]+)`/g, '$1')
-    .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
-    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+    .replace(/`([^`]+)`/g, inline)
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, image)
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, inline)
     .replace(/^#{1,6}\s+/gm, '')
-    .replace(/(\*\*|__)(.*?)\1/g, '$2')
-    .replace(/(\*|_)(.*?)\1/g, '$2')
+    .replace(/(\*\*|__)(.*?)\1/g, emphasis)
+    .replace(/(\*|_)(.*?)\1/g, emphasis)
     .replace(/^>\s?/gm, '')
     .replace(/^[-*+]\s+/gm, '')
     .replace(/\n+/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+/**
+ * 生成帖子正文预览：复用 `stripMarkdown` 去除 Markdown 标记，折叠多余空白，
+ * 并截断到 max 个字符（末尾加省略号）。
+ */
+export function excerpt(text: string, max = 180): string {
+  const stripped = stripMarkdown(text);
   if (stripped.length <= max) return stripped;
   return stripped.slice(0, max).trimEnd() + '…';
 }
@@ -170,8 +190,8 @@ export interface PostsSummary {
 
 /**
  * 估算帖子正文阅读时长（分钟）。
- * 先粗略去除 Markdown 标记（代码块/行内代码/图片/链接/标题/加粗/斜体/引用/列表），
- * 再分别统计：
+ * 先复用 `stripMarkdown`（keepSpacing=true）粗略去除 Markdown 标记，保证与
+ * `excerpt` 使用同一套清洗逻辑；再分别统计：
  * - CJK 字符（中日韩统一表意文字及假名等）：按 ~300 字/分钟；
  * - 非 CJK 词语（按空白切分）：按 ~200 词/分钟。
  * 规则：空串返回 0；非空内容至少 1 分钟；结果四舍五入。
@@ -180,18 +200,7 @@ export interface PostsSummary {
 export function postReadingTime(content: string): number {
   if (content == null || content.trim() === '') return 0;
 
-  const text = content
-    .replace(/```[\s\S]*?```/g, ' ')
-    .replace(/`([^`]+)`/g, ' $1 ')
-    .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
-    .replace(/\[([^\]]+)\]\([^)]*\)/g, ' $1 ')
-    .replace(/^#{1,6}\s+/gm, '')
-    .replace(/(\*\*|__)(.*?)\1/g, ' $2 ')
-    .replace(/(\*|_)(.*?)\1/g, ' $2 ')
-    .replace(/^>\s?/gm, '')
-    .replace(/^[-*+]\s+/gm, '')
-    .replace(/\s+/g, ' ')
-    .trim();
+  const text = stripMarkdown(content, { keepSpacing: true });
 
   // CJK 字符数（含中日韩表意文字与日文假名）
   const cjkMatches =

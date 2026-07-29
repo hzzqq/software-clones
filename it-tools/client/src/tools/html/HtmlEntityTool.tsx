@@ -1,14 +1,7 @@
 import { useState } from 'react';
 import { Alert, Button, Paper, Stack, TextField } from '@mui/material';
 import { copyToClipboard } from '../../utils/format';
-
-const MAP: Record<string, string> = {
-  '&': '&amp;',
-  '<': '&lt;',
-  '>': '&gt;',
-  '"': '&quot;',
-  "'": '&#39;',
-};
+import { encodeHtmlEntities, decodeHtmlEntities } from '../../utils/tools';
 
 /** Encodes / decodes HTML entities. */
 export default function HtmlEntityTool(): JSX.Element {
@@ -21,13 +14,9 @@ export default function HtmlEntityTool(): JSX.Element {
     setError('');
     try {
       if (mode === 'encode') {
-        setOutput(
-          input.replace(/[&<>"']/g, (c) => MAP[c] ?? c)
-        );
+        setOutput(encodeHtmlEntities(input));
       } else {
-        const el = document.createElement('textarea');
-        el.innerHTML = input;
-        setOutput(el.value);
+        setOutput(decodeHtmlEntities(input));
       }
     } catch (e) {
       setError('处理失败：' + (e as Error).message);

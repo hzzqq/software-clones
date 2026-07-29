@@ -39,6 +39,35 @@ describe('hitTest', () => {
   });
 });
 
+describe('hitTest (arrow 精确线段判定)', () => {
+  // 对角线箭头从 (0,0) 到 (100,100)
+  const arrow = { id: 'a', type: 'arrow', stroke: '#000', strokeWidth: 2, x: 0, y: 0, w: 100, h: 100 } as CanvasElement;
+  it('命中线段上的点', () => {
+    expect(hitTest(arrow, { x: 50, y: 50 })).toBe(true);
+  });
+  it('命中线段附近的点（在 pad 内）', () => {
+    expect(hitTest(arrow, { x: 50, y: 54 })).toBe(true);
+  });
+  it('包围盒内但远离线段不命中（修复误选 bug）', () => {
+    // (100,0) 在 AABB 内，但距对角线很远
+    expect(hitTest(arrow, { x: 100, y: 0 })).toBe(false);
+  });
+});
+
+describe('hitTest (ellipse 椭圆方程判定)', () => {
+  // 椭圆中心 (50,40)，半径 50×40
+  const ellipse = { id: 'e', type: 'ellipse', stroke: '#000', strokeWidth: 2, x: 0, y: 0, w: 100, h: 80 } as CanvasElement;
+  it('椭圆中心命中', () => {
+    expect(hitTest(ellipse, { x: 50, y: 40 })).toBe(true);
+  });
+  it('椭圆边缘内命中', () => {
+    expect(hitTest(ellipse, { x: 50, y: 10 })).toBe(true);
+  });
+  it('椭圆四角（AABB 内但椭圆外）不命中（修复误选 bug）', () => {
+    expect(hitTest(ellipse, { x: 2, y: 2 })).toBe(false);
+  });
+});
+
 describe('uid', () => {
   it('生成不同 id', () => {
     expect(uid()).not.toBe(uid());

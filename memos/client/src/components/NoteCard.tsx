@@ -15,7 +15,7 @@ import UnarchiveOutlinedIcon from '@mui/icons-material/UnarchiveOutlined';
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { Note } from '../types';
-import { visibilityLabel, formatRelativeTime, countChars, formatCharCount, extractTitle, truncatePreview, highlightSegments } from '../utils/notes';
+import { visibilityLabel, formatRelativeTime, countChars, formatCharCount, estimateReading, extractTitle, truncatePreview, highlightSegments } from '../utils/notes';
 
 interface Props {
   note: Note;
@@ -58,6 +58,7 @@ function renderHighlighted(text: string, query: string): JSX.Element | string {
 export default function NoteCard(props: Props): JSX.Element {
   const { note } = props;
   const [copied, setCopied] = useState(false);
+  const reading = estimateReading(note.content);
 
   const copy = async (): Promise<void> => {
     try {
@@ -77,6 +78,7 @@ export default function NoteCard(props: Props): JSX.Element {
           <Typography variant="caption" color="text.secondary">
             {formatRelativeTime(note.createdAt)}
             {note.pinned ? ' · 📌' : ''} · {formatCharCount(countChars(note.content))} 字
+            {reading > 0 ? ` · 约 ${reading} 分钟` : ''}
           </Typography>
         </Stack>
         {(() => {

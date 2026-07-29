@@ -55,11 +55,18 @@ export function clampPriority(p: number): number {
   return p > max ? max : p;
 }
 
-/** 统计各优先级（数值）下的卡片数量，不修改入参。 */
+/**
+ * 统计各优先级（数值）下的卡片数量，不修改入参。
+ * 与 Card 组件展示时保持一致：先用 clampPriority 把越界 / NaN 的优先级
+ * 回落到合法区间（0），避免 Toolbar 渲染出 "P5: 1" / "PNaN: 1" 之类的
+ * 脏数据标签（此前 dueDate 的同类问题由 safeDueTime 防御，priority 由
+ * clampPriority 防御展示，这里补齐统计路径）。
+ */
 export function countCardsByPriority(cards: Card[]): Record<number, number> {
   const map: Record<number, number> = {};
   for (const c of cards) {
-    map[c.priority] = (map[c.priority] ?? 0) + 1;
+    const p = clampPriority(c.priority);
+    map[p] = (map[p] ?? 0) + 1;
   }
   return map;
 }

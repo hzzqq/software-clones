@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { progressPercent, nextUnwatched, nextEpisode, isComplete, filterShows, sortShows, episodesLeft, remainingWatchTime, formatWatchTime, filterEpisodesByWatched, episodesByStatus, formatProgress, clampEpisodeCount, nextEpisodeLabel, lastWatchedAt } from './show';
+import { progressPercent, nextUnwatched, nextEpisode, isComplete, filterShows, sortShows, episodesLeft, remainingWatchTime, formatWatchTime, filterEpisodesByWatched, episodesByStatus, formatProgress, clampEpisodeCount, nextEpisodeLabel, lastWatchedAt, summarizeLibrary } from './show';
 import type { Episode, Show } from '../types';
 
 function mkShow(id: number, title: string, watchedCount: number, totalEpisodes: number, updatedAt: string): Show {
@@ -210,6 +210,53 @@ describe('clampEpisodeCount', () => {
   it('支持自定义 fallback 与取整', () => {
     expect(clampEpisodeCount(3.9, 4)).toBe(3);
     expect(clampEpisodeCount(-1, 4)).toBe(4);
+  });
+});
+
+describe('summarizeLibrary', () => {
+  it('聚合片库统计：总数 / 进行中 / 已完结 / 累计集数', () => {
+    const shows = [
+      mkShow(1, 'A', 5, 10, '2026-01-01'),
+      mkShow(2, 'B', 10, 10, '2026-01-01'),
+      mkShow(3, 'C', 0, 8, '2026-01-01'),
+    ];
+    expect(summarizeLibrary(shows)).toEqual({
+      totalShows: 3,
+      watching: 2,
+      completed: 1,
+      totalEpisodes: 28,
+      watchedEpisodes: 15,
+      overallPercent: Math.round((15 / 28) * 100),
+    });
+  });
+  it('整体百分比由 progressPercent 夹回（不会越界）', () => {
+    const shows = [mkShow(1, 'X', 12, 10, '2026-01-01')];
+    expect(summarizeLibrary(shows).overallPercent).toBe(100);
+  });
+  it('负数 watchedCount / totalEpisodes 按非负处理，不产生 NaN', () => {
+    const shows = [
+      { id: 1, title: 'X', note: '', totalEpisodes: -5, watchedCount: -3, createdAt: '', updatedAt: '' },
+    ];
+    const s = summarizeLibrary(shows);
+    expect(s.totalEpisodes).toBe(0);
+    expect(s.watchedEpisodes).toBe(0);
+    expect(s.overallPercent).toBe(0);
+    expect(Number.isNaN(s.overallPercent)).toBe(false);
+  });
+  it('空片库返回全零', () => {
+    expect(summarizeLibrary([])).toEqual({
+      totalShows: 0,
+      watching: 0,
+      completed: 0,
+      totalEpisodes: 0,
+      watchedEpisodes: 0,
+      overallPercent: 0,
+    });
+  });
+  it('不修改入参', () => {
+    const shows = [mkShow(1, 'A', 5, 10, '2026-01-01')];
+    summarizeLibrary(shows);
+    expect(shows[0].watchedCount).toBe(5);
   });
 });
 

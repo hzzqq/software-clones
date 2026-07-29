@@ -44,7 +44,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CallMergeIcon from '@mui/icons-material/CallMerge';
 import { uid, applyFilter, getFilterLabel, formatPercent, clampOpacity, clampNumber, formatBytes, blendOver } from '../utils/image';
 import { formatRelativeTime } from '../utils/time';
-import { duplicateLayerName } from '../utils/layers';
+import { duplicateLayerName, applyLayerMeta } from '../utils/layers';
 import { designApi } from '../api/designs';
 import type { Layer, Tool, FilterKind, Design } from '../types';
 
@@ -62,6 +62,15 @@ interface Draft {
   strokeWidth: number;
 }
 type Drawing = Draft | { kind: 'pen' } | null;
+
+/** 撤销 / 重做快照：保存每层像素(dataURL)与元数据，确保还原时名称/不透明度/可见性不丢失。 */
+interface LayerSnap {
+  data: string;
+  name: string;
+  opacity: number;
+  visible: boolean;
+}
+type Snapshot = { count: number; layers: LayerSnap[] };
 
 function ctxOf(layer: Layer): CanvasRenderingContext2D {
   const ctx = layer.canvas.getContext('2d');
@@ -109,8 +118,8 @@ export default function CanvasEditor(): JSX.Element {
   const selectedIdRef = useRef<string>('');
   const drawingRef = useRef<Drawing>(null);
   const penRef = useRef<{ x: number; y: number } | null>(null);
-  const undoStack = useRef<{ count: number; data: string[] }[]>([]);
-  const redoStack = useRef<{ count: number; data: string[] }[]>([]);
+  const undoStack = useRef<Snapshot[]>([]);
+  const redoStack = useRef<Snapshot[]>([]);
   const fileRef = useRef<HTMLInputElement | null>(null);
   const [filterAnchor, setFilterAnchor] = useState<null | HTMLElement>(null);
 
@@ -162,9 +171,14 @@ export default function CanvasEditor(): JSX.Element {
   }, []);
 
   const pushUndo = useCallback((): void => {
-    const snapshot = {
+    const snapshot: Snapshot = {
       count: layersRef.current.length,
-      data: layersRef.current.map((l) => l.canvas.toDataURL()),
+      layers: layersRef.current.map((l) => ({
+        data: l.canvas.toDataURL(),
+        name: l.name,
+        opacity: l.opacity,
+        visible: l.visible,
+      })),
     };
     undoStack.current.push(snapshot);
     if (undoStack.current.length > 30) undoStack.current.shift();
@@ -172,17 +186,21 @@ export default function CanvasEditor(): JSX.Element {
   }, []);
 
   const restore = useCallback(
-    (snap: { count: number; data: string[] }): void => {
+    (snap: Snapshot): void => {
       const layers = layersRef.current;
       while (layers.length < snap.count) layers.push(makeLayer(layers.length + 1));
       while (layers.length > snap.count) layers.pop();
-      Promise.all(layers.map((l, i) => loadDataUrl(l.canvas, snap.data[i]))).then(() => {
-        if (!layers.find((l) => l.id === selectedIdRef.current) && layers.length) {
-          selectLayer(layers[layers.length - 1].id);
+      // 还原每层的名称 / 不透明度 / 可见性，避免撤销删除 / 新增图层后元数据被重置为默认。
+      applyLayerMeta(layers, snap.layers);
+      Promise.all(layers.map((l, i) => loadDataUrl(l.canvas, snap.layers[i]?.data ?? ''))).then(
+        () => {
+          if (!layers.find((l) => l.id === selectedIdRef.current) && layers.length) {
+            selectLayer(layers[layers.length - 1].id);
+          }
+          composite();
+          setVersion((v) => v + 1);
         }
-        composite();
-        setVersion((v) => v + 1);
-      });
+      );
     },
     [composite, selectLayer]
   );
