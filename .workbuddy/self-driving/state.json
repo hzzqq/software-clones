@@ -1,5 +1,5 @@
 {
-  "cycle": 235,
+  "cycle": 236,
   "max_cycles": 253,
   "phase": "running",
   "paused": false,
@@ -3110,6 +3110,19 @@
       "verify": "client 59 passed + typecheck pass",
       "score": 80,
       "ts": 1785406594.719
+    },
+    {
+      "cycle": 236,
+      "app": "photopea",
+      "task_id": "mix_rgb",
+      "new_requirement": "mixRgb 纯函数(两RGB线性混色,t夹回[0,1])+测试",
+      "files": [
+        "client/src/utils/image.ts",
+        "client/src/utils/image.test.ts"
+      ],
+      "verify": "client 70 passed + typecheck pass",
+      "score": 80,
+      "ts": 1785406753.6
     }
   ],
   "last_task_id": "server_security_headers",

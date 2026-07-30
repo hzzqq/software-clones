@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { clamp, clampNumber, grayscale, invert, brightness, sepia, uid, applyFilter, contrast, saturate, getFilterLabel, FILTER_LABELS, formatPercent, blendOver, rgbToHsl, hslToRgb, hueRotate, rgbToHex, hexToRgb } from './image';
+import { clamp, clampNumber, grayscale, invert, brightness, sepia, uid, applyFilter, contrast, saturate, getFilterLabel, FILTER_LABELS, formatPercent, blendOver, rgbToHsl, hslToRgb, hueRotate, rgbToHex, hexToRgb, mixRgb } from './image';
 import type { FilterKind } from '../types';
 
 function makeData(): Uint8ClampedArray {
@@ -283,5 +283,21 @@ describe('rgbToHex / hexToRgb', () => {
     expect(hexToRgb('nope')).toBeNull();
     expect(hexToRgb('#12')).toBeNull();
     expect(hexToRgb(123 as unknown as string)).toBeNull();
+  });
+});
+
+describe('mixRgb', () => {
+  it('t=0 取 a', () => {
+    expect(mixRgb([10, 20, 30], [200, 100, 50], 0)).toEqual([10, 20, 30]);
+  });
+  it('t=1 取 b', () => {
+    expect(mixRgb([10, 20, 30], [200, 100, 50], 1)).toEqual([200, 100, 50]);
+  });
+  it('t=0.5 取中点', () => {
+    expect(mixRgb([0, 0, 0], [100, 200, 40], 0.5)).toEqual([50, 100, 20]);
+  });
+  it('t 越界被夹回', () => {
+    expect(mixRgb([0, 0, 0], [100, 100, 100], 2)).toEqual([100, 100, 100]);
+    expect(mixRgb([0, 0, 0], [100, 100, 100], -1)).toEqual([0, 0, 0]);
   });
 });

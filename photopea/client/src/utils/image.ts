@@ -257,3 +257,17 @@ export function hexToRgb(hex: string): [number, number, number] | null {
   const n = parseInt(h, 16);
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
 }
+
+/**
+ * 混合两个 RGB 颜色（t=0 取 a，t=1 取 b，线性插值），返回 [r,g,b]，分量已夹紧到 [0,255]。
+ * 用于渐变/双色混合预览；t 不在 [0,1] 时夹回区间，非有限输入按 0 处理。
+ */
+export function mixRgb(a: [number, number, number], b: [number, number, number], t: number): [number, number, number] {
+  const tt = typeof t === 'number' && Number.isFinite(t) ? Math.max(0, Math.min(1, t)) : 0;
+  const lerp = (x: number, y: number) => {
+    const vx = Number.isFinite(x) ? x : 0;
+    const vy = Number.isFinite(y) ? y : 0;
+    return Math.max(0, Math.min(255, Math.round(vx + (vy - vx) * tt)));
+  };
+  return [lerp(a[0], b[0]), lerp(a[1], b[1]), lerp(a[2], b[2])];
+}
