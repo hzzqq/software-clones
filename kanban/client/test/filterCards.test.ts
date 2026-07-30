@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { filterCardsByQuery, sortCards, countCardsByPriority, dueSoonCards, overdueCards, filterCardsByPriority, filterCardsByCompleted, formatDueLabel, countCardsByTag, priorityColor } from '../src/utils/filterCards';
+import { filterCardsByQuery, sortCards, countCardsByPriority, dueSoonCards, overdueCards, filterCardsByPriority, filterCardsByCompleted, formatDueLabel, countCardsByTag, priorityColor, boardCompletion } from '../src/utils/filterCards';
 import type { Card } from '../src/types';
 
 function mk(id: number, title: string, description = ''): Card {
@@ -264,5 +264,26 @@ describe('priorityColor', () => {
   it('高优先级 → error', () => {
     expect(priorityColor(3)).toBe('error');
     expect(priorityColor(99)).toBe('error');
+  });
+});
+
+describe('boardCompletion', () => {
+  const cards: Card[] = [
+    { id: 1, listId: 1, title: 'a', description: '', dueDate: null, priority: 1, completed: 1, position: 0, createdAt: '', updatedAt: '', tagIds: [] },
+    { id: 2, listId: 1, title: 'b', description: '', dueDate: null, priority: 1, completed: 1, position: 1, createdAt: '', updatedAt: '', tagIds: [] },
+    { id: 3, listId: 1, title: 'c', description: '', dueDate: null, priority: 1, completed: 0, position: 2, createdAt: '', updatedAt: '', tagIds: [] },
+  ];
+  it('已完成占比四舍五入', () => {
+    expect(boardCompletion(cards)).toBe(67); // 2/3 = 66.67% -> 67
+  });
+  it('空数组返回 0', () => {
+    expect(boardCompletion([])).toBe(0);
+  });
+  it('非数组返回 0', () => {
+    expect(boardCompletion(null as unknown as Card[])).toBe(0);
+  });
+  it('全部完成返回 100', () => {
+    const all = cards.map((c) => ({ ...c, completed: 1 }));
+    expect(boardCompletion(all)).toBe(100);
   });
 });

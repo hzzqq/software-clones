@@ -35,6 +35,7 @@ interface ToolbarProps {
   onCopySummary: () => void;
   totalCards?: number;
   completedCards?: number;
+  completionPercent?: number;
   priorityCounts?: Record<number, number>;
   tagCounts?: Record<number, number>;
   dueSoonCount?: number;
@@ -59,6 +60,7 @@ export default function Toolbar({
   onCopySummary,
   totalCards,
   completedCards,
+  completionPercent,
   priorityCounts,
   tagCounts,
   dueSoonCount,
@@ -80,6 +82,15 @@ export default function Toolbar({
         {typeof totalCards === 'number' && (
           <Typography variant="caption" color="text.secondary">
             共 {totalCards} 张 · 已完成 {completedCards ?? 0} 张
+            {typeof completionPercent === 'number' && (
+              <Chip
+                size="small"
+                color={completionPercent === 100 ? 'success' : 'primary'}
+                variant="outlined"
+                sx={{ ml: 1 }}
+                label={`完成率 ${completionPercent}%`}
+              />
+            )}
           </Typography>
         )}
         {priorityCounts && Object.keys(priorityCounts).length > 0 && (

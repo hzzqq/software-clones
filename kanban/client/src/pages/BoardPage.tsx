@@ -23,7 +23,7 @@ import { boardsApi } from '../api/boards';
 import { ApiError } from '../api/client';
 import { CardPatch } from '../api/cards';
 import { Card } from '../types';
-import { countCardsByPriority, dueSoonCards, overdueCards, countCardsByTag } from '../utils/filterCards';
+import { countCardsByPriority, dueSoonCards, overdueCards, countCardsByTag, boardCompletion } from '../utils/filterCards';
 import { formatBoardSummary } from '../utils/boardSummary';
 import { parseIdParam } from '../utils/id';
 
@@ -169,6 +169,7 @@ export default function BoardPage(): JSX.Element {
         onCopySummary={() => void copySummary()}
         totalCards={board.detail.cards.length}
         completedCards={board.detail.cards.filter((c) => c.completed === 1).length}
+        completionPercent={boardCompletion(board.detail.cards)}
         priorityCounts={countCardsByPriority(board.detail.cards)}
         tagCounts={countCardsByTag(board.detail.cards)}
         dueSoonCount={dueSoonCards(board.detail.cards).length}

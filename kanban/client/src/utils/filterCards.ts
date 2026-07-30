@@ -178,6 +178,19 @@ export function countCardsByTag(cards: Card[]): Record<number, number> {
 }
 
 /**
+ * 看板总体完成率（已完成卡片占比，四舍五入为整数百分比）。
+ * 入参非数组/空数组返回 0；遍历中对 completed 非 1 的情况不计入已完成。
+ */
+export function boardCompletion(cards: Card[]): number {
+  if (!Array.isArray(cards) || cards.length === 0) return 0;
+  let done = 0;
+  for (const c of cards) {
+    if (c?.completed === 1) done++;
+  }
+  return Math.round((done / cards.length) * 100);
+}
+
+/**
  * 优先级 → MUI Chip 语义色。非有限/负值按 default；数值区间映射为
  * info(低) / warning(中) / error(高)，供卡片优先级标签统一着色。
  */

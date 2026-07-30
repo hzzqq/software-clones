@@ -1,5 +1,5 @@
 {
-  "cycle": 237,
+  "cycle": 238,
   "max_cycles": 253,
   "phase": "running",
   "paused": false,
@@ -3136,6 +3136,21 @@
       "verify": "client 96 passed + typecheck pass",
       "score": 80,
       "ts": 1785407144.937
+    },
+    {
+      "cycle": 238,
+      "app": "kanban",
+      "task_id": "board_completion",
+      "new_requirement": "boardCompletion 纯函数(看板总体完成率)+测试;Toolbar 新增「完成率 X%」chip",
+      "files": [
+        "client/src/utils/filterCards.ts",
+        "client/test/filterCards.test.ts",
+        "client/src/components/Toolbar.tsx",
+        "client/src/pages/BoardPage.tsx"
+      ],
+      "verify": "client 75 passed + typecheck pass",
+      "score": 80,
+      "ts": 1785407462.678
     }
   ],
   "last_task_id": "server_security_headers",
