@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { filterCardsByQuery, sortCards, countCardsByPriority, dueSoonCards, overdueCards, filterCardsByPriority, filterCardsByCompleted, formatDueLabel, countCardsByTag, priorityColor, boardCompletion } from '../src/utils/filterCards';
+import { filterCardsByQuery, sortCards, countCardsByPriority, dueSoonCards, overdueCards, filterCardsByPriority, filterCardsByCompleted, filterCardsByTag, formatDueLabel, countCardsByTag, priorityColor, boardCompletion } from '../src/utils/filterCards';
 import type { Card } from '../src/types';
 
 function mk(id: number, title: string, description = ''): Card {
@@ -207,6 +207,31 @@ describe('formatDueLabel', () => {
   });
   it('非法日期字符串 → 日期无效 / none（不渲染 NaN天后）', () => {
     expect(formatDueLabel('not-a-date', now)).toEqual({ text: '日期无效', tone: 'none' });
+  });
+});
+
+describe('filterCardsByTag', () => {
+  const cards: Card[] = [
+    { id: 1, listId: 1, title: 'a', description: '', dueDate: null, priority: 0, completed: 0, position: 0, createdAt: '', updatedAt: '', tagIds: [10, 20] },
+    { id: 2, listId: 1, title: 'b', description: '', dueDate: null, priority: 0, completed: 0, position: 1, createdAt: '', updatedAt: '', tagIds: [20] },
+    { id: 3, listId: 1, title: 'c', description: '', dueDate: null, priority: 0, completed: 0, position: 2, createdAt: '', updatedAt: '', tagIds: [] },
+  ];
+  it('null 返回全部', () => {
+    expect(filterCardsByTag(cards, null)).toHaveLength(3);
+  });
+  it('按标签筛选（含多标签命中）', () => {
+    expect(filterCardsByTag(cards, 20).map((c) => c.id)).toEqual([1, 2]);
+  });
+  it('无匹配返回空', () => {
+    expect(filterCardsByTag(cards, 99)).toHaveLength(0);
+  });
+  it('空列表返回空数组', () => {
+    expect(filterCardsByTag([], 10)).toEqual([]);
+  });
+  it('不修改入参', () => {
+    const before = cards.map((c) => c.id);
+    filterCardsByTag(cards, 20);
+    expect(cards.map((c) => c.id)).toEqual(before);
   });
 });
 

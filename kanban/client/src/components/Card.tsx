@@ -18,6 +18,7 @@ interface CardProps {
   tags: Tag[];
   onClick: () => void;
   onToggleComplete: (id: number, completed: number) => void;
+  onTagClick?: (tagId: number) => void;
 }
 
 const PRIORITY_COLOR: Record<number, 'error' | 'warning' | 'default'> = {
@@ -41,6 +42,7 @@ export default function Card({
   tags,
   onClick,
   onToggleComplete,
+  onTagClick,
 }: CardProps): JSX.Element {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: String(card.id) });
@@ -105,7 +107,19 @@ export default function Card({
               );
             })()}
             {cardTags.map((t) => (
-              <TagChip key={t.id} name={t.name} color={t.color} />
+              <TagChip
+                key={t.id}
+                name={t.name}
+                color={t.color}
+                onClick={
+                  onTagClick
+                    ? (e: React.MouseEvent) => {
+                        e.stopPropagation();
+                        onTagClick(t.id);
+                      }
+                    : undefined
+                }
+              />
             ))}
           </Box>
         )}

@@ -184,6 +184,7 @@ export default function BoardPage(): JSX.Element {
           filterPriority={filterPriority}
           onlyIncomplete={onlyIncomplete}
           searchQuery={search}
+          onTagClick={setFilterTagId}
           onAddList={(t) => void board.addList(t)}
           onDeleteList={(lid) => void board.removeList(lid)}
           onAddCard={(lid, t) => void board.addCard(lid, t)}

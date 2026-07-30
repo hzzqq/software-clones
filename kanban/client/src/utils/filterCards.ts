@@ -125,6 +125,17 @@ export function filterCardsByCompleted(cards: Card[], onlyIncomplete: boolean): 
   return cards.filter((c) => c.completed !== 1);
 }
 
+/**
+ * 按标签精确筛选（不修改入参）。
+ * tagId 为 null 时返回全部；否则只保留 tagIds 含该标签的卡片。
+ * 与 filterCardsByPriority / filterCardsByCompleted 形成一组正交过滤器，
+ * 集中维护标签匹配语义，避免在 Board 中重复写 `c.tagIds.includes(tagId)` 内联判断。
+ */
+export function filterCardsByTag(cards: Card[], tagId: number | null): Card[] {
+  if (tagId === null) return cards;
+  return cards.filter((c) => c.tagIds.includes(tagId));
+}
+
 /** 截止日语义色调：已逾期 / 今天 / 临近 / 无。 */
 export type DueTone = 'overdue' | 'today' | 'soon' | 'none';
 

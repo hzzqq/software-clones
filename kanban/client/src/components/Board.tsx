@@ -12,7 +12,7 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import Column from './Column';
-import { filterCardsByQuery, sortCards, filterCardsByPriority, filterCardsByCompleted, type CardSort } from '../utils/filterCards';
+import { filterCardsByQuery, sortCards, filterCardsByPriority, filterCardsByCompleted, filterCardsByTag, type CardSort } from '../utils/filterCards';
 import { Card, List, Tag } from '../types';
 
 interface BoardProps {
@@ -28,6 +28,7 @@ interface BoardProps {
   onAddCard: (listId: number, title: string) => void;
   onOpenCard: (id: number) => void;
   onToggleComplete: (id: number, completed: number) => void;
+  onTagClick?: (tagId: number) => void;
 }
 
 /** Horizontal board of columns plus an "add list" affordance. */
@@ -44,6 +45,7 @@ export default function Board({
   onAddCard,
   onOpenCard,
   onToggleComplete,
+  onTagClick,
 }: BoardProps): JSX.Element {
   const [title, setTitle] = useState<string>('');
   const [sortBy, setSortBy] = useState<CardSort>('position');
@@ -56,8 +58,7 @@ export default function Board({
   };
 
   const visibleCards = (cards: Card[]): Card[] => {
-    const byTag =
-      filterTagId === null ? cards : cards.filter((c) => c.tagIds.includes(filterTagId));
+    const byTag = filterCardsByTag(cards, filterTagId);
     const byPriority = filterCardsByPriority(byTag, filterPriority);
     const byCompleted = filterCardsByCompleted(byPriority, onlyIncomplete);
     return sortCards(filterCardsByQuery(searchQuery, byCompleted), sortBy);
@@ -93,6 +94,7 @@ export default function Board({
           onDeleteList={onDeleteList}
           onOpenCard={onOpenCard}
           onToggleComplete={onToggleComplete}
+          onTagClick={onTagClick}
         />
       ))}
 

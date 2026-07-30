@@ -3,7 +3,7 @@ import { Chip } from '@mui/material';
 interface TagChipProps {
   name: string;
   color: string;
-  onClick?: () => void;
+  onClick?: (e: React.MouseEvent) => void;
   onDelete?: () => void;
   selected?: boolean;
 }

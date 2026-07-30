@@ -22,6 +22,7 @@ interface ColumnProps {
   onDeleteList: (id: number) => void;
   onOpenCard: (id: number) => void;
   onToggleComplete: (id: number, completed: number) => void;
+  onTagClick?: (tagId: number) => void;
 }
 
 /** A board column (droppable) containing sortable cards. */
@@ -33,6 +34,7 @@ export default function Column({
   onDeleteList,
   onOpenCard,
   onToggleComplete,
+  onTagClick,
 }: ColumnProps): JSX.Element {
   const { setNodeRef, isOver } = useDroppable({ id: `list-${list.id}` });
   const [title, setTitle] = useState<string>('');
@@ -90,6 +92,7 @@ export default function Column({
                 tags={tags}
                 onClick={() => onOpenCard(c.id)}
                 onToggleComplete={onToggleComplete}
+                onTagClick={onTagClick}
               />
             ))
           )}

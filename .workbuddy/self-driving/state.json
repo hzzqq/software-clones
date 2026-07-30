@@ -1,5 +1,5 @@
 {
-  "cycle": 249,
+  "cycle": 250,
   "max_cycles": 253,
   "phase": "running",
   "paused": false,
@@ -3305,6 +3305,24 @@
       "verify": "client 101 passed + typecheck pass",
       "score": 80,
       "ts": 1785410481.516
+    },
+    {
+      "cycle": 250,
+      "app": "kanban",
+      "task_id": "filter_cards_by_tag",
+      "new_requirement": "filterCardsByTag 纯函数(按标签精确筛选)+测试;Board 复用共享过滤;卡片标签 Chip 可点击直接按该标签筛选",
+      "files": [
+        "client/src/utils/filterCards.ts",
+        "client/test/filterCards.test.ts",
+        "client/src/components/Board.tsx",
+        "client/src/components/Column.tsx",
+        "client/src/components/Card.tsx",
+        "client/src/components/TagChip.tsx",
+        "client/src/pages/BoardPage.tsx"
+      ],
+      "verify": "client 80 passed + typecheck pass",
+      "score": 82,
+      "ts": 1785410763.623
     }
   ],
   "last_task_id": "server_security_headers",
