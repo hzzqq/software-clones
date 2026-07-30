@@ -3,6 +3,7 @@ import {
   Avatar,
   Box,
   Button,
+  Chip,
   Dialog,
   DialogActions,
   DialogContent,
@@ -42,7 +43,7 @@ import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CallMergeIcon from '@mui/icons-material/CallMerge';
-import { uid, applyFilter, getFilterLabel, formatPercent, clampOpacity, clampNumber, formatBytes, blendOver } from '../utils/image';
+import { uid, applyFilter, getFilterLabel, formatPercent, clampOpacity, clampNumber, formatBytes, blendOver, rgbToHexTuple, hexToRgb } from '../utils/image';
 import { formatRelativeTime } from '../utils/time';
 import { duplicateLayerName, applyLayerMeta } from '../utils/layers';
 import { designApi } from '../api/designs';
@@ -761,6 +762,12 @@ export default function CanvasEditor(): JSX.Element {
             />
           ))}
         </Stack>
+        <Chip
+          size="small"
+          variant="outlined"
+          title="当前描边色（归一化十六进制）"
+          label={`色 ${rgbToHexTuple(hexToRgb(stroke) ?? [0, 0, 0])}`}
+        />
 
         <TextField
           select

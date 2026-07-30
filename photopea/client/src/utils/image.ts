@@ -271,3 +271,17 @@ export function mixRgb(a: [number, number, number], b: [number, number, number],
   };
   return [lerp(a[0], b[0]), lerp(a[1], b[1]), lerp(a[2], b[2])];
 }
+
+/**
+ * RGB 三元组 → '#rrggbb' 十六进制串（带前导 #）。
+ * 各分量非有限/越界时夹回 [0,255] 再转两位十六进制（小写）。
+ * 与 hexToRgb 互逆；用于颜色选择器/图层填充色的十六进制展示与回填。
+ */
+export function rgbToHexTuple(rgb: [number, number, number]): string {
+  const clamp = (v: number) => {
+    const n = Number.isFinite(v) ? v : 0;
+    return Math.max(0, Math.min(255, Math.round(n)));
+  };
+  const toHex = (v: number) => clamp(v).toString(16).padStart(2, '0');
+  return `#${toHex(rgb[0])}${toHex(rgb[1])}${toHex(rgb[2])}`;
+}

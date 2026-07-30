@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { clamp, clampNumber, grayscale, invert, brightness, sepia, uid, applyFilter, contrast, saturate, getFilterLabel, FILTER_LABELS, formatPercent, blendOver, rgbToHsl, hslToRgb, hueRotate, rgbToHex, hexToRgb, mixRgb } from './image';
+import { clamp, clampNumber, grayscale, invert, brightness, sepia, uid, applyFilter, contrast, saturate, getFilterLabel, FILTER_LABELS, formatPercent, blendOver, rgbToHsl, hslToRgb, hueRotate, rgbToHex, rgbToHexTuple, hexToRgb, mixRgb } from './image';
 import type { FilterKind } from '../types';
 
 function makeData(): Uint8ClampedArray {
@@ -299,5 +299,19 @@ describe('mixRgb', () => {
   it('t 越界被夹回', () => {
     expect(mixRgb([0, 0, 0], [100, 100, 100], 2)).toEqual([100, 100, 100]);
     expect(mixRgb([0, 0, 0], [100, 100, 100], -1)).toEqual([0, 0, 0]);
+  });
+});
+
+describe('rgbToHexTuple', () => {
+  it('RGB 转 #rrggbb', () => {
+    expect(rgbToHexTuple([255, 0, 0])).toBe('#ff0000');
+    expect(rgbToHexTuple([0, 128, 255])).toBe('#0080ff');
+    expect(rgbToHexTuple([17, 17, 17])).toBe('#111111');
+  });
+  it('分量越界被夹紧', () => {
+    expect(rgbToHexTuple([300, -5, 256])).toBe('#ff00ff');
+  });
+  it('非有限按 0 处理', () => {
+    expect(rgbToHexTuple([NaN, 10, 20])).toBe('#000a14');
   });
 });
