@@ -7,9 +7,10 @@ interface Props {
   notes: Note[];
   activeId: number | null;
   onSelect: (id: number) => void;
+  onTagClick?: (tag: string) => void;
 }
 
-export default function NoteList({ notes, activeId, onSelect }: Props): JSX.Element {
+export default function NoteList({ notes, activeId, onSelect, onTagClick }: Props): JSX.Element {
   if (notes.length === 0) {
     return (
       <Typography color="text.secondary" variant="body2" sx={{ p: 2 }}>
@@ -46,7 +47,24 @@ export default function NoteList({ notes, activeId, onSelect }: Props): JSX.Elem
             }
           />
           {n.tags.length > 0 && (
-            <Chip size="small" label={`#${n.tags[0]}`} sx={{ ml: 1 }} />
+            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', ml: 1 }}>
+              {n.tags.map((t) => (
+                <Chip
+                  key={t}
+                  size="small"
+                  label={`#${t}`}
+                  sx={{ cursor: onTagClick ? 'pointer' : 'default' }}
+                  onClick={
+                    onTagClick
+                      ? (e: React.MouseEvent) => {
+                          e.stopPropagation();
+                          onTagClick(t);
+                        }
+                      : undefined
+                  }
+                />
+              ))}
+            </Box>
           )}
         </ListItemButton>
       ))}

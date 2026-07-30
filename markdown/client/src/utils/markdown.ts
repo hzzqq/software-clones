@@ -235,6 +235,17 @@ export function filterNotesByFolder(notes: Note[], folder: string): Note[] {
   return notes.filter((n) => (n.folder ?? '').trim() === f);
 }
 
+/**
+ * 按标签精确筛选（大小写不敏感）；tag 为空 / '' 时返回全部。
+ * 与 filterNotesByFolder / searchNotes 形成一组正交过滤器，便于侧栏「点击标签即筛选」。
+ * 不修改入参。
+ */
+export function filterNotesByTag(notes: Note[], tag: string): Note[] {
+  const t = tag.trim().toLowerCase();
+  if (!t) return notes;
+  return notes.filter((n) => (n.tags ?? []).some((x) => x.toLowerCase() === t));
+}
+
 /** 单个 Markdown 链接（文本 + 地址）。 */
 export interface MdLink {
   text: string;

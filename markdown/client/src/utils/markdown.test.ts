@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseTags, countWords, deriveTitle, countCodeBlocks, estimateReadingTime, countSentences, countParagraphs, extractHeadings, extractLinks, sortNotes, filterNotesByFolder, summarizeNotes, formatRelativeTime, searchNotes, stripInlineMarkdown } from './markdown';
+import { parseTags, countWords, deriveTitle, countCodeBlocks, estimateReadingTime, countSentences, countParagraphs, extractHeadings, extractLinks, sortNotes, filterNotesByFolder, filterNotesByTag, summarizeNotes, formatRelativeTime, searchNotes, stripInlineMarkdown } from './markdown';
 import type { Note } from '../types';
 
 describe('parseTags', () => {
@@ -207,6 +207,31 @@ describe('filterNotesByFolder', () => {
   });
   it('不修改原数组', () => {
     filterNotesByFolder(notes, '工作');
+    expect(notes).toHaveLength(4);
+  });
+});
+
+describe('filterNotesByTag', () => {
+  const mk = (id: number, tags: string[]): Note => ({
+    id, title: `n${id}`, content: '', folder: '', tags, pinned: false, createdAt: '', updatedAt: '',
+  });
+  const notes = [mk(1, ['todo', 'bug']), mk(2, ['bug']), mk(3, ['idea', 'Todo']), mk(4, [])];
+  it('空标签返回全部', () => {
+    expect(filterNotesByTag(notes, '')).toHaveLength(4);
+    expect(filterNotesByTag(notes, '   ')).toHaveLength(4);
+  });
+  it('精确匹配（大小写不敏感）', () => {
+    expect(filterNotesByTag(notes, 'todo').map((n) => n.id)).toEqual([1, 3]);
+    expect(filterNotesByTag(notes, 'TODO').map((n) => n.id)).toEqual([1, 3]);
+  });
+  it('单标签匹配', () => {
+    expect(filterNotesByTag(notes, 'bug').map((n) => n.id)).toEqual([1, 2]);
+  });
+  it('无匹配返回空', () => {
+    expect(filterNotesByTag(notes, 'nope')).toHaveLength(0);
+  });
+  it('不修改原数组', () => {
+    filterNotesByTag(notes, 'bug');
     expect(notes).toHaveLength(4);
   });
 });

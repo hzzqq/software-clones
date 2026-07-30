@@ -1,5 +1,5 @@
 {
-  "cycle": 250,
+  "cycle": 251,
   "max_cycles": 253,
   "phase": "running",
   "paused": false,
@@ -3323,6 +3323,21 @@
       "verify": "client 80 passed + typecheck pass",
       "score": 82,
       "ts": 1785410763.623
+    },
+    {
+      "cycle": 251,
+      "app": "markdown",
+      "task_id": "filter_notes_by_tag",
+      "new_requirement": "filterNotesByTag 纯函数(按标签大小写不敏感筛选)+测试;NoteList 标签 Chip 全部展示且可点击筛选;NotesPage 接入标签筛选+可清除 chip",
+      "files": [
+        "client/src/utils/markdown.ts",
+        "client/src/utils/markdown.test.ts",
+        "client/src/components/NoteList.tsx",
+        "client/src/pages/NotesPage.tsx"
+      ],
+      "verify": "client 95 passed + typecheck pass",
+      "score": 82,
+      "ts": 1785410963.913
     }
   ],
   "last_task_id": "server_security_headers",

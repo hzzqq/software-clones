@@ -27,7 +27,7 @@ import { noteApi } from '../api/notes';
 import type { Note } from '../types';
 import NoteList from '../components/NoteList';
 import MarkdownPreview from '../components/MarkdownPreview';
-import { parseTags, countWords, countSentences, countParagraphs, countCodeBlocks, estimateReadingTime, extractHeadings, extractLinks, sortNotes, filterNotesByFolder, summarizeNotes, searchNotes } from '../utils/markdown';
+import { parseTags, countWords, countSentences, countParagraphs, countCodeBlocks, estimateReadingTime, extractHeadings, extractLinks, sortNotes, filterNotesByFolder, filterNotesByTag, summarizeNotes, searchNotes } from '../utils/markdown';
 
 type ViewMode = 'edit' | 'split' | 'preview';
 
@@ -39,6 +39,7 @@ export default function NotesPage(): JSX.Element {
   const [query, setQuery] = useState('');
   const [mode, setMode] = useState<ViewMode>('split');
   const [folderFilter, setFolderFilter] = useState('');
+  const [tagFilter, setTagFilter] = useState('');
   const [saving, setSaving] = useState(false);
   const [outlineAnchor, setOutlineAnchor] = useState<null | HTMLElement>(null);
   const [linkAnchor, setLinkAnchor] = useState<null | HTMLElement>(null);
@@ -58,9 +59,10 @@ export default function NotesPage(): JSX.Element {
   const visibleNotes = useMemo(
     () => {
       const byFolder = folderOptions.length ? filterNotesByFolder(sortedNotes, folderFilter) : sortedNotes;
-      return searchNotes(byFolder, query);
+      const byTag = filterNotesByTag(byFolder, tagFilter);
+      return searchNotes(byTag, query);
     },
-    [sortedNotes, folderOptions, folderFilter, query],
+    [sortedNotes, folderOptions, folderFilter, tagFilter, query],
   );
   const summary = useMemo(() => summarizeNotes(visibleNotes), [visibleNotes]);
 
@@ -195,15 +197,23 @@ export default function NotesPage(): JSX.Element {
             </Select>
           </FormControl>
         )}
-        <Stack direction="row" spacing={1} sx={{ px: 1, pb: 1 }}>
+        <Stack direction="row" spacing={1} sx={{ px: 1, pb: 1 }} alignItems="center">
           <Chip size="small" color="primary" variant="outlined" label={`共 ${summary.total} 篇 · ${summary.totalWords} 词 · ${summary.tagTotal} 标签`} />
+          {tagFilter && (
+            <Chip
+              size="small"
+              color="secondary"
+              label={`#${tagFilter} ✕`}
+              onDelete={() => setTagFilter('')}
+            />
+          )}
         </Stack>
         <Divider />
         <Box sx={{ flexGrow: 1, overflowY: 'auto' }}>
             {loading ? (
               <CircularProgress sx={{ display: 'block', mx: 'auto', my: 3 }} />
             ) : (
-              <NoteList notes={visibleNotes} activeId={active?.id ?? null} onSelect={selectNote} />
+              <NoteList notes={visibleNotes} activeId={active?.id ?? null} onSelect={selectNote} onTagClick={setTagFilter} />
             )}
         </Box>
       </Box>
