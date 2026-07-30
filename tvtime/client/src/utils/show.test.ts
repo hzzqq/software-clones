@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { progressPercent, nextUnwatched, nextEpisode, isComplete, filterShows, sortShows, episodesLeft, remainingWatchTime, formatWatchTime, filterEpisodesByWatched, episodesByStatus, formatProgress, clampEpisodeCount, nextEpisodeLabel, lastWatchedAt, summarizeLibrary, seasonEpisodeCount } from './show';
+import { progressPercent, nextUnwatched, nextEpisode, isComplete, filterShows, sortShows, episodesLeft, remainingWatchTime, formatWatchTime, filterEpisodesByWatched, episodesByStatus, formatProgress, clampEpisodeCount, nextEpisodeLabel, lastWatchedAt, summarizeLibrary, seasonEpisodeCount, averageProgress } from './show';
 import type { Episode, Show } from '../types';
 
 function mkShow(id: number, title: string, watchedCount: number, totalEpisodes: number, updatedAt: string): Show {
@@ -337,7 +337,7 @@ describe('lastWatchedAt', () => {
 
 
 describe('seasonEpisodeCount', () => {
-  const mk = (season: number, episode: number) => ({ season, episode } as Episode);
+  const mk = (season: number, episode: number) => ({ season, episode } as unknown as Episode);
   it('counts episodes per season', () => {
     expect(seasonEpisodeCount([mk(1, 1), mk(1, 2), mk(2, 1)])).toEqual({ 1: 2, 2: 1 });
   });
@@ -346,5 +346,27 @@ describe('seasonEpisodeCount', () => {
   });
   it('returns empty for empty input', () => {
     expect(seasonEpisodeCount([])).toEqual({});
+  });
+});
+
+describe('averageProgress', () => {
+  const shows: Show[] = [
+    { id: 1, title: 'a', note: '', totalEpisodes: 10, watchedCount: 5, createdAt: '', updatedAt: '' },
+    { id: 2, title: 'b', note: '', totalEpisodes: 10, watchedCount: 0, createdAt: '', updatedAt: '' },
+    { id: 3, title: 'c', note: '', totalEpisodes: 20, watchedCount: 20, createdAt: '', updatedAt: '' },
+  ];
+  it('按剧进度均值计算(忽略无总集数)', () => {
+    // (50 + 0 + 100) / 3 = 50
+    expect(averageProgress(shows)).toBe(50);
+  });
+  it('空数组返回 0', () => {
+    expect(averageProgress([])).toBe(0);
+  });
+  it('非数组入参返回 0', () => {
+    expect(averageProgress(null as unknown as Show[])).toBe(0);
+  });
+  it('全部无总集数的剧返回 0', () => {
+    const bad: Show[] = [{ id: 1, title: 'x', note: '', totalEpisodes: 0, watchedCount: 0, createdAt: '', updatedAt: '' }];
+    expect(averageProgress(bad)).toBe(0);
   });
 });

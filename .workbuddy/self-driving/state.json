@@ -1,7 +1,7 @@
 {
-  "cycle": 233,
-  "max_cycles": 233,
-  "phase": "done",
+  "cycle": 234,
+  "max_cycles": 253,
+  "phase": "running",
   "paused": false,
   "log": [
     {
@@ -3082,6 +3082,20 @@
       "verify": "client 89 passed + typecheck pass",
       "score": 80,
       "ts": 1785335668.455
+    },
+    {
+      "cycle": 234,
+      "app": "tvtime",
+      "task_id": "avg_progress",
+      "new_requirement": "averageProgress 纯函数(按剧进度均值,区别于整体完成率)+测试;ShowsPage 头部新增「平均进度 X%」chip",
+      "files": [
+        "client/src/utils/show.ts",
+        "client/src/utils/show.test.ts",
+        "client/src/pages/ShowsPage.tsx"
+      ],
+      "verify": "client 86 passed + typecheck pass",
+      "score": 80,
+      "ts": 1785406379.698
     }
   ],
   "last_task_id": "server_security_headers",

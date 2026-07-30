@@ -200,8 +200,29 @@ export function lastWatchedAt(episodes: Episode[]): string | null {
 export function seasonEpisodeCount(episodes: Episode[]): Record<number, number> {
   const counts: Record<number, number> = {};
   for (const ep of episodes) {
-    const season = Number.isFinite(ep?.season) ? ep.season : 0;
+    const rawSeason = ep?.season;
+    const season = typeof rawSeason === 'number' && Number.isFinite(rawSeason) ? rawSeason : 0;
     counts[season] = (counts[season] ?? 0) + 1;
   }
   return counts;
+}
+
+/**
+ * 平均单剧进度（按剧进度百分比的均值，区别于 summarizeLibrary 的 overallPercent=总看/总集）。
+ * 无总集数(totalEpisodes<=0)的剧不计入均值，避免把未配置剧拉低；
+ * 入参非数组/空数组返回 0，遍历中对非法 watched/total 做 Number.isFinite 防护。
+ */
+export function averageProgress(shows: Show[]): number {
+  if (!Array.isArray(shows) || shows.length === 0) return 0;
+  let sum = 0;
+  let n = 0;
+  for (const s of shows) {
+    const total = Number.isFinite(s?.totalEpisodes) ? s.totalEpisodes : 0;
+    const watched = Number.isFinite(s?.watchedCount) ? s.watchedCount : 0;
+    if (total <= 0) continue;
+    sum += (watched / total) * 100;
+    n++;
+  }
+  if (n === 0) return 0;
+  return Math.round(sum / n);
 }

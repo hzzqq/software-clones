@@ -27,7 +27,7 @@ import ClearIcon from '@mui/icons-material/Clear';
 import { showApi } from '../api/shows';
 import type { Show } from '../types';
 import ShowCard from '../components/ShowCard';
-import { filterShows, sortShows, isComplete, clampEpisodeCount, summarizeLibrary, type ShowSort } from '../utils/show';
+import { filterShows, sortShows, isComplete, clampEpisodeCount, summarizeLibrary, averageProgress, type ShowSort } from '../utils/show';
 
 export default function ShowsPage(): JSX.Element {
   const [shows, setShows] = useState<Show[]>([]);
@@ -157,6 +157,7 @@ export default function ShowsPage(): JSX.Element {
           <Chip size="small" color="info" variant="outlined" label={`进行中 ${summary.watching}`} />
           <Chip size="small" label={`已看 ${summary.watchedEpisodes} / ${summary.totalEpisodes} 集`} />
           <Chip size="small" color="primary" label={`总进度 ${summary.overallPercent}%`} />
+          <Chip size="small" color="secondary" variant="outlined" label={`平均进度 ${averageProgress(shows)}%`} />
         </Stack>
       )}
 
