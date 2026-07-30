@@ -1,5 +1,5 @@
 {
-  "cycle": 251,
+  "cycle": 252,
   "max_cycles": 253,
   "phase": "running",
   "paused": false,
@@ -3338,6 +3338,21 @@
       "verify": "client 95 passed + typecheck pass",
       "score": 82,
       "ts": 1785410963.913
+    },
+    {
+      "cycle": 252,
+      "app": "nonio",
+      "task_id": "filter_posts_by_tag",
+      "new_requirement": "filterPostsByTag 纯函数(按标签大小写不敏感筛选)+测试;PostCard 标签 Chip 可点击筛选;HomePage 接入标签筛选+可清除 chip",
+      "files": [
+        "client/src/utils/forum.ts",
+        "client/src/utils/forum.test.ts",
+        "client/src/components/PostCard.tsx",
+        "client/src/pages/HomePage.tsx"
+      ],
+      "verify": "client 76 passed + typecheck pass",
+      "score": 82,
+      "ts": 1785411187.354
     }
   ],
   "last_task_id": "server_security_headers",

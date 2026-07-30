@@ -8,9 +8,10 @@ import { excerpt, postReadingTime, formatRelativeTime, formatCompactNumber } fro
 interface Props {
   post: Post;
   onLike: (id: number) => void;
+  onTagClick?: (tag: string) => void;
 }
 
-export default function PostCard({ post, onLike }: Props): JSX.Element {
+export default function PostCard({ post, onLike, onTagClick }: Props): JSX.Element {
   return (
     <Card variant="outlined" sx={{ mb: 2 }}>
       <CardContent>
@@ -37,7 +38,21 @@ export default function PostCard({ post, onLike }: Props): JSX.Element {
         {post.tags.length > 0 && (
           <Stack direction="row" spacing={0.5} sx={{ mt: 1, flexWrap: 'wrap', gap: 0.5 }}>
             {post.tags.map((t) => (
-              <Chip key={t} size="small" variant="outlined" label={`#${t}`} />
+              <Chip
+                key={t}
+                size="small"
+                variant="outlined"
+                label={`#${t}`}
+                sx={onTagClick ? { cursor: 'pointer' } : undefined}
+                onClick={
+                  onTagClick
+                    ? (e: React.MouseEvent) => {
+                        e.stopPropagation();
+                        onTagClick(t);
+                      }
+                    : undefined
+                }
+              />
             ))}
           </Stack>
         )}

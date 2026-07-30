@@ -25,7 +25,7 @@ import { channelApi } from '../api/channels';
 import { postApi } from '../api/posts';
 import type { Channel, Post } from '../types';
 import PostCard from '../components/PostCard';
-import { parseTags, searchPosts, topPosts, summarizePosts, filterPostsByChannel, countPostsByChannel, topAuthors, sortPosts, formatCompactNumber } from '../utils/forum';
+import { parseTags, searchPosts, topPosts, summarizePosts, filterPostsByChannel, filterPostsByTag, countPostsByChannel, topAuthors, sortPosts, formatCompactNumber } from '../utils/forum';
 
 export default function HomePage(): JSX.Element {
   const [channels, setChannels] = useState<Channel[]>([]);
@@ -34,6 +34,7 @@ export default function HomePage(): JSX.Element {
   const [error, setError] = useState<string | null>(null);
   const [activeChannel, setActiveChannel] = useState<number | null>(null);
   const [query, setQuery] = useState('');
+  const [tagFilter, setTagFilter] = useState('');
   const [sort, setSort] = useState<'newest' | 'likes' | 'comments'>('newest');
 
   // 发帖弹窗
@@ -61,7 +62,9 @@ export default function HomePage(): JSX.Element {
   const channelFiltered = useMemo(() => filterPostsByChannel(posts, activeChannel), [posts, activeChannel]);
   const channelPostCounts = useMemo(() => countPostsByChannel(posts), [posts]);
 
-  const filtered = useMemo(() => searchPosts(query, null, channelFiltered), [channelFiltered, query]);
+  const tagFiltered = useMemo(() => filterPostsByTag(channelFiltered, tagFilter), [channelFiltered, tagFilter]);
+
+  const filtered = useMemo(() => searchPosts(query, null, tagFiltered), [tagFiltered, query]);
 
   const summary = useMemo(() => summarizePosts(filtered), [filtered]);
 
@@ -124,8 +127,16 @@ export default function HomePage(): JSX.Element {
         </Select>
       </FormControl>
 
-      <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+      <Stack direction="row" spacing={1} sx={{ mt: 1 }} alignItems="center">
         <Chip size="small" color="primary" variant="outlined" label={`共 ${summary.total} 篇 · ${summary.channels} 个频道 · ♥ ${summary.totalLikes} · 💬 ${summary.totalComments}`} />
+        {tagFilter && (
+          <Chip
+            size="small"
+            color="secondary"
+            label={`#${tagFilter} ✕`}
+            onDelete={() => setTagFilter('')}
+          />
+        )}
       </Stack>
       {topAuthors(posts, 3).length > 0 && (
         <Stack direction="row" spacing={0.5} sx={{ mt: 0.5 }} alignItems="center" flexWrap="wrap" useFlexGap>
@@ -197,7 +208,7 @@ export default function HomePage(): JSX.Element {
           这里还没有帖子，来发第一条吧。
         </Typography>
       )}
-      {!loading && sorted.map((p) => <PostCard key={p.id} post={p} onLike={handleLike} />)}
+      {!loading && sorted.map((p) => <PostCard key={p.id} post={p} onLike={handleLike} onTagClick={setTagFilter} />)}
 
       <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
         <DialogTitle>发布新帖</DialogTitle>

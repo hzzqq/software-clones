@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseTags, slugify, buildCommentTree, countComments, searchPosts, excerpt, topPosts, summarizePosts, filterPostsByChannel, countPostsByChannel, topAuthors, formatRelativeTime, formatDateTime, sortPosts, parseIdParam, formatCompactNumber, stripMarkdown } from './forum';
+import { parseTags, slugify, buildCommentTree, countComments, searchPosts, excerpt, topPosts, summarizePosts, filterPostsByChannel, filterPostsByTag, countPostsByChannel, topAuthors, formatRelativeTime, formatDateTime, sortPosts, parseIdParam, formatCompactNumber, stripMarkdown } from './forum';
 import type { Comment, Post } from '../types';
 
 function mkComment(id: number, parentId: number | null): Comment {
@@ -197,6 +197,34 @@ describe('filterPostsByChannel', () => {
     const out = filterPostsByChannel(posts, 1);
     expect(posts.map((p) => p.id)).toEqual(before);
     expect(out).not.toBe(posts); // 返回的是新数组
+  });
+});
+
+describe('filterPostsByTag', () => {
+  const posts: Post[] = [
+    { id: 1, channelId: 1, channelName: 'a', title: 'Lofi 入门', body: '', authorName: '', tags: ['music', 'lofi'], likes: 0, commentCount: 0, createdAt: '', updatedAt: '' },
+    { id: 2, channelId: 1, channelName: 'a', title: 'React 技巧', body: '', authorName: '', tags: ['react'], likes: 0, commentCount: 0, createdAt: '', updatedAt: '' },
+    { id: 3, channelId: 2, channelName: 'b', title: 'Lofi 进阶', body: '', authorName: '', tags: ['Lofi', 'tips'], likes: 0, commentCount: 0, createdAt: '', updatedAt: '' },
+    { id: 4, channelId: 2, channelName: 'b', title: '无标签', body: '', authorName: '', tags: [], likes: 0, commentCount: 0, createdAt: '', updatedAt: '' },
+  ];
+  it('空标签返回全部', () => {
+    expect(filterPostsByTag(posts, '')).toHaveLength(4);
+    expect(filterPostsByTag(posts, '   ')).toHaveLength(4);
+  });
+  it('精确匹配（大小写不敏感）', () => {
+    expect(filterPostsByTag(posts, 'lofi').map((p) => p.id)).toEqual([1, 3]);
+    expect(filterPostsByTag(posts, 'LOFI').map((p) => p.id)).toEqual([1, 3]);
+  });
+  it('单标签匹配', () => {
+    expect(filterPostsByTag(posts, 'react').map((p) => p.id)).toEqual([2]);
+  });
+  it('无匹配返回空', () => {
+    expect(filterPostsByTag(posts, 'nope')).toHaveLength(0);
+  });
+  it('不修改入参', () => {
+    const before = posts.map((p) => p.id);
+    filterPostsByTag(posts, 'lofi');
+    expect(posts.map((p) => p.id)).toEqual(before);
   });
 });
 

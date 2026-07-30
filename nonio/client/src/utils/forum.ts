@@ -181,6 +181,17 @@ export function filterPostsByChannel(
 }
 
 /**
+ * 按标签精确（大小写不敏感）筛选帖子；tag 为空 / '' 时返回全部。
+ * 与 filterPostsByChannel / searchPosts 形成一组正交过滤器，便于「点击标签即筛选」。
+ * 不修改入参。
+ */
+export function filterPostsByTag(posts: Post[], tag: string): Post[] {
+  const t = tag.trim().toLowerCase();
+  if (!t) return posts;
+  return posts.filter((p) => (p.tags ?? []).some((x) => x.toLowerCase() === t));
+}
+
+/**
  * 按频道统计帖子数量，返回 channelId → 帖子数的映射。
  * 与 filterPostsByChannel 共用归一化逻辑（'' / 0 / null 视为无效频道，单独计数）。
  * 纯函数，不修改入参；用于频道筛选下拉中实时展示各频道发帖数。
