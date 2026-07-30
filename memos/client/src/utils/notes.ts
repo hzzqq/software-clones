@@ -85,6 +85,19 @@ export function countWords(content: string): number {
 }
 
 /**
+ * 段落数统计：以空行分隔，忽略仅含空白的片段。
+ * 空串/非字符串返回 0；单段无空行返回 1。
+ */
+export function countParagraphs(content: string): number {
+  if (typeof content !== 'string' || content.trim() === '') return 0;
+  const blocks = content
+    .split(/\n\s*\n/)
+    .map((b) => b.trim())
+    .filter((b) => b.length > 0);
+  return blocks.length;
+}
+
+/**
  * 按标签聚合笔记数量（标签小写去重），返回 标签 -> 数量 的映射。
  * 笔记若没有标签则不计入；同一标签出现在多篇笔记则累加。
  */

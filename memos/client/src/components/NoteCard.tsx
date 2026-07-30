@@ -15,7 +15,7 @@ import UnarchiveOutlinedIcon from '@mui/icons-material/UnarchiveOutlined';
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { Note } from '../types';
-import { visibilityLabel, formatRelativeTime, countChars, countWords, formatCharCount, estimateReading, extractTitle, truncatePreview, highlightSegments } from '../utils/notes';
+import { visibilityLabel, formatRelativeTime, countChars, countWords, countParagraphs, formatCharCount, estimateReading, extractTitle, truncatePreview, highlightSegments } from '../utils/notes';
 
 interface Props {
   note: Note;
@@ -77,7 +77,7 @@ export default function NoteCard(props: Props): JSX.Element {
           <Chip size="small" label={visibilityLabel(note.visibility)} color={visColor[note.visibility]} />
           <Typography variant="caption" color="text.secondary">
             {formatRelativeTime(note.createdAt)}
-            {note.pinned ? ' · 📌' : ''} · {formatCharCount(countChars(note.content))} 字 · {countWords(note.content)} 词
+            {note.pinned ? ' · 📌' : ''} · {formatCharCount(countChars(note.content))} 字 · {countWords(note.content)} 词 · {countParagraphs(note.content)} 段
             {reading > 0 ? ` · 约 ${reading} 分钟` : ''}
           </Typography>
         </Stack>
