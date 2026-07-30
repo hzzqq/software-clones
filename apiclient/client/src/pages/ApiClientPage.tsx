@@ -1,4 +1,4 @@
-import { useEffect, useState, Fragment } from 'react';
+import { useEffect, useState, useMemo, Fragment } from 'react';
 import {
   Box,
   Typography,
@@ -38,7 +38,7 @@ import { historyApi } from '../api/history';
 import type { HttpMethod, ProxyResponse, SavedRequest, HistoryItem } from '../types';
 import RequestBuilder from '../components/RequestBuilder';
 import ResponseViewer from '../components/ResponseViewer';
-import { parseHeadersText, parseKeyValueText, headersToText as h2t, matchRequest, matchHistory, buildCurlCommand, sortRequests, groupByMethod, buildUrlWithQuery, statusText, statusFamily, methodColor, type RequestSort } from '../utils/http';
+import { parseHeadersText, parseKeyValueText, headersToText as h2t, matchRequest, matchHistory, buildCurlCommand, sortRequests, groupByMethod, buildUrlWithQuery, statusText, statusFamily, methodColor, mergeHeaders, type RequestSort } from '../utils/http';
 
 interface Draft {
   method: HttpMethod;
@@ -50,6 +50,12 @@ interface Draft {
 
 const EMPTY: Draft = { method: 'GET', url: '', paramsText: '', headersText: '', body: '' };
 
+/** 每次请求附带的默认头（代理层基础头，用户填写的头会覆盖同名键）。 */
+const DEFAULT_HEADERS: Record<string, string> = {
+  Accept: 'application/json',
+  'User-Agent': 'apiclient',
+};
+
 export default function ApiClientPage(): JSX.Element {
   const [draft, setDraft] = useState<Draft>(EMPTY);
   const [response, setResponse] = useState<ProxyResponse | null>(null);
@@ -58,6 +64,12 @@ export default function ApiClientPage(): JSX.Element {
 
   const [sideTab, setSideTab] = useState(0);
   const [requests, setRequests] = useState<SavedRequest[]>([]);
+
+  const finalHeaders = useMemo(
+    () => mergeHeaders(DEFAULT_HEADERS, parseHeadersText(draft.headersText)),
+    [draft.headersText],
+  );
+  const finalHeadersEntries = Object.entries(finalHeaders);
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [sideQuery, setSideQuery] = useState('');
   const [sideSort, setSideSort] = useState<RequestSort>('name');
@@ -338,6 +350,18 @@ export default function ApiClientPage(): JSX.Element {
             onBody={(b) => set({ body: b })}
             onSend={send}
           />
+          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ px: 1.5, pb: 1, pt: 0.5 }}>
+            <Typography variant="caption" color="text.secondary">
+              最终请求头：
+            </Typography>
+            {finalHeadersEntries.length === 0 ? (
+              <Typography variant="caption" color="text.secondary">（无）</Typography>
+            ) : (
+              finalHeadersEntries.map(([k, v]) => (
+                <Chip key={k} size="small" variant="outlined" label={`${k}: ${v}`} />
+              ))
+            )}
+          </Stack>
           <Stack direction="row" spacing={1} alignItems="center" sx={{ px: 1.5, pb: 1 }}>
             <TextField size="small" label="名称（可选）" value={name} onChange={(e) => setName(e.target.value)} sx={{ width: 200 }} />
             <Button variant="outlined" startIcon={<SaveOutlinedIcon />} onClick={save} disabled={!draft.url.trim()}>

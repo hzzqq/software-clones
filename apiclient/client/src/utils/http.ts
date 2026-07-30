@@ -352,3 +352,31 @@ export function methodColor(
       return 'primary';
   }
 }
+
+/**
+ * 合并默认头与自定义头：自定义头覆盖默认头，键名按大小写不敏感匹配
+ * （例如默认含 'Content-Type'、自定义含 'content-type'，后者覆盖前者而非并存）。
+ * 返回新对象（不修改入参）。入参可为 null/undefined，按空对象处理。
+ * 用于请求发送前将全局默认头与用户本次填写头合并为最终请求头。
+ */
+export function mergeHeaders(
+  defaults: Record<string, string> | null | undefined,
+  custom: Record<string, string> | null | undefined,
+): Record<string, string> {
+  const base: Record<string, string> = {};
+  const lowerMap: Record<string, string> = {};
+  if (defaults) {
+    for (const [k, v] of Object.entries(defaults)) {
+      lowerMap[k.toLowerCase()] = k;
+      base[k] = v;
+    }
+  }
+  if (custom) {
+    for (const [k, v] of Object.entries(custom)) {
+      const canon = lowerMap[k.toLowerCase()];
+      if (canon) delete base[canon];
+      base[k] = v;
+    }
+  }
+  return base;
+}

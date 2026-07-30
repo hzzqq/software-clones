@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseHeadersText, headersToText, parseKeyValueText, statusKind, tryPrettyJson, matchRequest, matchHistory, buildCurlCommand, sortRequests, groupByMethod, buildUrlWithQuery, statusText, byteLengthOf, formatBytes, getResponseMediaType, formatResponseBody, methodColor } from './http';
+import { parseHeadersText, headersToText, parseKeyValueText, statusKind, tryPrettyJson, matchRequest, matchHistory, buildCurlCommand, sortRequests, groupByMethod, buildUrlWithQuery, statusText, byteLengthOf, formatBytes, getResponseMediaType, formatResponseBody, methodColor, mergeHeaders } from './http';
 
 describe('parseHeadersText', () => {
   it('解析多行 header', () => {
@@ -301,5 +301,35 @@ describe('methodColor', () => {
     expect(methodColor('HEAD')).toBe('primary');
     expect(methodColor('OPTIONS')).toBe('primary');
     expect(methodColor('FOO')).toBe('primary');
+  });
+});
+
+describe('mergeHeaders', () => {
+  it('自定义头覆盖默认头(同键)', () => {
+    const out = mergeHeaders({ 'Content-Type': 'application/json' }, { 'Content-Type': 'text/plain' });
+    expect(out).toEqual({ 'Content-Type': 'text/plain' });
+  });
+  it('大小写不敏感合并(不同写法视为同键)', () => {
+    const out = mergeHeaders({ 'content-type': 'application/json' }, { 'Content-Type': 'text/plain' });
+    // 默认先写入 content-type，自定义键不同写法应替换而非并存
+    expect(Object.keys(out)).toEqual(['Content-Type']);
+    expect(out['Content-Type']).toBe('text/plain');
+  });
+  it('默认头保留在自定义未覆盖时', () => {
+    expect(mergeHeaders({ Accept: '*/*' }, { Authorization: 'Bearer x' })).toEqual({
+      Accept: '*/*',
+      Authorization: 'Bearer x',
+    });
+  });
+  it('入参为空安全返回', () => {
+    expect(mergeHeaders(null, undefined)).toEqual({});
+    expect(mergeHeaders({ a: '1' }, null)).toEqual({ a: '1' });
+  });
+  it('不修改入参', () => {
+    const d = { a: '1' };
+    const c = { b: '2' };
+    mergeHeaders(d, c);
+    expect(d).toEqual({ a: '1' });
+    expect(c).toEqual({ b: '2' });
   });
 });

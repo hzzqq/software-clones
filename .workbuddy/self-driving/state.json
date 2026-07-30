@@ -1,5 +1,5 @@
 {
-  "cycle": 244,
+  "cycle": 245,
   "max_cycles": 253,
   "phase": "running",
   "paused": false,
@@ -3235,6 +3235,20 @@
       "verify": "client 49 passed + typecheck pass",
       "score": 80,
       "ts": 1785409158
+    },
+    {
+      "cycle": 245,
+      "app": "apiclient",
+      "task_id": "merge_headers",
+      "new_requirement": "mergeHeaders 纯函数(默认头+用户头,大小写不敏感覆盖)+ 测试；ApiClientPage 新增「最终请求头」预览",
+      "files": [
+        "client/src/utils/http.ts",
+        "client/src/utils/http.test.ts",
+        "client/src/pages/ApiClientPage.tsx"
+      ],
+      "verify": "client 94 passed + typecheck pass",
+      "score": 80,
+      "ts": 1785409445
     }
   ],
   "last_task_id": "server_security_headers",
