@@ -232,3 +232,13 @@ export function countElementsByType(els: CanvasElement[]): Record<string, number
   }
   return counts;
 }
+
+/**
+ * 元素面积（包围盒宽×高，取绝对值，避免负尺寸导致负面积）。
+ * 用于选中信息栏展示元素占用面积；对 w/h 缺失或非有限值返回 0。
+ */
+export function elementArea(el: CanvasElement): number {
+  const w = Number.isFinite(el?.w) ? el.w : 0;
+  const h = Number.isFinite(el?.h) ? el.h : 0;
+  return Math.abs(w) * Math.abs(h);
+}

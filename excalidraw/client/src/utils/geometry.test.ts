@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { normalizeRect, distance, hitTest, elementBounds, uid, serializeScene, snapPoint, boundingBox, getCenter, getSelectionBox, translateElement, dragElement, clampStrokeWidth, countElementsByType } from './geometry';
+import { normalizeRect, distance, hitTest, elementBounds, uid, serializeScene, snapPoint, boundingBox, getCenter, getSelectionBox, translateElement, dragElement, clampStrokeWidth, countElementsByType, elementArea } from './geometry';
 import type { CanvasElement } from '../types';
 
 describe('normalizeRect', () => {
@@ -210,5 +210,20 @@ describe('countElementsByType', () => {
   });
   it('returns empty for empty input', () => {
     expect(countElementsByType([])).toEqual({});
+  });
+});
+
+describe('elementArea', () => {
+  const rect: CanvasElement = { id: '1', type: 'rect', stroke: '#000', strokeWidth: 2, x: 0, y: 0, w: 10, h: 20 } as unknown as CanvasElement;
+  it('矩形面积=宽×高', () => {
+    expect(elementArea(rect)).toBe(200);
+  });
+  it('负尺寸取绝对值', () => {
+    const neg = { ...rect, w: -10, h: 5 } as unknown as CanvasElement;
+    expect(elementArea(neg)).toBe(50);
+  });
+  it('非有限尺寸返回 0', () => {
+    const bad = { ...rect, w: NaN, h: 5 } as unknown as CanvasElement;
+    expect(elementArea(bad)).toBe(0);
   });
 });
