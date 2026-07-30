@@ -25,7 +25,7 @@ import { channelApi } from '../api/channels';
 import { postApi } from '../api/posts';
 import type { Channel, Post } from '../types';
 import PostCard from '../components/PostCard';
-import { parseTags, searchPosts, topPosts, summarizePosts, filterPostsByChannel, countPostsByChannel, sortPosts, formatCompactNumber } from '../utils/forum';
+import { parseTags, searchPosts, topPosts, summarizePosts, filterPostsByChannel, countPostsByChannel, topAuthors, sortPosts, formatCompactNumber } from '../utils/forum';
 
 export default function HomePage(): JSX.Element {
   const [channels, setChannels] = useState<Channel[]>([]);
@@ -127,6 +127,14 @@ export default function HomePage(): JSX.Element {
       <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
         <Chip size="small" color="primary" variant="outlined" label={`共 ${summary.total} 篇 · ${summary.channels} 个频道 · ♥ ${summary.totalLikes} · 💬 ${summary.totalComments}`} />
       </Stack>
+      {topAuthors(posts, 3).length > 0 && (
+        <Stack direction="row" spacing={0.5} sx={{ mt: 0.5 }} alignItems="center" flexWrap="wrap" useFlexGap>
+          <Typography variant="caption" color="text.secondary">活跃作者：</Typography>
+          {topAuthors(posts, 3).map((a) => (
+            <Chip key={a.author} size="small" variant="outlined" label={`${a.author} ×${a.count}`} />
+          ))}
+        </Stack>
+      )}
 
       <TextField
         fullWidth

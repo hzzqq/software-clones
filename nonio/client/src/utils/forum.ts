@@ -195,6 +195,28 @@ export function countPostsByChannel(posts: Post[]): Record<number, number> {
   return map;
 }
 
+export interface AuthorCount {
+  author: string;
+  count: number;
+}
+
+/**
+ * 按发帖数取 Top N 作者（同名聚合，空名/undefined 忽略，不计入榜单）。
+ * 返回按 count 降序、同数按作者名字典序的稳定结果；n<=0 返回空数组。
+ */
+export function topAuthors(posts: Post[], n = 3): AuthorCount[] {
+  if (!Array.isArray(posts)) return [];
+  const map = new Map<string, number>();
+  for (const p of posts) {
+    const name = p?.authorName;
+    if (typeof name !== 'string' || name.trim() === '') continue;
+    map.set(name, (map.get(name) ?? 0) + 1);
+  }
+  const arr = Array.from(map, ([author, count]) => ({ author, count }));
+  arr.sort((a, b) => b.count - a.count || a.author.localeCompare(b.author));
+  return n > 0 ? arr.slice(0, n) : [];
+}
+
 /** 帖子统计概览。 */
 export interface PostsSummary {
   total: number;

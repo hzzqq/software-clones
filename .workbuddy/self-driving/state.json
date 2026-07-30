@@ -1,5 +1,5 @@
 {
-  "cycle": 239,
+  "cycle": 240,
   "max_cycles": 253,
   "phase": "running",
   "paused": false,
@@ -3165,6 +3165,20 @@
       "verify": "client 90 passed + typecheck pass",
       "score": 80,
       "ts": 1785407654.998
+    },
+    {
+      "cycle": 240,
+      "app": "nonio",
+      "task_id": "top_authors",
+      "new_requirement": "topAuthors 纯函数(按发帖数取Top N作者)+测试;HomePage 新增「活跃作者」chips",
+      "files": [
+        "client/src/utils/forum.ts",
+        "client/src/utils/forum.test.ts",
+        "client/src/pages/HomePage.tsx"
+      ],
+      "verify": "client 71 passed + typecheck pass",
+      "score": 80,
+      "ts": 1785407861.056
     }
   ],
   "last_task_id": "server_security_headers",

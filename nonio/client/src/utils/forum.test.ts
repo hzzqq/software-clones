@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseTags, slugify, buildCommentTree, countComments, searchPosts, excerpt, topPosts, summarizePosts, filterPostsByChannel, countPostsByChannel, formatRelativeTime, formatDateTime, sortPosts, parseIdParam, formatCompactNumber, stripMarkdown } from './forum';
+import { parseTags, slugify, buildCommentTree, countComments, searchPosts, excerpt, topPosts, summarizePosts, filterPostsByChannel, countPostsByChannel, topAuthors, formatRelativeTime, formatDateTime, sortPosts, parseIdParam, formatCompactNumber, stripMarkdown } from './forum';
 import type { Comment, Post } from '../types';
 
 function mkComment(id: number, parentId: number | null): Comment {
@@ -372,5 +372,25 @@ describe('countPostsByChannel', () => {
       { id: 2, channelId: 3, title: 'y', likes: 0, createdAt: '', ...base },
     ];
     expect(countPostsByChannel(bad)).toEqual({ 3: 1 });
+  });
+});
+
+describe('topAuthors', () => {
+  const mk = (authorName: string, id = 1): Post => ({
+    id, channelId: 1, channelName: 'c', title: 't', body: '', authorName, tags: [], likes: 0, commentCount: 0, createdAt: '', updatedAt: '',
+  });
+  it('按发帖数降序取 Top N', () => {
+    const posts = [mk('A', 1), mk('A', 2), mk('B', 3), mk('B', 4), mk('C', 5)];
+    expect(topAuthors(posts, 2)).toEqual([{ author: 'A', count: 2 }, { author: 'B', count: 2 }]);
+  });
+  it('忽略空名作者', () => {
+    const posts = [mk('A', 1), mk('', 2), mk(undefined as unknown as string, 3)];
+    expect(topAuthors(posts, 3)).toEqual([{ author: 'A', count: 1 }]);
+  });
+  it('n<=0 返回空数组', () => {
+    expect(topAuthors([mk('A')], 0)).toEqual([]);
+  });
+  it('非数组返回空数组', () => {
+    expect(topAuthors(null as unknown as Post[])).toEqual([]);
   });
 });
