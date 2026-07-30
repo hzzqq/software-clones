@@ -1,7 +1,7 @@
 {
-  "cycle": 252,
+  "cycle": 253,
   "max_cycles": 253,
-  "phase": "running",
+  "phase": "completed",
   "paused": false,
   "log": [
     {
@@ -3353,6 +3353,20 @@
       "verify": "client 76 passed + typecheck pass",
       "score": 82,
       "ts": 1785411187.354
+    },
+    {
+      "cycle": 253,
+      "app": "memos",
+      "task_id": "filter_notes_by_visibility",
+      "new_requirement": "filterNotesByVisibility 纯函数(按 public/protected/private 筛选)+测试;NotesPage 新增可见性筛选下拉+可清除 chip",
+      "files": [
+        "client/src/utils/notes.ts",
+        "client/src/utils/notes.test.ts",
+        "client/src/pages/NotesPage.tsx"
+      ],
+      "verify": "client 74 passed + typecheck pass",
+      "score": 80,
+      "ts": 1785411414.43
     }
   ],
   "last_task_id": "server_security_headers",

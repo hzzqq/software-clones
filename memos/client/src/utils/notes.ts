@@ -125,6 +125,20 @@ export function filterNotesByTag(notes: Note[], tag: string): Note[] {
   );
 }
 
+/**
+ * 按可见性筛选笔记；visibility 为 null / '' / 'all' 时返回全部。
+ * 与 filterNotesByTag / pinnedNotes / sortNotes 形成一组正交过滤器，便于按
+ * 公开 / 受限 / 私有筛选当前列表。不修改入参（返回新数组）。
+ */
+export function filterNotesByVisibility(
+  notes: Note[],
+  visibility: Visibility | 'all' | '' | null,
+): Note[] {
+  const v = (visibility ?? '').toString().trim();
+  if (!v || v === 'all') return notes;
+  return notes.filter((n) => n.visibility === v);
+}
+
 /** 返回已置顶的笔记（pinned === true），不修改入参。 */
 export function pinnedNotes(notes: Note[]): Note[] {
   return notes.filter((n) => n.pinned);

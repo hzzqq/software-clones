@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseTags, formatRelativeTime, visibilityLabel, groupNotesByTag, filterNotesByTag, pinnedNotes, sortNotesByPinned, summarizeNotes, groupNotesByMonth, monthKeyOf, formatCharCount, sortNotes, extractTitle, truncatePreview, highlightSegments } from './notes';
+import { parseTags, formatRelativeTime, visibilityLabel, groupNotesByTag, filterNotesByTag, filterNotesByVisibility, pinnedNotes, sortNotesByPinned, summarizeNotes, groupNotesByMonth, monthKeyOf, formatCharCount, sortNotes, extractTitle, truncatePreview, highlightSegments } from './notes';
 import { Visibility, Note } from '../types';
 
 describe('parseTags', () => {
@@ -154,6 +154,33 @@ describe('filterNotesByTag', () => {
   it('不修改入参', () => {
     const before = notes.map((n) => n.id);
     filterNotesByTag(notes, 'work');
+    expect(notes.map((n) => n.id)).toEqual(before);
+  });
+});
+
+describe('filterNotesByVisibility', () => {
+  const notes: Note[] = [
+    { id: 1, content: '', visibility: 'public', pinned: false, archived: false, createdAt: '', updatedAt: '', tags: [] },
+    { id: 2, content: '', visibility: 'protected', pinned: false, archived: false, createdAt: '', updatedAt: '', tags: [] },
+    { id: 3, content: '', visibility: 'private', pinned: false, archived: false, createdAt: '', updatedAt: '', tags: [] },
+    { id: 4, content: '', visibility: 'public', pinned: false, archived: false, createdAt: '', updatedAt: '', tags: [] },
+  ];
+  it('空 / all 返回全部', () => {
+    expect(filterNotesByVisibility(notes, '').map((n) => n.id)).toEqual([1, 2, 3, 4]);
+    expect(filterNotesByVisibility(notes, 'all').map((n) => n.id)).toEqual([1, 2, 3, 4]);
+    expect(filterNotesByVisibility(notes, null).map((n) => n.id)).toEqual([1, 2, 3, 4]);
+  });
+  it('按可见性精确筛选', () => {
+    expect(filterNotesByVisibility(notes, 'public').map((n) => n.id)).toEqual([1, 4]);
+    expect(filterNotesByVisibility(notes, 'protected').map((n) => n.id)).toEqual([2]);
+    expect(filterNotesByVisibility(notes, 'private').map((n) => n.id)).toEqual([3]);
+  });
+  it('不存在的可见性返回空', () => {
+    expect(filterNotesByVisibility(notes, 'secret' as Visibility)).toEqual([]);
+  });
+  it('不修改入参', () => {
+    const before = notes.map((n) => n.id);
+    filterNotesByVisibility(notes, 'public');
     expect(notes.map((n) => n.id)).toEqual(before);
   });
 });

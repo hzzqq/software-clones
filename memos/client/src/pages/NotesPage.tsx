@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
+  Chip,
   FormControl,
   FormControlLabel,
   IconButton,
@@ -25,7 +26,7 @@ import { Note, Visibility } from '../types';
 import { noteApi } from '../api/notes';
 import { tagApi } from '../api/tags';
 import { useNotes } from '../hooks/useNotes';
-import { pinnedNotes, sortNotesByPinned, summarizeNotes, filterNotesByTag, groupNotesByMonth, formatCharCount, sortNotes } from '../utils/notes';
+import { pinnedNotes, sortNotesByPinned, summarizeNotes, filterNotesByTag, filterNotesByVisibility, groupNotesByMonth, formatCharCount, visibilityLabel, sortNotes } from '../utils/notes';
 
 export default function NotesPage(): JSX.Element {
   const navigate = useNavigate();
@@ -35,6 +36,7 @@ export default function NotesPage(): JSX.Element {
   const [sort, setSort] = useState<'newest' | 'oldest' | 'updated'>('newest');
   const [onlyPinned, setOnlyPinned] = useState(false);
   const [groupByMonth, setGroupByMonth] = useState(false);
+  const [visFilter, setVisFilter] = useState<'' | 'public' | 'protected' | 'private'>('');
   const [dropdownTag, setDropdownTag] = useState('');
   const [tags, setTags] = useState<{ id: number; name: string; count: number }[]>([]);
   const { notes, loading, error, reload } = useNotes({ archived, tag: activeTag, q });
@@ -48,9 +50,14 @@ export default function NotesPage(): JSX.Element {
     [onlyPinned, sorted]
   );
 
+  const byVisibility = useMemo(
+    () => filterNotesByVisibility(visible, visFilter),
+    [visible, visFilter]
+  );
+
   const filtered = useMemo(
-    () => filterNotesByTag(visible, dropdownTag),
-    [visible, dropdownTag]
+    () => filterNotesByTag(byVisibility, dropdownTag),
+    [byVisibility, dropdownTag]
   );
 
   const groupedByMonth = useMemo(
@@ -135,9 +142,19 @@ export default function NotesPage(): JSX.Element {
 
       {!archived && <Composer onSubmit={handleCreate} />}
 
-      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
-        共 {summary.total} 篇 · {formatCharCount(summary.totalChars)} 字 · {summary.tagTotal} 个标签
-      </Typography>
+      <Stack direction="row" spacing={1} sx={{ mt: 1 }} alignItems="center">
+        <Typography variant="caption" color="text.secondary">
+          共 {summary.total} 篇 · {formatCharCount(summary.totalChars)} 字 · {summary.tagTotal} 个标签
+        </Typography>
+        {visFilter && (
+          <Chip
+            size="small"
+            color="secondary"
+            label={`${visibilityLabel(visFilter)} ✕`}
+            onDelete={() => setVisFilter('')}
+          />
+        )}
+      </Stack>
 
       <Box sx={{ mt: 2 }}>
         <TagFilter tags={tags} active={activeTag} onSelect={setActiveTag} />
@@ -157,6 +174,19 @@ export default function NotesPage(): JSX.Element {
             {tags.map((t) => (
               <MenuItem key={t.id} value={t.name}>{`#${t.name} (${t.count})`}</MenuItem>
             ))}
+          </Select>
+        </FormControl>
+        <FormControl size="small" sx={{ minWidth: 160 }}>
+          <InputLabel>按可见性筛选</InputLabel>
+          <Select
+            label="按可见性筛选"
+            value={visFilter}
+            onChange={(e) => setVisFilter(e.target.value as '' | 'public' | 'protected' | 'private')}
+          >
+            <MenuItem value="">全部可见性</MenuItem>
+            <MenuItem value="public">{visibilityLabel('public')}</MenuItem>
+            <MenuItem value="protected">{visibilityLabel('protected')}</MenuItem>
+            <MenuItem value="private">{visibilityLabel('private')}</MenuItem>
           </Select>
         </FormControl>
         <FormControl size="small" sx={{ minWidth: 160 }}>
