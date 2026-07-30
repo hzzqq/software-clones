@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { normalizeRect, distance, hitTest, elementBounds, uid, serializeScene, snapPoint, boundingBox, getCenter, getSelectionBox, translateElement, dragElement, clampStrokeWidth, countElementsByType, elementArea } from './geometry';
+import { normalizeRect, distance, hitTest, elementBounds, uid, serializeScene, snapPoint, boundingBox, getCenter, getSelectionBox, translateElement, dragElement, clampStrokeWidth, countElementsByType, elementArea, polylineLength } from './geometry';
 import type { CanvasElement } from '../types';
 
 describe('normalizeRect', () => {
@@ -225,5 +225,24 @@ describe('elementArea', () => {
   it('非有限尺寸返回 0', () => {
     const bad = { ...rect, w: NaN, h: 5 } as unknown as CanvasElement;
     expect(elementArea(bad)).toBe(0);
+  });
+});
+
+describe('polylineLength', () => {
+  const pts = [
+    { x: 0, y: 0 },
+    { x: 3, y: 4 },
+    { x: 3, y: 0 },
+  ];
+  it('3 点折线总长 5+4=9', () => {
+    expect(polylineLength(pts)).toBeCloseTo(9, 6);
+  });
+  it('单点/空/非数组返回 0', () => {
+    expect(polylineLength([])).toBe(0);
+    expect(polylineLength([{ x: 1, y: 1 }])).toBe(0);
+    expect(polylineLength(null as unknown as { x: number; y: number }[])).toBe(0);
+  });
+  it('非有限坐标按 0 处理不抛错', () => {
+    expect(polylineLength([{ x: 0, y: 0 }, { x: NaN, y: 2 }])).toBeCloseTo(2, 6);
   });
 });

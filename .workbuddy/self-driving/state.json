@@ -1,5 +1,5 @@
 {
-  "cycle": 246,
+  "cycle": 247,
   "max_cycles": 253,
   "phase": "running",
   "paused": false,
@@ -3263,6 +3263,20 @@
       "verify": "client 89 passed + typecheck pass",
       "score": 80,
       "ts": 1785409660
+    },
+    {
+      "cycle": 247,
+      "app": "excalidraw",
+      "task_id": "polyline_length",
+      "new_requirement": "polylineLength 纯函数(折线总长度,非有限坐标兜底)+ 测试；Whiteboard 钢笔元素选中展示「路径长度」",
+      "files": [
+        "client/src/utils/geometry.ts",
+        "client/src/utils/geometry.test.ts",
+        "client/src/components/Whiteboard.tsx"
+      ],
+      "verify": "client 62 passed + typecheck pass",
+      "score": 80,
+      "ts": 1785409865
     }
   ],
   "last_task_id": "server_security_headers",

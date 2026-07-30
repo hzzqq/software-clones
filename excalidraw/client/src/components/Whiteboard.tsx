@@ -19,7 +19,7 @@ import TitleIcon from '@mui/icons-material/Title';
 import rough from 'roughjs';
 import type { RoughCanvas } from 'roughjs/bin/canvas';
 import type { CanvasElement, Point, Scene, Tool } from '../types';
-import { normalizeRect, hitTest, uid, serializeScene, snapPoint, boundingBox, getCenter, getSelectionBox, translateElement, dragElement, rotateElement, scaleElement, clampStrokeWidth, elementArea } from '../utils/geometry';
+import { normalizeRect, hitTest, uid, serializeScene, snapPoint, boundingBox, getCenter, getSelectionBox, translateElement, dragElement, rotateElement, scaleElement, clampStrokeWidth, elementArea, polylineLength } from '../utils/geometry';
 import { formatRelativeTime } from '../utils/time';
 import { sceneApi } from '../api/scenes';
 
@@ -388,6 +388,9 @@ export default function Whiteboard({ elements, setElements }: Props): JSX.Elemen
             <>
               <Chip size="small" variant="outlined" sx={{ ml: 1 }} title="选中元素中心坐标" label={`中心 ${Math.round(c.x)}, ${Math.round(c.y)}`} />
               <Chip size="small" variant="outlined" sx={{ ml: 1 }} title="选中元素面积" label={`面积 ${Math.round(elementArea(sel))}`} />
+              {sel.type === 'pen' && sel.points && sel.points.length >= 2 && (
+                <Chip size="small" variant="outlined" sx={{ ml: 1 }} title="钢笔路径长度" label={`路径 ${Math.round(polylineLength(sel.points))}`} />
+              )}
             </>
           );
         })()}

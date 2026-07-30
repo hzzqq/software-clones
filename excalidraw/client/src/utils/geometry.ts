@@ -242,3 +242,24 @@ export function elementArea(el: CanvasElement): number {
   const h = Number.isFinite(el?.h) ? el.h : 0;
   return Math.abs(w) * Math.abs(h);
 }
+
+/**
+ * 计算折线总长度（相邻点之间的欧氏距离之和）。
+ * - 点少于 2 个 → 返回 0（无路径）。
+ * - 任意点缺失或非有限坐标视为 (0,0) 处理，避免抛错。
+ * 用于钢笔元素「路径长度」展示。入参非数组返回 0。
+ */
+export function polylineLength(points: Point[] | null | undefined): number {
+  if (!Array.isArray(points) || points.length < 2) return 0;
+  let total = 0;
+  for (let i = 1; i < points.length; i++) {
+    const a = points[i - 1];
+    const b = points[i];
+    const ax = Number.isFinite(a?.x) ? a.x : 0;
+    const ay = Number.isFinite(a?.y) ? a.y : 0;
+    const bx = Number.isFinite(b?.x) ? b.x : 0;
+    const by = Number.isFinite(b?.y) ? b.y : 0;
+    total += Math.hypot(bx - ax, by - ay);
+  }
+  return total;
+}
