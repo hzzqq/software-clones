@@ -18,6 +18,7 @@ import {
   timestampToIso,
   isoToTimestampSeconds,
   truncateMiddle,
+  escapeRegExp,
 } from '../src/utils/tools';
 
 describe('base64 helpers', () => {
@@ -197,5 +198,21 @@ describe('truncateMiddle', () => {
   });
   it('hard-truncates when max too small for ellipsis', () => {
     expect(truncateMiddle('abcdefghij', 3, '…')).toBe('a…j');
+  });
+});
+
+describe('escapeRegExp', () => {
+  it('转义正则元字符', () => {
+    expect(escapeRegExp('a.b*c')).toBe('a\\.b\\*c');
+  });
+  it('转义分组与锚点', () => {
+    expect(escapeRegExp('(x)+?^${y}|z')).toBe('\\(x\\)\\+\\?\\^\\$\\{y\\}\\|z');
+  });
+  it('普通文本不变', () => {
+    expect(escapeRegExp('hello world')).toBe('hello world');
+  });
+  it('空串/非字符串返回空串', () => {
+    expect(escapeRegExp('')).toBe('');
+    expect(escapeRegExp(null as unknown as string)).toBe('');
   });
 });

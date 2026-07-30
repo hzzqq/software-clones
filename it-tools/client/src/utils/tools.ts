@@ -446,3 +446,12 @@ export function truncateMiddle(text: string, max = 40, ellipsis = '…'): string
   const tail = Math.floor(keep / 2);
   return text.slice(0, head) + ellipsis + text.slice(text.length - tail);
 }
+
+/**
+ * 转义正则特殊字符，使任意字符串可安全用于 RegExp 构造（避免 . * + ? ^ $ ( ) [ ] { } | \ 等被当作元字符）。
+ * 非字符串入参返回空串；空串返回空串。
+ */
+export function escapeRegExp(text: string): string {
+  if (typeof text !== 'string') return '';
+  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}

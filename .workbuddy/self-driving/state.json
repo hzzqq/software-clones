@@ -1,5 +1,5 @@
 {
-  "cycle": 236,
+  "cycle": 237,
   "max_cycles": 253,
   "phase": "running",
   "paused": false,
@@ -3123,6 +3123,19 @@
       "verify": "client 70 passed + typecheck pass",
       "score": 80,
       "ts": 1785406753.6
+    },
+    {
+      "cycle": 237,
+      "app": "it-tools",
+      "task_id": "escape_regexp",
+      "new_requirement": "escapeRegExp 纯函数(正则特殊字符转义)+测试",
+      "files": [
+        "client/src/utils/tools.ts",
+        "client/test/tools.test.ts"
+      ],
+      "verify": "client 96 passed + typecheck pass",
+      "score": 80,
+      "ts": 1785407144.937
     }
   ],
   "last_task_id": "server_security_headers",
