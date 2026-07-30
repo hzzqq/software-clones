@@ -169,3 +169,14 @@ export function meanResolveSeconds(incidents: Incident[], nowMs: number): number
   }
   return total / resolved.length;
 }
+
+/**
+ * 事件解决状态 → 中文标签：resolvedAt 非 null/undefined（即已解决）→ '已解决'，
+ * 仍在进行（resolvedAt 为 null/undefined）→ '进行中'。
+ * 入参为 Incident（仅需 resolvedAt 字段）；非对象/缺字段按「进行中」兜底。
+ * 与 DashboardPage 事件面板「状态」Chip 配套，取代组件内联三元判断。
+ */
+export function incidentStatusLabel(incident: Incident | null | undefined): string {
+  if (!incident || incident.resolvedAt == null) return '进行中';
+  return '已解决';
+}

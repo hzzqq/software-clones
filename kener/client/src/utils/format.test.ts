@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatDuration, incidentDurationSeconds, uptimePercentage, countByStatus, incidentSeverityLabel, incidentSeverityColor, uptimeColor, summarizeIncidents, formatIncidentWindow, formatUptime, meanResolveSeconds } from './format';
+import { formatDuration, incidentDurationSeconds, uptimePercentage, countByStatus, incidentSeverityLabel, incidentSeverityColor, uptimeColor, summarizeIncidents, formatIncidentWindow, formatUptime, meanResolveSeconds, incidentStatusLabel } from './format';
 import type { Incident } from '../types';
 
 describe('formatDuration', () => {
@@ -267,5 +267,25 @@ describe('meanResolveSeconds', () => {
     const before = JSON.stringify(list);
     meanResolveSeconds(list, now);
     expect(JSON.stringify(list)).toBe(before);
+  });
+});
+
+describe('incidentStatusLabel', () => {
+  const base: Incident = {
+    id: 1, serviceId: null, title: 'x', description: null,
+    status: 'open', severity: 'medium',
+    createdAt: '2026-01-01T00:00:00Z', updatedAt: '2026-01-01T00:00:00Z',
+    resolvedAt: null,
+  } as Incident;
+  it('进行中事件返回「进行中」', () => {
+    expect(incidentStatusLabel(base)).toBe('进行中');
+  });
+  it('已解决事件返回「已解决」', () => {
+    expect(incidentStatusLabel({ ...base, resolvedAt: '2026-01-02T00:00:00Z' })).toBe('已解决');
+  });
+  it('非对象/缺字段兜底「进行中」', () => {
+    expect(incidentStatusLabel(null)).toBe('进行中');
+    expect(incidentStatusLabel(undefined)).toBe('进行中');
+    expect(incidentStatusLabel({} as Incident)).toBe('进行中');
   });
 });

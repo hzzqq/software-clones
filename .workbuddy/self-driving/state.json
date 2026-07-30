@@ -1,5 +1,5 @@
 {
-  "cycle": 241,
+  "cycle": 242,
   "max_cycles": 253,
   "phase": "running",
   "paused": false,
@@ -3193,6 +3193,20 @@
       "verify": "client 70 passed + typecheck pass",
       "score": 80,
       "ts": 1785408173
+    },
+    {
+      "cycle": 242,
+      "app": "kener",
+      "task_id": "incident_status_label",
+      "new_requirement": "incidentStatusLabel 纯函数(事件解决状态→中文标签) + 测试；DashboardPage 事件面板接入状态 Chip",
+      "files": [
+        "client/src/utils/format.ts",
+        "client/src/utils/format.test.ts",
+        "client/src/pages/DashboardPage.tsx"
+      ],
+      "verify": "client 82 passed + typecheck pass",
+      "score": 80,
+      "ts": 1785408439
     }
   ],
   "last_task_id": "server_security_headers",
