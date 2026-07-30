@@ -1,5 +1,5 @@
 {
-  "cycle": 243,
+  "cycle": 244,
   "max_cycles": 253,
   "phase": "running",
   "paused": false,
@@ -3221,6 +3221,20 @@
       "verify": "client 71 passed + typecheck pass",
       "score": 80,
       "ts": 1785408822
+    },
+    {
+      "cycle": 244,
+      "app": "glance",
+      "task_id": "filter_widgets_by_enabled",
+      "new_requirement": "filterWidgetsByEnabled 纯函数(开关过滤 disabled 组件)+ 测试；DashboardPage 新增「仅显示启用」开关",
+      "files": [
+        "client/src/utils/filterWidgets.ts",
+        "client/src/utils/filterWidgets.test.ts",
+        "client/src/pages/DashboardPage.tsx"
+      ],
+      "verify": "client 49 passed + typecheck pass",
+      "score": 80,
+      "ts": 1785409158
     }
   ],
   "last_task_id": "server_security_headers",

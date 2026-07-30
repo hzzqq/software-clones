@@ -10,10 +10,12 @@ import {
   DialogContent,
   DialogTitle,
   FormControl,
+  FormControlLabel,
   InputLabel,
   MenuItem,
   Select,
   Stack,
+  Switch,
   TextField,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
@@ -31,7 +33,7 @@ import { useWidgets } from '../hooks/useWidgets';
 import { CreateWidgetInput, UpdateWidgetInput } from '../api/widgets';
 import { configApi } from '../api/config';
 import { Widget, WidgetLayout, WidgetType } from '../types';
-import { filterWidgets, sortWidgets, countWidgetsByType, filterWidgetsByType, summarizeWidgets, groupWidgetsByType, widgetTypeLabel, type WidgetSort } from '../utils/filterWidgets';
+import { filterWidgets, sortWidgets, countWidgetsByType, filterWidgetsByType, filterWidgetsByEnabled, summarizeWidgets, groupWidgetsByType, widgetTypeLabel, type WidgetSort } from '../utils/filterWidgets';
 
 interface WidgetHandlers {
   onConfigure: (widget: Widget) => void;
@@ -86,10 +88,14 @@ export default function DashboardPage(): JSX.Element {
   const [groupByType, setGroupByType] = useState<boolean>(false);
   const [deleteTarget, setDeleteTarget] = useState<Widget | null>(null);
   const [clearAllOpen, setClearAllOpen] = useState<boolean>(false);
+  const [enabledOnly, setEnabledOnly] = useState<boolean>(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const scoped = filterWidgetsByType(widgets, typeFilter);
-  const visibleWidgets = sortWidgets(filterWidgets(search, scoped), sortBy);
+  const visibleWidgets = sortWidgets(
+    filterWidgetsByEnabled(filterWidgets(search, scoped), enabledOnly),
+    sortBy,
+  );
   const typeCounts = countWidgetsByType(widgets);
   const summary = summarizeWidgets(visibleWidgets);
   const groupedWidgets = groupWidgetsByType(visibleWidgets);
@@ -237,6 +243,16 @@ export default function DashboardPage(): JSX.Element {
         >
           按类型分组：{groupByType ? '开' : '关'}
         </Button>
+        <FormControlLabel
+          control={
+            <Switch
+              size="small"
+              checked={enabledOnly}
+              onChange={(e) => setEnabledOnly(e.target.checked)}
+            />
+          }
+          label="仅显示启用"
+        />
         <Button startIcon={<UploadIcon />} onClick={() => fileRef.current?.click()}>
           导入 YAML
         </Button>

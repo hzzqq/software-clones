@@ -91,3 +91,16 @@ export function groupWidgetsByType(widgets: Widget[]): Record<WidgetType, Widget
   }
   return groups as Record<WidgetType, Widget[]>;
 }
+
+/**
+ * 仅保留已启用的组件（widget.enabled === true），返回新数组（不修改入参）。
+ * - only=false（默认）时直接返回原数组浅拷贝（开关关闭，不影响展示）。
+ * - only=true 时仅保留 enabled===true 的组件。
+ * - 空/非数组入参返回 []。
+ * - 用于仪表盘「仅显示启用组件」开关：隐藏被用户禁用的组件而不删除数据。
+ */
+export function filterWidgetsByEnabled(widgets: Widget[], only: boolean = false): Widget[] {
+  if (!Array.isArray(widgets)) return [];
+  if (!only) return widgets.slice();
+  return widgets.filter((w) => w.enabled === true);
+}

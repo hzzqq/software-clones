@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { filterWidgets, sortWidgets, countWidgetsByType, filterWidgetsByType, summarizeWidgets, widgetTypeLabel } from './filterWidgets';
-import type { Widget } from '../types';
+import { filterWidgets, sortWidgets, countWidgetsByType, filterWidgetsByType, filterWidgetsByEnabled, summarizeWidgets, widgetTypeLabel } from './filterWidgets';
+import type { Widget, WidgetLayout, WidgetConfig } from '../types';
 
 function mk(id: number, title: string, type: Widget['type']): Widget {
   return {
@@ -120,5 +120,30 @@ describe('widgetTypeLabel', () => {
   });
   it('未知类型原样透传', () => {
     expect(widgetTypeLabel('unknown-type' as unknown as Widget['type'])).toBe('unknown-type');
+  });
+});
+
+describe('filterWidgetsByEnabled', () => {
+  const widgets: Widget[] = [
+    { id: 1, type: 'clock', title: 'A', layout: {} as WidgetLayout, config: {} as WidgetConfig, enabled: true, createdAt: '', updatedAt: '' },
+    { id: 2, type: 'rss', title: 'B', layout: {} as WidgetLayout, config: {} as WidgetConfig, enabled: false, createdAt: '', updatedAt: '' },
+    { id: 3, type: 'weather', title: 'C', layout: {} as WidgetLayout, config: {} as WidgetConfig, enabled: true, createdAt: '', updatedAt: '' },
+  ];
+  it('仅保留 enabled=true', () => {
+    expect(filterWidgetsByEnabled(widgets, true).map((w) => w.id)).toEqual([1, 3]);
+  });
+  it('only=false 时原样返回(浅拷贝)', () => {
+    const out = filterWidgetsByEnabled(widgets, false);
+    expect(out.map((w) => w.id)).toEqual([1, 2, 3]);
+    expect(out).not.toBe(widgets);
+  });
+  it('不修改原数组', () => {
+    const before = widgets.map((w) => w.id);
+    filterWidgetsByEnabled(widgets, true);
+    expect(widgets.map((w) => w.id)).toEqual(before);
+  });
+  it('空/非数组返回空数组', () => {
+    expect(filterWidgetsByEnabled([])).toEqual([]);
+    expect(filterWidgetsByEnabled(null as unknown as Widget[])).toEqual([]);
   });
 });
