@@ -6,6 +6,8 @@
  */
 
 /** Shape of the standardized response envelope returned by all backend routes. */
+import { authStore } from '../authStore';
+
 export interface ApiEnvelope<T> {
   code: number;
   message: string;
@@ -43,6 +45,9 @@ async function request<T>(method: string, path: string, options?: RequestOptions
     'Content-Type': 'application/json',
     ...(options?.headers as Record<string, string> | undefined),
   };
+  // 自动附加登录令牌（如有）
+  const token = authStore.getToken();
+  if (token) headers['Authorization'] = `Bearer ${token}`;
 
   // 请求超时防护：避免「已连接但后端挂起 / 极慢」导致 UI 永久转圈、用户无反馈。
   // 内部 AbortController 在 DEFAULT_TIMEOUT_MS 后主动中断 fetch；
@@ -74,9 +79,12 @@ async function request<T>(method: string, path: string, options?: RequestOptions
     if (options?.signal) options.signal.removeEventListener('abort', onCallerAbort);
   }
 
-  // Reserved hooks: surface 401/403 so the app can redirect to login later.
+  // 鉴权失败：清理本地会话并广播事件，由布局层重定向到登录页。
   if (response.status === 401 || response.status === 403) {
-    console.warn(`Auth error (${response.status}) on ${method} ${path}`);
+    authStore.clear();
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('memos:unauthorized'));
+    }
   }
 
   let payload: ApiEnvelope<T>;

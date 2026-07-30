@@ -16,3 +16,9 @@ export interface Tag {
   name: string;
   count: number;
 }
+
+export interface User {
+  id: number;
+  email: string;
+  displayName: string;
+}

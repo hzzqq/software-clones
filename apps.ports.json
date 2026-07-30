@@ -1,0 +1,17 @@
+{
+  "_comment": "12 个克隆 App 的端口分配 —— 单一真源。e2e/apps.config.ts 与 scripts/*.mjs 都从这里读，避免各处各写一份导致漂移。serverPort 刻意错开各 app 的默认端口（大多默认 4101，会互相抢占）。",
+  "apps": [
+    { "name": "markdown", "serverPort": 4201, "clientPort": 5180 },
+    { "name": "apiclient", "serverPort": 4202, "clientPort": 5181 },
+    { "name": "tvtime", "serverPort": 4203, "clientPort": 5182 },
+    { "name": "excalidraw", "serverPort": 4204, "clientPort": 5183 },
+    { "name": "photopea", "serverPort": 4205, "clientPort": 5184 },
+    { "name": "it-tools", "serverPort": 4206, "clientPort": 5185 },
+    { "name": "kanban", "serverPort": 4207, "clientPort": 5186 },
+    { "name": "glance", "serverPort": 4208, "clientPort": 5187 },
+    { "name": "kener", "serverPort": 4209, "clientPort": 5188 },
+    { "name": "memos", "serverPort": 4210, "clientPort": 5189 },
+    { "name": "lofi", "serverPort": 4211, "clientPort": 5190 },
+    { "name": "nonio", "serverPort": 4212, "clientPort": 5191 }
+  ]
+}

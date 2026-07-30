@@ -9,10 +9,12 @@ export interface NoteRow {
   archived: number;
   created_at: string;
   updated_at: string;
+  user_id: number;
   tag_names: string | null;
 }
 
 export interface NoteFilter {
+  userId?: number;
   visibility?: Visibility;
   tag?: string;
   archived?: boolean;
@@ -41,6 +43,10 @@ export function listNotes(filter: NoteFilter = {}): Note[] {
   const clauses: string[] = [];
   const params: unknown[] = [];
 
+  if (typeof filter.userId === 'number') {
+    clauses.push('n.user_id = ?');
+    params.push(filter.userId);
+  }
   if (typeof filter.archived === 'boolean') {
     clauses.push('n.archived = ?');
     params.push(filter.archived ? 1 : 0);
@@ -71,24 +77,28 @@ export function listNotes(filter: NoteFilter = {}): Note[] {
   return rows.map(rowToNote);
 }
 
-export function getNote(id: number): Note | null {
-  const sql = `SELECT n.*, ${tagSubquery()} AS tag_names FROM notes n WHERE n.id = ?`;
-  const row = db.prepare(sql).get(id) as NoteRow | undefined;
+export function getNote(id: number, userId?: number): Note | null {
+  const sql = `SELECT n.*, ${tagSubquery()} AS tag_names FROM notes n WHERE n.id = ?${
+    userId === undefined ? '' : ' AND n.user_id = ?'
+  }`;
+  const row =
+    userId === undefined
+      ? (db.prepare(sql).get(id) as NoteRow | undefined)
+      : (db.prepare(sql).get(id, userId) as NoteRow | undefined);
   return row ? rowToNote(row) : null;
 }
 
-export function createNote(input: {
-  content: string;
-  visibility: Visibility;
-  tags: string[];
-}): Note {
+export function createNote(
+  input: { content: string; visibility: Visibility; tags: string[] },
+  userId: number,
+): Note {
   const now = new Date().toISOString();
   const info = db
     .prepare(
-      `INSERT INTO notes (content, visibility, pinned, archived, created_at, updated_at)
-       VALUES (?, ?, 0, 0, ?, ?)`,
+      `INSERT INTO notes (content, visibility, pinned, archived, user_id, created_at, updated_at)
+       VALUES (?, ?, 0, 0, ?, ?, ?)`,
     )
-    .run(input.content, input.visibility, now, now);
+    .run(input.content, input.visibility, userId, now, now);
   const id = Number(info.lastInsertRowid);
   syncTags(id, input.tags);
   return getNote(id)!;
@@ -97,8 +107,9 @@ export function createNote(input: {
 export function updateNote(
   id: number,
   input: { content?: string; visibility?: Visibility; tags?: string[] },
+  userId?: number,
 ): Note | null {
-  const existing = getNote(id);
+  const existing = getNote(id, userId);
   if (!existing) return null;
 
   const content = input.content ?? existing.content;
@@ -115,7 +126,8 @@ export function updateNote(
   return getNote(id);
 }
 
-export function setArchived(id: number, archived: boolean): Note | null {
+export function setArchived(id: number, archived: boolean, userId?: number): Note | null {
+  if (getNote(id, userId) === null) return null;
   const now = new Date().toISOString();
   db.prepare(`UPDATE notes SET archived = ?, updated_at = ? WHERE id = ?`).run(
     archived ? 1 : 0,
@@ -125,7 +137,8 @@ export function setArchived(id: number, archived: boolean): Note | null {
   return getNote(id);
 }
 
-export function setPinned(id: number, pinned: boolean): Note | null {
+export function setPinned(id: number, pinned: boolean, userId?: number): Note | null {
+  if (getNote(id, userId) === null) return null;
   const now = new Date().toISOString();
   db.prepare(`UPDATE notes SET pinned = ?, updated_at = ? WHERE id = ?`).run(
     pinned ? 1 : 0,
@@ -135,7 +148,11 @@ export function setPinned(id: number, pinned: boolean): Note | null {
   return getNote(id);
 }
 
-export function deleteNote(id: number): boolean {
+export function deleteNote(id: number, userId?: number): boolean {
+  if (userId !== undefined) {
+    const row = db.prepare('SELECT id FROM notes WHERE id = ? AND user_id = ?').get(id, userId);
+    if (!row) return false;
+  }
   const info = db.prepare(`DELETE FROM notes WHERE id = ?`).run(id);
   return info.changes > 0;
 }

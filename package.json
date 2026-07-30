@@ -3,8 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "E2E 冒烟测试骨架 —— 12 个克隆 App 的 Playwright 套件（沙箱内 better-sqlite3 无法编译，仅产出脚手架，需在真实/CI 环境安装依赖后运行）",
+  "description": "12 个克隆 App 的 Playwright 端到端套件 + 启动编排（后端 better-sqlite3 现已可运行，E2E 真正走通前端→后端→SQLite 全链路）。",
   "scripts": {
+    "dev:all": "node scripts/start-all.mjs",
+    "dev:app": "node scripts/start-app.mjs",
+    "check:backends": "node scripts/check-backends.mjs",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:report": "playwright show-report",
@@ -19,6 +22,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.48.0",
+    "@types/node": "^26.1.2",
     "typescript": "^5.6.3"
   }
 }

@@ -7,6 +7,8 @@ import { notFound } from './middleware/notFound';
 import { healthRouter } from './routes/health';
 import { notesRouter } from './routes/notes';
 import { tagsRouter } from './routes/tags';
+import { authRouter } from './routes/auth';
+import { requireAuth } from './middleware/auth';
 
 /**
  * Builds and configures the Express application with shared middleware and
@@ -20,6 +22,8 @@ app.use(express.json({ limit: '2mb' }));
 
 // Mount API routes under the shared `/api` prefix.
 app.use('/api', healthRouter);
+app.use('/api', authRouter);
+// 笔记与标签需要登录（鉴权在各自 router 内通过 .use(requireAuth) 施加）。
 app.use('/api', notesRouter);
 app.use('/api', tagsRouter);
 

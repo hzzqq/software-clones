@@ -1,8 +1,12 @@
 import { Router, Request, Response } from 'express';
 import { asyncHandler } from '../middleware/asyncHandler';
 import { listTags } from '../repositories/tagRepo';
+import { requireAuth } from '../middleware/auth';
 
 export const tagsRouter: Router = Router();
+
+// 整组路由需登录
+tagsRouter.use(requireAuth);
 
 tagsRouter.get(
   '/tags',

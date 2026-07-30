@@ -35,6 +35,14 @@ export function initSchema(): void {
   const schemaPath: string = resolveSchemaPath();
   const schema: string = fs.readFileSync(schemaPath, 'utf-8');
   db.exec(schema);
+
+  // 增量迁移：为历史库补充 user_id 列（新建库已在 schema.sql 中定义）。
+  // 列已存在时 SQLite 会抛错，捕获后忽略即可（幂等）。
+  try {
+    db.exec('ALTER TABLE notes ADD COLUMN user_id INTEGER NOT NULL DEFAULT 0');
+  } catch {
+    /* 列已存在 */
+  }
 }
 
 initSchema();
