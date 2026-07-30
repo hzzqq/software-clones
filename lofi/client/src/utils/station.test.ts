@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { categoryLabel, truncate, filterStations, sortStations, shuffleStations, groupStationsByCategory, countStationsByCategory, filterStationsByLikes, summarizeStations, formatCount, formatClock, validateStreamUrl, relativeTime } from './station';
+import { categoryLabel, truncate, filterStations, sortStations, shuffleStations, groupStationsByCategory, countStationsByCategory, filterStationsByLikes, summarizeStations, formatCount, formatClock, validateStreamUrl, pickRandomStation, relativeTime } from './station';
 import { Station } from '../types';
 
 const sample: Station[] = [
@@ -288,5 +288,25 @@ describe('countStationsByCategory', () => {
   it('category 非字符串被忽略', () => {
     const bad = [{ ...stations[0], category: null as unknown as string }];
     expect(countStationsByCategory(bad)).toEqual({});
+  });
+});
+
+describe('pickRandomStation', () => {
+  const list: Station[] = [
+    { id: 1, name: 'a', streamUrl: '', description: '', category: '', likes: 0, createdAt: '' },
+    { id: 2, name: 'b', streamUrl: '', description: '', category: '', likes: 0, createdAt: '' },
+    { id: 3, name: 'c', streamUrl: '', description: '', category: '', likes: 0, createdAt: '' },
+  ];
+  it('空/非数组返回 null', () => {
+    expect(pickRandomStation([])).toBeNull();
+    expect(pickRandomStation(null as unknown as Station[])).toBeNull();
+  });
+  it('可注入 rng 实现确定性挑选', () => {
+    expect(pickRandomStation(list, () => 0)?.id).toBe(1);
+    expect(pickRandomStation(list, () => 0.99)?.id).toBe(3);
+  });
+  it('rng 越界被夹取不抛错', () => {
+    expect(pickRandomStation(list, () => 5)?.id).toBe(3);
+    expect(pickRandomStation(list, () => -5)?.id).toBe(1);
   });
 });

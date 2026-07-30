@@ -26,7 +26,7 @@ import StationCard from '../components/StationCard';
 import CategoryFilter from '../components/CategoryFilter';
 import { Station } from '../types';
 import { stationApi } from '../api/stations';
-import { filterStations, sortStations, shuffleStations, groupStationsByCategory, countStationsByCategory, categoryLabel, filterStationsByLikes, filterStationsByCategory, summarizeStations, formatCount, validateStreamUrl, type StationSort } from '../utils/station';
+import { filterStations, sortStations, shuffleStations, groupStationsByCategory, countStationsByCategory, categoryLabel, filterStationsByLikes, filterStationsByCategory, summarizeStations, formatCount, validateStreamUrl, pickRandomStation, type StationSort } from '../utils/station';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
 export default function RadioPage(): JSX.Element {
@@ -164,6 +164,17 @@ export default function RadioPage(): JSX.Element {
             <MenuItem value="shuffle">随机排序</MenuItem>
           </Select>
         </FormControl>
+        <Button
+          variant="contained"
+          color="secondary"
+          disabled={filtered.length === 0}
+          onClick={() => {
+            const pick = pickRandomStation(filtered);
+            if (pick) handlePlay(pick);
+          }}
+        >
+          随机一首
+        </Button>
         <FormControl size="small" sx={{ minWidth: 140 }}>
           <InputLabel id="station-likes-label">最少点赞</InputLabel>
           <Select

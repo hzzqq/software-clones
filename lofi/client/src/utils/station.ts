@@ -203,3 +203,15 @@ export function validateStreamUrl(url: string): boolean {
     return false;
   }
 }
+
+/**
+ * 从列表中随机挑选一个电台（不修改入参）。
+ * rng 可注入（默认 Math.random），便于确定性测试；rng 应返回 [0,1) 区间。
+ * 入参非数组或为空列表 → 返回 null（无可播放项，调用方应禁用按钮）。
+ * 索引经夹取保护，rng 返回越界值也不会越界。
+ */
+export function pickRandomStation(stations: Station[], rng: () => number = Math.random): Station | null {
+  if (!Array.isArray(stations) || stations.length === 0) return null;
+  const idx = Math.max(0, Math.min(stations.length - 1, Math.floor(rng() * stations.length)));
+  return stations[idx];
+}
