@@ -74,6 +74,19 @@ export function countSentences(text: string): number {
 }
 
 /**
+ * 段落数统计：以空行分隔，忽略仅含空白的片段（代码块内连续非空行视为同一段落）。
+ * 空串/非字符串返回 0；单段无空行返回 1。
+ */
+export function countParagraphs(text: string): number {
+  if (typeof text !== 'string' || text.trim() === '') return 0;
+  const blocks = text
+    .split(/\n\s*\n/)
+    .map((b) => b.trim())
+    .filter((b) => b.length > 0);
+  return blocks.length;
+}
+
+/**
  * 将时间格式化为中文相对时间（"刚刚 / N 分钟前 / N 小时前 / N 天前 / N 周前"），
  * 超过约 5 周则退化为「M 月 D 日」。纯函数，不修改入参。
  * - `now` 可注入以便测试；默认取当前时间。

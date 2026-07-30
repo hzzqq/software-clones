@@ -27,7 +27,7 @@ import { noteApi } from '../api/notes';
 import type { Note } from '../types';
 import NoteList from '../components/NoteList';
 import MarkdownPreview from '../components/MarkdownPreview';
-import { parseTags, countWords, countSentences, countCodeBlocks, estimateReadingTime, extractHeadings, extractLinks, sortNotes, filterNotesByFolder, summarizeNotes, searchNotes } from '../utils/markdown';
+import { parseTags, countWords, countSentences, countParagraphs, countCodeBlocks, estimateReadingTime, extractHeadings, extractLinks, sortNotes, filterNotesByFolder, summarizeNotes, searchNotes } from '../utils/markdown';
 
 type ViewMode = 'edit' | 'split' | 'preview';
 
@@ -304,7 +304,8 @@ export default function NotesPage(): JSX.Element {
                   <Chip key={t} size="small" label={`#${t}`} />
                 ))}
                 <Typography variant="caption" color="text.secondary">
-                  {countWords(active.content)} 词 · {countSentences(active.content)} 句 · 约{' '}
+                  {countWords(active.content)} 词 · {countSentences(active.content)} 句 ·{' '}
+                  {countParagraphs(active.content)} 段 · 约{' '}
                   {estimateReadingTime(active.content)} 分钟 · {countCodeBlocks(active.content)} 个代码块{' '}
                   {saving ? '· 保存中…' : ''}
                 </Typography>

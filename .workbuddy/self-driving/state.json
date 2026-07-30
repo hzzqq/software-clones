@@ -1,5 +1,5 @@
 {
-  "cycle": 238,
+  "cycle": 239,
   "max_cycles": 253,
   "phase": "running",
   "paused": false,
@@ -3151,6 +3151,20 @@
       "verify": "client 75 passed + typecheck pass",
       "score": 80,
       "ts": 1785407462.678
+    },
+    {
+      "cycle": 239,
+      "app": "markdown",
+      "task_id": "count_paragraphs",
+      "new_requirement": "countParagraphs 纯函数(空行分隔段落数)+测试;编辑器头部新增「段」维度",
+      "files": [
+        "client/src/utils/markdown.ts",
+        "client/src/utils/markdown.test.ts",
+        "client/src/pages/NotesPage.tsx"
+      ],
+      "verify": "client 90 passed + typecheck pass",
+      "score": 80,
+      "ts": 1785407654.998
     }
   ],
   "last_task_id": "server_security_headers",

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseTags, countWords, deriveTitle, countCodeBlocks, estimateReadingTime, countSentences, extractHeadings, extractLinks, sortNotes, filterNotesByFolder, summarizeNotes, formatRelativeTime, searchNotes, stripInlineMarkdown } from './markdown';
+import { parseTags, countWords, deriveTitle, countCodeBlocks, estimateReadingTime, countSentences, countParagraphs, extractHeadings, extractLinks, sortNotes, filterNotesByFolder, summarizeNotes, formatRelativeTime, searchNotes, stripInlineMarkdown } from './markdown';
 import type { Note } from '../types';
 
 describe('parseTags', () => {
@@ -286,5 +286,21 @@ describe('countSentences', () => {
   });
   it('连续空白与换行不计入句数', () => {
     expect(countSentences('第一句。\n\n   第二句。   ')).toBe(2);
+  });
+});
+
+describe('countParagraphs', () => {
+  it('空串返回 0', () => {
+    expect(countParagraphs('')).toBe(0);
+    expect(countParagraphs('   \n  ')).toBe(0);
+  });
+  it('空行分隔计数', () => {
+    expect(countParagraphs('第一段。\n\n第二段。\n\n第三段。')).toBe(3);
+  });
+  it('单段无空行返回 1', () => {
+    expect(countParagraphs('只有一段文字，没有空行。')).toBe(1);
+  });
+  it('连续多个空行不重复计数', () => {
+    expect(countParagraphs('A。\n\n\n\nB。')).toBe(2);
   });
 });
