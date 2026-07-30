@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography } from '@mui/material';
 import ToolCard from '../components/ToolCard';
 import { useFavorites } from '../hooks/useFavorites';
+import { formatList } from '../utils/search';
 
 /** Lists the user's favorites; clicking opens the tool, trash removes it. */
 export default function FavoritesPage(): JSX.Element {
@@ -30,7 +31,11 @@ export default function FavoritesPage(): JSX.Element {
       {favorites.length === 0 ? (
         <Typography color="text.secondary">还没有收藏任何工具。</Typography>
       ) : (
-        <Stack>
+        <>
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+            共 {favorites.length} 个收藏：{formatList(favorites.map((f) => f.title))}
+          </Typography>
+          <Stack>
           {favorites.map((f) => (
             <ToolCard
               key={`${f.id}-${f.toolKey}`}
@@ -40,6 +45,7 @@ export default function FavoritesPage(): JSX.Element {
             />
           ))}
         </Stack>
+        </>
       )}
       <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
         <DialogTitle>清空所有收藏？</DialogTitle>

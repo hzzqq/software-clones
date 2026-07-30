@@ -147,3 +147,25 @@ export function fuzzyMatchTools(
       .some((token) => token.length > 0 && levenshtein(q, token) <= maxDistance);
   });
 }
+
+/**
+ * 将字符串数组格式化为中文列举串：「a、b、c」。
+ * - 0 项 → 空串 ''。
+ * - 1 项 → 该项原样返回。
+ * - ≥2 项 → 用 separator（默认 '、'）连接，末两项之间用 lastSep（默认 separator）连接。
+ * 入参非数组按空数组处理，单项非字符串按 String() 转换。
+ * 用于收藏夹/历史等「共 N 个工具：a、b、c」类友好展示。
+ */
+export function formatList(
+  items: (string | null | undefined)[] | null | undefined,
+  separator = '、',
+  lastSep?: string,
+): string {
+  if (!Array.isArray(items)) return '';
+  const list = items.filter((x) => x != null).map((x) => String(x));
+  if (list.length === 0) return '';
+  if (list.length === 1) return list[0];
+  const sep = lastSep ?? separator;
+  const head = list.slice(0, -1).join(separator);
+  return head + sep + list[list.length - 1];
+}

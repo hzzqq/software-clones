@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { filterTools, sortTools, groupToolsByCategory, levenshtein, fuzzyMatchTools, summarizeTools, normalizeQuery, toolCategoryLabel, isFavoriteTool } from '../src/utils/search';
+import { filterTools, sortTools, groupToolsByCategory, levenshtein, fuzzyMatchTools, summarizeTools, normalizeQuery, toolCategoryLabel, isFavoriteTool, formatList } from '../src/utils/search';
 import type { ToolModule } from '../src/tools/types';
 
 const noop = (() => null) as unknown as ToolModule['Component'];
@@ -186,5 +186,25 @@ describe('isFavoriteTool', () => {
     isFavoriteTool(set, 'hash');
     expect(set.has('hash')).toBe(true);
     expect(set.size).toBe(2);
+  });
+});
+
+describe('formatList', () => {
+  it('空/非数组返回空串', () => {
+    expect(formatList([])).toBe('');
+    expect(formatList(null)).toBe('');
+    expect(formatList(undefined)).toBe('');
+  });
+  it('单元素原样返回', () => {
+    expect(formatList(['苹果'])).toBe('苹果');
+  });
+  it('多元素用顿号连接', () => {
+    expect(formatList(['苹果', '香蕉', '橙子'])).toBe('苹果、香蕉、橙子');
+  });
+  it('可自定义分隔符与末项分隔符', () => {
+    expect(formatList(['A', 'B', 'C'], ', ', ' 和 ')).toBe('A, B 和 C');
+  });
+  it('过滤 null/undefined 项', () => {
+    expect(formatList(['x', null, undefined, 'y'])).toBe('x、y');
   });
 });

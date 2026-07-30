@@ -1,5 +1,5 @@
 {
-  "cycle": 248,
+  "cycle": 249,
   "max_cycles": 253,
   "phase": "running",
   "paused": false,
@@ -3291,6 +3291,20 @@
       "verify": "client 73 passed + typecheck pass",
       "score": 80,
       "ts": 1785410121
+    },
+    {
+      "cycle": 249,
+      "app": "it-tools",
+      "task_id": "format_list",
+      "new_requirement": "formatList 纯函数(中文列举串,可自定义分隔符+尾分隔符)+测试;FavoritesPage 收藏名枚举展示",
+      "files": [
+        "client/src/utils/search.ts",
+        "client/test/search.test.ts",
+        "client/src/pages/FavoritesPage.tsx"
+      ],
+      "verify": "client 101 passed + typecheck pass",
+      "score": 80,
+      "ts": 1785410481.516
     }
   ],
   "last_task_id": "server_security_headers",
