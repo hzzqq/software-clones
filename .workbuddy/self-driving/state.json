@@ -1,5 +1,5 @@
 {
-  "cycle": 245,
+  "cycle": 246,
   "max_cycles": 253,
   "phase": "running",
   "paused": false,
@@ -3249,6 +3249,20 @@
       "verify": "client 94 passed + typecheck pass",
       "score": 80,
       "ts": 1785409445
+    },
+    {
+      "cycle": 246,
+      "app": "tvtime",
+      "task_id": "seasons_of",
+      "new_requirement": "seasonsOf 纯函数(去重季号升序,缺省回第1季)+ 测试；ShowDetailPage 新增「选择季」切换",
+      "files": [
+        "client/src/utils/show.ts",
+        "client/src/utils/show.test.ts",
+        "client/src/pages/ShowDetailPage.tsx"
+      ],
+      "verify": "client 89 passed + typecheck pass",
+      "score": 80,
+      "ts": 1785409660
     }
   ],
   "last_task_id": "server_security_headers",

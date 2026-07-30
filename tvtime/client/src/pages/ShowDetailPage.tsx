@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
   Box, Typography, Stack, Button, LinearProgress, Chip, CircularProgress, Alert, Divider, ToggleButton, ToggleButtonGroup,
@@ -10,7 +10,7 @@ import { showApi } from '../api/shows';
 import { episodeApi } from '../api/episodes';
 import type { Show, Episode } from '../types';
 import EpisodeGrid from '../components/EpisodeGrid';
-import { progressPercent, nextEpisode, isComplete, episodesLeft, remainingWatchTime, formatWatchTime, formatEpisodeCode, nextEpisodeLabel, filterEpisodesByWatched, episodesByStatus, formatProgress, lastWatchedAt, type EpisodeFilter } from '../utils/show';
+import { progressPercent, nextEpisode, isComplete, episodesLeft, remainingWatchTime, formatWatchTime, formatEpisodeCode, nextEpisodeLabel, filterEpisodesByWatched, episodesByStatus, formatProgress, lastWatchedAt, seasonsOf, type EpisodeFilter } from '../utils/show';
 import { formatRelativeTime } from '../utils/time';
 
 export default function ShowDetailPage(): JSX.Element {
@@ -20,6 +20,7 @@ export default function ShowDetailPage(): JSX.Element {
   const [show, setShow] = useState<Show | null>(null);
   const [episodes, setEpisodes] = useState<Episode[]>([]);
   const [epFilter, setEpFilter] = useState<EpisodeFilter>('all');
+  const [seasonFilter, setSeasonFilter] = useState<number | 'all'>('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -80,7 +81,11 @@ export default function ShowDetailPage(): JSX.Element {
   if (!show) return <Alert severity="warning">剧集不存在</Alert>;
 
   const pct = progressPercent(show.watchedCount, show.totalEpisodes);
-  const visibleEps = filterEpisodesByWatched(episodes, epFilter);
+  const seasons = useMemo(() => seasonsOf(episodes), [episodes]);
+  const visibleEps = filterEpisodesByWatched(
+    seasonFilter === 'all' ? episodes : episodes.filter((e) => (e.season ?? 1) === seasonFilter),
+    epFilter,
+  );
   const epStatus = episodesByStatus(episodes);
   const nextEp = nextEpisode(episodes);
   const lastWatched = lastWatchedAt(episodes);
@@ -133,6 +138,22 @@ export default function ShowDetailPage(): JSX.Element {
       </Typography>
 
       <Divider sx={{ mb: 2 }} />
+      {seasons.length > 1 && (
+        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+          <Typography variant="caption" color="text.secondary">选择季：</Typography>
+          <ToggleButtonGroup
+            size="small"
+            value={seasonFilter}
+            exclusive
+            onChange={(_e, v: number | 'all' | null) => v != null && setSeasonFilter(v)}
+          >
+            <ToggleButton value="all">全部</ToggleButton>
+            {seasons.map((s) => (
+              <ToggleButton key={s} value={s}>第 {s} 季</ToggleButton>
+            ))}
+          </ToggleButtonGroup>
+        </Stack>
+      )}
       <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
         <Typography variant="caption" color="text.secondary">剧集筛选：</Typography>
         <ToggleButtonGroup

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { progressPercent, nextUnwatched, nextEpisode, isComplete, filterShows, sortShows, episodesLeft, remainingWatchTime, formatWatchTime, filterEpisodesByWatched, episodesByStatus, formatProgress, clampEpisodeCount, nextEpisodeLabel, lastWatchedAt, summarizeLibrary, seasonEpisodeCount, averageProgress } from './show';
+import { progressPercent, nextUnwatched, nextEpisode, isComplete, filterShows, sortShows, episodesLeft, remainingWatchTime, formatWatchTime, filterEpisodesByWatched, episodesByStatus, formatProgress, clampEpisodeCount, nextEpisodeLabel, lastWatchedAt, summarizeLibrary, seasonEpisodeCount, averageProgress, seasonsOf } from './show';
 import type { Episode, Show } from '../types';
 
 function mkShow(id: number, title: string, watchedCount: number, totalEpisodes: number, updatedAt: string): Show {
@@ -368,5 +368,28 @@ describe('averageProgress', () => {
   it('全部无总集数的剧返回 0', () => {
     const bad: Show[] = [{ id: 1, title: 'x', note: '', totalEpisodes: 0, watchedCount: 0, createdAt: '', updatedAt: '' }];
     expect(averageProgress(bad)).toBe(0);
+  });
+});
+
+describe('seasonsOf', () => {
+  const eps: Episode[] = [
+    { id: 1, showId: 1, index: 1, season: 1, number: 1, watched: false, watchedAt: null, createdAt: '', updatedAt: '' },
+    { id: 2, showId: 1, index: 2, season: 1, number: 2, watched: false, watchedAt: null, createdAt: '', updatedAt: '' },
+    { id: 3, showId: 1, index: 3, season: 2, number: 1, watched: false, watchedAt: null, createdAt: '', updatedAt: '' },
+    { id: 4, showId: 1, index: 4, season: 3, number: 1, watched: false, watchedAt: null, createdAt: '', updatedAt: '' },
+  ];
+  it('提取去重升序季号', () => {
+    expect(seasonsOf(eps)).toEqual([1, 2, 3]);
+  });
+  it('缺失/非有限季号按第1季', () => {
+    const bad: Episode[] = [
+      { id: 1, showId: 1, index: 1, watched: false, watchedAt: null, createdAt: '', updatedAt: '' } as Episode,
+      { id: 2, showId: 1, index: 2, season: undefined, number: 2, watched: false, watchedAt: null, createdAt: '', updatedAt: '' },
+    ];
+    expect(seasonsOf(bad)).toEqual([1]);
+  });
+  it('空/非数组返回空', () => {
+    expect(seasonsOf([])).toEqual([]);
+    expect(seasonsOf(null as unknown as Episode[])).toEqual([]);
   });
 });

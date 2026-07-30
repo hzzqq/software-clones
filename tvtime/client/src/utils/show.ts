@@ -226,3 +226,18 @@ export function averageProgress(shows: Show[]): number {
   if (n === 0) return 0;
   return Math.round(sum / n);
 }
+
+/**
+ * 从剧集列表提取去重后的季号（升序），用于详情页「选择季」切换。
+ * - 缺失/非有限季号按第 1 季处理（与 Episode.season 的语义约定一致）。
+ * - 返回新数组，不修改入参；入参非数组返回 []。
+ */
+export function seasonsOf(episodes: Episode[]): number[] {
+  if (!Array.isArray(episodes)) return [];
+  const set = new Set<number>();
+  for (const ep of episodes) {
+    const raw = ep?.season;
+    set.add(typeof raw === 'number' && Number.isFinite(raw) ? raw : 1);
+  }
+  return Array.from(set).sort((a, b) => a - b);
+}
