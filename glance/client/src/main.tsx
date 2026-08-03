@@ -1,11 +1,16 @@
 import React from 'react';
 import ErrorBoundary from './components/ErrorBoundary';
 import ReactDOM from 'react-dom/client';
-import { CssBaseline, ThemeProvider } from '@mui/material';
 import App from './App';
-import { theme } from './theme';
+import { SettingsHelpProvider } from './components/SettingsHelp';
+import { helpContent } from './help/helpContent';
 import './styles/global.css';
 
+/**
+ * Application entry point. Wraps the root component with the shared
+ * settings/help provider (which owns the MUI theme and CSS baseline),
+ * then mounts it to the DOM.
+ */
 /**
  * 全局异步错误兜底：React ErrorBoundary 仅捕获渲染/生命周期错误，
  * 无法捕获事件回调 / 异步(fetch / setTimeout)中未处理的 Promise 拒绝。
@@ -48,10 +53,9 @@ if (!rootElement) {
 ReactDOM.createRoot(rootElement).render(
   <ErrorBoundary>
   <React.StrictMode>
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
+    <SettingsHelpProvider appId="glance" appName="仪表盘" helpContent={helpContent}>
       <App />
-    </ThemeProvider>
+    </SettingsHelpProvider>
   </React.StrictMode>
   </ErrorBoundary>
 );
