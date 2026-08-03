@@ -3,7 +3,6 @@ import MainLayout from './layouts/MainLayout';
 import ErrorBoundary from './components/ErrorBoundary';
 import ToolPage from './pages/ToolPage';
 import FavoritesPage from './pages/FavoritesPage';
-import SettingsPage from './pages/SettingsPage';
 import HistoryPage from './pages/HistoryPage';
 import { tools } from './tools/registry';
 
@@ -17,7 +16,8 @@ export const router = createBrowserRouter([
       { path: 'tool/:key', element: <ToolPage /> },
       { path: 'favorites', element: <FavoritesPage /> },
       { path: 'history', element: <HistoryPage /> },
-      { path: 'settings', element: <SettingsPage /> },
+      // 设置已统一收敛到右下角悬浮设置面板，旧路由重定向到首页，避免书签 404。
+      { path: 'settings', element: <Navigate to="/" replace /> },
     ],
   },
 ]);

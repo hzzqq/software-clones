@@ -28,6 +28,7 @@ import ExtensionIcon from '@mui/icons-material/Extension';
 import ClearIcon from '@mui/icons-material/Clear';
 import { sortTools, fuzzyMatchTools, summarizeTools, toolCategoryLabel } from '../utils/search';
 import { compactNumber } from '../utils/tools';
+import { useSettingsHelp } from '../components/SettingsHelp';
 
 import { tools } from '../tools/registry';
 
@@ -58,6 +59,8 @@ export default function MainLayout(): JSX.Element {
   const [sortBy, setSortBy] = useState<'title' | 'key'>('title');
   const [catFilter, setCatFilter] = useState<string>('');
   const navigate = useNavigate();
+  // 设置已统一收敛到共享的「设置」面板（右下角悬浮入口 / Ctrl+, 亦可打开）。
+  const { openSettings } = useSettingsHelp();
 
   const filteredGroups = useMemo(() => {
     const scoped = catFilter ? groups.filter((g) => g.category === catFilter) : groups;
@@ -178,14 +181,11 @@ export default function MainLayout(): JSX.Element {
           <ListItemText primary="收藏夹" primaryTypographyProps={{ fontSize: 14 }} />
         </ListItemButton>
         <ListItemButton
-          component={NavLink}
-          to="/settings"
-          onClick={() => setMobileOpen(false)}
-          sx={{
-            borderRadius: 1.5,
-            mx: 1,
-            '&.active': { bgcolor: 'primary.main', color: 'primary.contrastText' },
+          onClick={() => {
+            setMobileOpen(false);
+            openSettings();
           }}
+          sx={{ borderRadius: 1.5, mx: 1 }}
         >
           <ListItemIcon sx={{ minWidth: 36 }}>
             <SettingsIcon fontSize="small" />
@@ -235,7 +235,7 @@ export default function MainLayout(): JSX.Element {
           <IconButton color="inherit" onClick={() => navigate('/favorites')} aria-label="favorites">
             <StarIcon />
           </IconButton>
-          <IconButton color="inherit" onClick={() => navigate('/settings')} aria-label="settings">
+          <IconButton color="inherit" onClick={openSettings} aria-label="settings">
             <SettingsIcon />
           </IconButton>
         </Toolbar>
