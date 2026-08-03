@@ -1,0 +1,106 @@
+sequenceDiagram
+    autonumber
+    actor U as 用户
+    participant M as main.tsx
+    participant P as SettingsHelpProvider
+    participant S as storage.ts
+    participant UA as useAppSettings
+    participant UF as useFullscreen
+    participant UM as useModalBroadcast
+    participant T as createAppTheme
+    participant L as SettingsHelpLauncher
+    participant SM as SettingsModal
+    participant HM as HelpModal
+    participant B as 浏览器/DOM
+    participant G as WidgetGrid(glance)
+    participant K as Whiteboard/CanvasEditor
+
+    rect rgb(240,246,255)
+    note over M,T: 阶段一 启动与水合
+    M->>P: render(appId, appName, helpContent)
+    P->>UA: useAppSettings(appId)
+    UA->>S: load(appId)
+    S-->>UA: AppSettings(已 migrate + sanitize)
+    UA-->>P: settings, resolvedMode
+    P->>T: createAppTheme(resolvedMode)
+    T-->>P: MUI Theme
+    P->>B: 渲染 ThemeProvider + CssBaseline + children
+    UA->>B: useLayoutEffect 施加 html.style.fontSize = 16*fontScale
+    UA->>B: 设置 --app-font-scale / data-reduce-motion
+    UF->>B: addEventListener(fullscreenchange, webkitfullscreenchange)
+    end
+
+    rect rgb(245,255,245)
+    note over U,K: 阶段二 打开设置面板
+    U->>L: 点击齿轮
+    L->>P: openSettings()
+    P->>UM: notifyOpen('settings')
+    UM->>B: body.dataset.appModalOpen = '1'
+    UM-)K: dispatchEvent CustomEvent app:modal {open:true}
+    K->>K: 守卫置位 后续 keydown 直接 return
+    P->>SM: open = true
+    SM-->>U: 展示 主题/字号/全屏/重置
+    end
+
+    rect rgb(255,250,240)
+    note over U,G: 阶段三 切换全屏与布局重排
+    U->>SM: 点击 全屏模式 开关
+    SM->>UF: toggle()
+    UF->>B: documentElement.requestFullscreen()
+    alt 成功
+        B--)UF: fullscreenchange 事件
+        UF->>UF: setIsFullscreen(!!fullscreenElement)
+        UF->>B: body.dataset.appFullscreen = '1'
+        UF-)B: dispatchEvent CustomEvent app:fullscreenchange {active:true}
+        UF-)B: rAF 后 dispatchEvent Event resize
+        UF-)B: 150ms 后 再次 dispatchEvent Event resize
+        B--)G: window resize
+        G->>G: WidthProvider 重算容器宽度 网格重排
+        UF-->>SM: isFullscreen = true 开关同步为开
+    else 失败 无用户手势/iframe 无 allow
+        B--xUF: Promise reject
+        UF->>UF: catch 不外抛 避免全局红条
+        UF-->>SM: Snackbar 当前环境不支持全屏
+    end
+    end
+
+    rect rgb(255,245,250)
+    note over U,B: 阶段四 Esc 退出全屏（浏览器原生）
+    U->>B: 按下 Esc
+    B--)UF: fullscreenchange 事件
+    UF->>UF: setIsFullscreen(false)
+    UF->>B: 删除 body.dataset.appFullscreen
+    UF-)B: 广播 app:fullscreenchange{active:false} + 两次 resize
+    B--)G: 网格再次重排
+    end
+
+    rect rgb(248,248,255)
+    note over U,S: 阶段五 修改设置并持久化
+    U->>SM: 拖动字号滑块至 1.15
+    SM->>UA: update('fontScale', 1.15)
+    UA->>B: html.style.fontSize = '18.4px'
+    UA->>S: save(appId, settings)
+    S->>B: localStorage.setItem('app-settings:markdown', json)
+    U->>SM: 点击 重置
+    SM->>UA: reset()
+    UA->>S: clear(appId)
+    UA->>B: 恢复 DEFAULT_SETTINGS 并重新施加副作用
+    note right of UA: 重置不退出全屏 全屏是即时动作 不属于持久化设置
+    end
+
+    rect rgb(245,255,245)
+    note over U,K: 阶段六 关闭面板 与 打开帮助
+    U->>SM: 关闭
+    SM->>P: closeAll()
+    P->>UM: notifyClose('settings')
+    UM->>B: 计数归零 删除 body.dataset.appModalOpen
+    UM-)K: dispatchEvent app:modal {open:false}
+    K->>K: 守卫复位 快捷键恢复
+    U->>L: 点击问号 或 按 F1
+    L->>P: openHelp()
+    P->>UM: notifyOpen('help')
+    UM-)K: app:modal {open:true}
+    P->>HM: open = true
+    HM->>HM: 读取 helpContent 渲染 简介/核心功能/快捷键/FAQ
+    HM-->>U: 展示本 App 专属说明
+    end

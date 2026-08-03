@@ -1,0 +1,155 @@
+classDiagram
+    direction LR
+
+    class AppSettings {
+        <<interface>>
+        +1 version
+        +ThemeMode themeMode
+        +number fontScale
+        +boolean reduceMotion
+        +Record extras
+    }
+
+    class HelpContent {
+        <<interface>>
+        +string appName
+        +string tagline
+        +HelpSection[] sections
+        +HelpShortcut[] shortcuts
+        +HelpFaq[] faq
+    }
+    class HelpSection {
+        <<interface>>
+        +string title
+        +string[] items
+    }
+    class HelpShortcut {
+        <<interface>>
+        +string key
+        +string desc
+    }
+    class HelpFaq {
+        <<interface>>
+        +string q
+        +string a
+    }
+
+    class SettingsStorage {
+        <<module>> storage.ts
+        +load(appId) AppSettings
+        +save(appId, s) void
+        +clear(appId) void
+        -migrate(raw) AppSettings
+        -sanitize(s) AppSettings
+    }
+
+    class useAppSettings {
+        <<hook>>
+        -AppSettings state
+        +update(key, value) void
+        +reset() void
+        +resolvedMode() light|dark
+        -applyFontScale(scale) void
+        -applyReduceMotion(on) void
+        -persist() void
+    }
+
+    class useFullscreen {
+        <<hook>>
+        -boolean isFullscreen
+        +enter() Promise
+        +exit() Promise
+        +toggle() Promise
+        -onFullscreenChange() void
+        -broadcastResize() void
+    }
+
+    class useModalBroadcast {
+        <<hook>>
+        -number openCount
+        +notifyOpen(source) void
+        +notifyClose(source) void
+        -setBodyFlag(on) void
+        -dispatchAppModal(open) void
+    }
+
+    class SettingsHelpProvider {
+        <<component>>
+        +appId string
+        +appName string
+        +helpContent HelpContent
+        +launcherPosition string
+        +enableShortcuts boolean
+        -muiTheme Theme
+        -render() JSX
+    }
+
+    class SettingsHelpContext {
+        <<React.Context>>
+        +SettingsHelpContextValue value
+    }
+
+    class createAppTheme {
+        <<factory>> theme.ts
+        +createAppTheme(mode) Theme
+    }
+
+    class SettingsHelpLauncher {
+        <<component>>
+        -onGearClick() void
+        -onHelpClick() void
+    }
+    class SettingsModal {
+        <<component>>
+        -renderThemeToggle() JSX
+        -renderFontScaleSlider() JSX
+        -renderFullscreenSwitch() JSX
+        -renderResetButton() JSX
+    }
+    class HelpModal {
+        <<component>>
+        -renderSections() JSX
+        -renderShortcuts() JSX
+        -renderFaq() JSX
+    }
+
+    class HostApp {
+        <<existing>> App.tsx
+        +RouterProvider
+    }
+    class KeyboardHost {
+        <<existing>>
+        Whiteboard.tsx / CanvasEditor.tsx
+        -onKeyDown(e) void
+    }
+    class WidgetGrid {
+        <<existing>> glance
+        WidthProvider(GridLayout)
+        -onWindowResize() void
+    }
+
+    HelpContent *-- HelpSection
+    HelpContent o-- HelpShortcut
+    HelpContent o-- HelpFaq
+
+    SettingsHelpProvider ..> useAppSettings : uses
+    SettingsHelpProvider ..> useFullscreen : uses
+    SettingsHelpProvider ..> useModalBroadcast : uses
+    SettingsHelpProvider ..> createAppTheme : calls with resolvedMode
+    SettingsHelpProvider --> SettingsHelpContext : provides
+    SettingsHelpProvider *-- SettingsHelpLauncher
+    SettingsHelpProvider *-- SettingsModal
+    SettingsHelpProvider *-- HelpModal
+    SettingsHelpProvider o-- HostApp : renders as children
+    SettingsHelpProvider o-- HelpContent : prop
+
+    useAppSettings ..> SettingsStorage : load/save
+    useAppSettings ..> AppSettings : owns
+
+    SettingsHelpLauncher ..> SettingsHelpContext : consume
+    SettingsModal ..> SettingsHelpContext : consume
+    HelpModal ..> SettingsHelpContext : consume
+    HostApp ..> SettingsHelpContext : consume (it-tools AppBar)
+
+    useModalBroadcast ..> KeyboardHost : window CustomEvent app:modal + body dataset
+    useFullscreen ..> WidgetGrid : window Event resize
