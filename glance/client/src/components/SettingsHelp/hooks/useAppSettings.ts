@@ -111,15 +111,35 @@ export function useAppSettings(appId: string): UseAppSettingsResult {
     root.style.setProperty(CSS_VARS.BASE_FONT_PX, `${BASE_FONT_PX}px`);
   }, [settings.fontScale]);
 
-  // 减少动效：打标记，由 Provider 注入的全局样式消费。
+  // 减少动效：打标记，并注入全局样式真正禁用动画/过渡（否则开关点了无效）。
   useEffect(() => {
     if (typeof document === 'undefined') {
       return;
     }
+    const STYLE_ID = 'app-reduced-motion-style';
     if (settings.reduceMotion) {
       document.body.dataset[BODY_FLAGS.REDUCE_MOTION] = '1';
+      if (!document.getElementById(STYLE_ID)) {
+        const style = document.createElement('style');
+        style.id = STYLE_ID;
+        style.textContent = [
+          'body[appReduceMotion="1"] *,',
+          'body[appReduceMotion="1"] *::before,',
+          'body[appReduceMotion="1"] *::after {',
+          '  animation-duration: 0.001ms !important;',
+          '  animation-iteration-count: 1 !important;',
+          '  transition-duration: 0.001ms !important;',
+          '  scroll-behavior: auto !important;',
+          '}',
+        ].join('\n');
+        document.head.appendChild(style);
+      }
     } else {
       delete document.body.dataset[BODY_FLAGS.REDUCE_MOTION];
+      const existing = document.getElementById(STYLE_ID);
+      if (existing) {
+        existing.remove();
+      }
     }
   }, [settings.reduceMotion]);
 
