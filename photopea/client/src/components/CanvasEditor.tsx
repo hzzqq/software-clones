@@ -634,6 +634,8 @@ export default function CanvasEditor(): JSX.Element {
 
   useEffect(() => {
     const handler = (e: KeyboardEvent): void => {
+      // 设置 / 使用说明弹窗打开时，编辑器快捷键全部让位，避免误触发图像操作。
+      if (document.body.dataset.appModalOpen === '1') return;
       const target = e.target as HTMLElement | null;
       const typing =
         !!target &&

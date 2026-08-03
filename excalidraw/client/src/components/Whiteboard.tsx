@@ -297,6 +297,8 @@ export default function Whiteboard({ elements, setElements }: Props): JSX.Elemen
   shortcutRef.current = { undo, redo, deleteSelected, selectedId, nudge };
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      // 设置 / 使用说明弹窗打开时，画布快捷键全部让位，避免误触发绘图操作。
+      if (document.body.dataset.appModalOpen === '1') return;
       const t = e.target as HTMLElement | null;
       if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
       const mod = e.ctrlKey || e.metaKey;
