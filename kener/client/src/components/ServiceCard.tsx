@@ -1,6 +1,20 @@
-import { Card, CardContent, Typography, Box, IconButton, Stack } from '@mui/material';
+import {
+  Button,
+  Card,
+  CardContent,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Typography,
+  Box,
+  IconButton,
+  Stack,
+} from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Service } from '../types';
 import StatusBadge from './StatusBadge';
@@ -14,6 +28,7 @@ export default function ServiceCard({
   onChanged: () => void;
 }) {
   const navigate = useNavigate();
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const status = service.lastStatus ?? 'down';
 
   const handleProbe = async () => {
@@ -25,7 +40,11 @@ export default function ServiceCard({
   };
 
   const handleDelete = async () => {
-    if (!window.confirm(`删除服务「${service.name}」？`)) return;
+    setConfirmOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    setConfirmOpen(false);
     await servicesApi.remove(service.id);
     onChanged();
   };
@@ -62,6 +81,18 @@ export default function ServiceCard({
           </Typography>
         )}
       </CardContent>
+      <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
+        <DialogTitle>删除服务</DialogTitle>
+        <DialogContent>
+          <DialogContentText>确定删除服务「{service.name}」吗？此操作不可撤销。</DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmOpen(false)}>取消</Button>
+          <Button color="error" variant="contained" onClick={() => void confirmDelete()}>
+            删除
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Card>
   );
 }
