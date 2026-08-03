@@ -4,7 +4,7 @@
  * 包含：主题（亮/暗/跟随系统）、字号缩放、全屏模式、减少动效、重置。
  * 所有变更即时生效并写入 localStorage。
  */
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import type { ChangeEvent, MouseEvent } from 'react';
 import {
   Alert,
@@ -30,6 +30,8 @@ import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined';
 import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined';
 import SettingsBrightnessIcon from '@mui/icons-material/SettingsBrightness';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
+import FileUploadOutlinedIcon from '@mui/icons-material/FileUploadOutlined';
 import type { ThemeMode } from './types';
 import {
   FONT_SCALE_MIN,
@@ -64,8 +66,13 @@ export function SettingsModal(): JSX.Element {
     settingsOpen,
     closeSettings,
     appName,
+    appId,
   } = useSettingsHelp();
   const [resetTip, setResetTip] = useState<boolean>(false);
+  const [importTip, setImportTip] = useState<{ severity: 'success' | 'error'; msg: string } | null>(
+    null
+  );
+  const importRef = useRef<HTMLInputElement | null>(null);
 
   useModalPresence(settingsOpen, 'settings');
 
@@ -101,6 +108,73 @@ export function SettingsModal(): JSX.Element {
     reset();
     setResetTip(true);
   }, [reset]);
+
+  const handleExport = useCallback((): void => {
+    try {
+      const blob = new Blob([JSON.stringify(settings, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${appId}-settings.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setImportTip({ severity: 'success', msg: '设置已导出' });
+    } catch {
+      setImportTip({ severity: 'error', msg: '导出失败' });
+    }
+  }, [settings, appId]);
+
+  const handleImportFile = useCallback(
+    (event: ChangeEvent<HTMLInputElement>): void => {
+      const file = event.target.files?.[0];
+      event.target.value = '';
+      if (!file) {
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (): void => {
+        try {
+          const parsed = JSON.parse(String(reader.result)) as Partial<{
+            themeMode: unknown;
+            fontScale: unknown;
+            reduceMotion: unknown;
+            extras: unknown;
+          }>;
+          const themeMode = parsed.themeMode;
+          const fontScale = Number(parsed.fontScale);
+          const reduceMotion = Boolean(parsed.reduceMotion);
+          if (
+            themeMode !== 'light' &&
+            themeMode !== 'dark' &&
+            themeMode !== 'system' &&
+            !(
+              typeof themeMode === 'string' &&
+              ['light', 'dark', 'system'].includes(themeMode)
+            )
+          ) {
+            throw new Error('themeMode 非法');
+          }
+          if (!Number.isFinite(fontScale)) {
+            throw new Error('fontScale 非法');
+          }
+          update('themeMode', themeMode as 'light' | 'dark' | 'system');
+          update(
+            'fontScale',
+            Math.min(FONT_SCALE_MAX, Math.max(FONT_SCALE_MIN, fontScale))
+          );
+          update('reduceMotion', reduceMotion);
+          if (parsed.extras && typeof parsed.extras === 'object') {
+            update('extras', parsed.extras as Record<string, unknown>);
+          }
+          setImportTip({ severity: 'success', msg: '设置已导入' });
+        } catch {
+          setImportTip({ severity: 'error', msg: '导入失败：文件格式不正确' });
+        }
+      };
+      reader.readAsText(file);
+    },
+    [update]
+  );
 
   return (
     <>
@@ -203,9 +277,28 @@ export function SettingsModal(): JSX.Element {
           </Stack>
         </DialogContent>
         <DialogActions sx={{ justifyContent: 'space-between' }}>
-          <Button color="inherit" startIcon={<RestartAltIcon />} onClick={handleReset}>
-            重置
-          </Button>
+          <Stack direction="row" spacing={1} flexWrap="wrap">
+            <Button color="inherit" startIcon={<RestartAltIcon />} onClick={handleReset}>
+              重置
+            </Button>
+            <Button color="inherit" startIcon={<FileDownloadOutlinedIcon />} onClick={handleExport}>
+              导出
+            </Button>
+            <Button
+              color="inherit"
+              component="label"
+              startIcon={<FileUploadOutlinedIcon />}
+            >
+              导入
+              <input
+                ref={importRef}
+                type="file"
+                accept="application/json,.json"
+                hidden
+                onChange={handleImportFile}
+              />
+            </Button>
+          </Stack>
           <Button variant="contained" onClick={closeSettings}>
             完成
           </Button>
@@ -220,6 +313,21 @@ export function SettingsModal(): JSX.Element {
       >
         <Alert severity="success" variant="filled" onClose={() => setResetTip(false)}>
           已恢复默认设置
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={importTip !== null}
+        autoHideDuration={2400}
+        onClose={() => setImportTip(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          severity={importTip?.severity ?? 'info'}
+          variant="filled"
+          onClose={() => setImportTip(null)}
+        >
+          {importTip?.msg ?? ''}
         </Alert>
       </Snackbar>
     </>
