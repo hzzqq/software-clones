@@ -114,6 +114,32 @@ export function HelpModal(): JSX.Element {
               </Stack>
             </Box>
           ) : null}
+
+          <Box>
+            <Divider sx={{ mb: 1.5 }} />
+            <Typography variant="subtitle2" color="primary" gutterBottom>
+              通用快捷键
+            </Typography>
+            <Stack spacing={0.75}>
+              <Stack direction="row" spacing={1.5} alignItems="center" justifyContent="space-between">
+                <Chip size="small" label="F1" variant="outlined" sx={{ fontFamily: 'monospace', flexShrink: 0 }} />
+                <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'right' }}>
+                  打开本使用说明
+                </Typography>
+              </Stack>
+              <Stack direction="row" spacing={1.5} alignItems="center" justifyContent="space-between">
+                <Chip
+                  size="small"
+                  label="Ctrl / Cmd + ,"
+                  variant="outlined"
+                  sx={{ fontFamily: 'monospace', flexShrink: 0 }}
+                />
+                <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'right' }}>
+                  打开设置面板
+                </Typography>
+              </Stack>
+            </Stack>
+          </Box>
         </Stack>
       </DialogContent>
     </Dialog>
