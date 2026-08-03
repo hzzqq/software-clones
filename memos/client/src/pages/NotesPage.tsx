@@ -2,7 +2,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
+  Button,
   Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   FormControl,
   FormControlLabel,
   IconButton,
@@ -39,6 +45,7 @@ export default function NotesPage(): JSX.Element {
   const [visFilter, setVisFilter] = useState<'' | 'public' | 'protected' | 'private'>('');
   const [dropdownTag, setDropdownTag] = useState('');
   const [tags, setTags] = useState<{ id: number; name: string; count: number }[]>([]);
+  const [deleteTarget, setDeleteTarget] = useState<Note | null>(null);
   const { notes, loading, error, reload } = useNotes({ archived, tag: activeTag, q });
 
   const sorted = useMemo(() => sortNotes(notes, sort), [notes, sort]);
@@ -94,8 +101,12 @@ export default function NotesPage(): JSX.Element {
     await reload();
   };
   const handleDelete = async (note: Note) => {
-    if (!window.confirm('确定删除这条笔记？')) return;
-    await noteApi.remove(note.id);
+    setDeleteTarget(note);
+  };
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    await noteApi.remove(deleteTarget.id);
+    setDeleteTarget(null);
     await reload();
     await refreshTags();
   };
@@ -266,6 +277,27 @@ export default function NotesPage(): JSX.Element {
           )}
         </Stack>
       )}
+
+      <Dialog open={deleteTarget !== null} onClose={() => setDeleteTarget(null)}>
+        <DialogTitle>删除笔记</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            确定删除这条笔记吗？此操作不可撤销。
+            {deleteTarget ? (
+              <Box component="pre" sx={{ mt: 1, whiteSpace: 'pre-wrap', fontSize: 13, opacity: 0.8 }}>
+                {deleteTarget.content.slice(0, 80)}
+                {deleteTarget.content.length > 80 ? '…' : ''}
+              </Box>
+            ) : null}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteTarget(null)}>取消</Button>
+          <Button color="error" variant="contained" onClick={confirmDelete}>
+            删除
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
