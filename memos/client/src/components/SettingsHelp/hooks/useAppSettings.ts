@@ -125,11 +125,14 @@ export function useAppSettings(appId: string): UseAppSettingsResult {
         style.textContent = [
           'body[appReduceMotion="1"] *,',
           'body[appReduceMotion="1"] *::before,',
-          'body[appReduceMotion="1"] *::after {',
-          '  animation-duration: 0.001ms !important;',
-          '  animation-iteration-count: 1 !important;',
-          '  transition-duration: 0.001ms !important;',
-          '  scroll-behavior: auto !important;',
+          'body[appReduceMotion="1"] *::after,',
+          '@media (prefers-reduced-motion: reduce) {',
+          '  *, *::before, *::after {',
+          '    animation-duration: 0.001ms !important;',
+          '    animation-iteration-count: 1 !important;',
+          '    transition-duration: 0.001ms !important;',
+          '    scroll-behavior: auto !important;',
+          '  }',
           '}',
         ].join('\n');
         document.head.appendChild(style);
