@@ -1,5 +1,6 @@
 node_modules/
 dist/
+dist-verify/
 build/
 *.log
 .DS_Store
@@ -12,8 +13,11 @@ coverage/
 # Playwright E2E
 node_modules/.cache
 playwright-report/
+playwright-report-settings/
 test-results/
 playwright/.cache/
+# 排障时手动截的调试图，不是基线快照（基线走 toHaveScreenshot 的 -snapshots/ 目录）
+e2e/*.png
 
 # Generated temp artifacts (vitest / vite caches)
 *.timestamp-*.mjs
@@ -21,3 +25,11 @@ playwright/.cache/
 # 运行时产物（非源码）：并发锁 + 一致性校验报告的瞬时输出
 .workbuddy/self-driving/.drive_lock
 .workbuddy/self-driving/last-check.json
+
+# daemon 模式运行时产物：后台日志 + 子进程 PID 记录
+logs/
+.pids/
+scripts/.pids/
+
+# 一次性排障探针（用完即弃，不进版本库）
+scripts/_tmp-*.mjs
