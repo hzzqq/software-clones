@@ -1,0 +1,19 @@
+# 仓库统一使用 LF 作为提交后的换行符。
+#
+# 为什么需要它：本仓库 796 个受控文件里 746 个是 LF，但历史上有 50 个文件
+# （12 份 main.tsx、各 App 的 api/client.ts、server/app.ts、securityHeaders.ts）
+# 被 Windows 编辑器写成了 CRLF。后续任何一次改动这些文件的提交，diff 都会把整
+# 个文件显示为「全删全增」—— 实测一次 400 行的真实改动被撑成 1699 行，评审时
+# 根本看不出改了什么。用 text=auto + eol=lf 把换行符钉死，杜绝再次发生。
+* text=auto eol=lf
+
+# 二进制资源不做任何换行转换。
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.db binary
+*.sqlite binary
