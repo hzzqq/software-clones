@@ -35,7 +35,9 @@ export function createAppTheme(mode: ThemeMode = 'light'): Theme {
       background:
         resolved === 'dark'
           ? { default: '#0f1419', paper: '#161b22' }
-          : { default: '#0f172a', paper: '#1e293b' },
+          : // 亮色分支必须给浅色底：MUI 在 mode:'light' 下用深色文字
+            // （rgba(0,0,0,0.87)），这里若沿用深色底会导致整屏文字不可读。
+            { default: '#f1f5f9', paper: '#ffffff' },
     },
     shape: {
       borderRadius: 12,

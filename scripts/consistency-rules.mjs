@@ -12,6 +12,9 @@
  */
 import { existsSync, readdirSync, statSync, readFileSync } from 'node:fs';
 import { join, dirname, resolve, relative } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const RULES_DIR = dirname(fileURLToPath(import.meta.url));
 
 /** 递归列出目录下所有单元/集成测试源文件（client 端 *.test.ts(x) / *.spec.ts(x)）。 */
 function walkTestFiles(dir, out = []) {
@@ -65,10 +68,27 @@ export function findE2ESpecs(root, app) {
  * 用精确解析替代脆弱的「整文件 includes」——避免应用名作为子串出现在注释/路径中时误判。
  * @returns {string[]} 应用名列表（去重、保留出现顺序）
  */
-export function parsePlaywrightApps(text) {
-  const block = text.match(/export\s+const\s+APPS[\s\S]*?=\s*\[([\s\S]*?)\]/);
-  if (!block) return [];
-  const names = block[1].match(/name\s*:\s*['"]([^'"]+)['"]/g) || [];
+/**
+ * 从 playwright.config.ts 提取所有登记的应用名。
+ *
+ * 兼容两种写法：
+ * 1. 传统：config 文件里直接写 `export const APPS = [...]`；
+ * 2. 当前：config 文件里 `import { E2E_APPS } from './e2e/apps.config'`。
+ *
+ * @param {string} text playwright.config.ts 文本
+ * @param {string} [configDir] playwright.config.ts 所在目录
+ * @returns {string[]} 应用名列表（去重、保留出现顺序）
+ */
+export function parsePlaywrightApps(text, configDir = resolve(RULES_DIR, '..')) {
+  let block = text.match(/export\s+const\s+APPS[\s\S]*?=\s*\[([\s\S]*?)\]/);
+  let source = block ? block[1] : '';
+  if (!block) {
+    const imported = tryResolveImportedApps(text, configDir);
+    if (imported.length) {
+      return imported.map((a) => a.name);
+    }
+  }
+  const names = source.match(/name\s*:\s*['"]([^'"]+)['"]/g) || [];
   const out = [];
   for (const n of names) {
     const m = n.match(/name\s*:\s*['"]([^'"]+)['"]/);
@@ -207,14 +227,92 @@ export function findAllMarkdownFiles(root) {
 }
 
 /**
+ * 从根目录 apps.ports.json（单一真源）读取 12 个 App 的 name / clientDir / clientPort。
+ *
+ * playwright.config.ts 与 e2e/apps.config.ts 都间接从该 JSON 派生，
+ * 因此解析 TS import / map 表达式既脆弱又多余，直接读 JSON 更可靠。
+ *
+ * @param {string} root 仓库根目录
+ * @returns {{name:string,dir:string,port:number}[]}
+ */
+function parseAppsFromPorts(root) {
+  const p = join(root, 'apps.ports.json');
+  if (!existsSync(p)) return [];
+  try {
+    const json = JSON.parse(readFileSync(p, 'utf8'));
+    const apps = Array.isArray(json.apps) ? json.apps : [];
+    return apps
+      .filter((a) => a && typeof a.name === 'string' && typeof a.clientPort === 'number')
+      .map((a) => ({ name: a.name, dir: a.clientDir ?? `${a.name}/client`, port: a.clientPort }));
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * 当 playwright.config.ts 里没有字面量 APPS 数组，而是 `import { E2E_APPS } from '...'` 时，
+ * 从相对路径（相对 playwright.config.ts 所在目录）读取并解析导入的 apps.config.ts。
+ *
+ * 如果 apps.config.ts 本身也是从 apps.ports.json 派生，则最终回落到读 apps.ports.json。
+ *
+ * @param {string} configText playwright.config.ts 文本
+ * @param {string} configDir playwright.config.ts 所在目录（默认本仓库根目录）
+ * @returns {{name:string,dir:?string,port:?number}[]}
+ */
+function tryResolveImportedApps(configText, configDir) {
+  const importRe = /import\s*\{\s*E2E_APPS\s*\}\s*from\s*['"]([^'"]+)['"]/;
+  const match = configText.match(importRe);
+  if (!match) return [];
+
+  // 若真源就是 apps.ports.json，直接读它（最稳）。
+  const portsPath = join(configDir, 'apps.ports.json');
+  if (existsSync(portsPath)) {
+    const ports = parseAppsFromPorts(configDir);
+    if (ports.length) return ports;
+  }
+
+  const target = join(configDir, match[1].replace(/\.ts$/, '') + '.ts');
+  if (!existsSync(target)) return [];
+
+  // e2e/apps.config.ts 里 E2E_APPS 是 ports.apps.map(...) 生成，不是字面量数组。
+  // 不再写脆弱的正则去拆 .map() 的 inline object，而是同样读 apps.ports.json。
+  try {
+    const appsConfigText = readFileSync(target, 'utf8');
+    const portsRef = appsConfigText.match(/import\s+ports\s+from\s+['"]([^'"]+)['"]/);
+    if (portsRef) {
+      const refPath = join(configDir, portsRef[1].replace(/\.json$/, '') + '.json');
+      if (existsSync(refPath)) {
+        return parseAppsFromPorts(configDir);
+      }
+    }
+  } catch {
+    // fall through
+  }
+  return [];
+}
+
+/**
  * 从 playwright.config.ts 文本稳健地解析 APPS 数组，逐个对象提取 name/dir/port。
  * 相比 lib-catalog.mjs 旧实现（要求 name→dir→port 固定顺序、否则整条丢弃导致目录漂移），
  * 本解析器对每个 `{...}` 对象独立抽取字段，对字段顺序不敏感。
+ *
+ * 兼容两种写法：
+ * 1. 传统：config 文件里直接写 `export const APPS = [...]`；
+ * 2. 当前：config 文件里 `import { E2E_APPS } from './e2e/apps.config'`，
+ *    真源为 apps.ports.json。
+ *
+ * @param {string} text playwright.config.ts 文本
+ * @param {string} [configDir] playwright.config.ts 所在目录
  * @returns {{name:string,dir:?string,port:?number}[]}
  */
-export function parseApps(text) {
-  const block = text.match(/export\s+const\s+APPS[\s\S]*?=\s*\[([\s\S]*?)\]/);
-  if (!block) return [];
+export function parseApps(text, configDir = resolve(RULES_DIR, '..')) {
+  let block = text.match(/export\s+const\s+APPS[\s\S]*?=\s*\[([\s\S]*?)\]/);
+  if (!block) {
+    // 没有字面量 APPS 数组，尝试从 import 的 e2e/apps.config.ts 解析
+    const imported = tryResolveImportedApps(text, configDir);
+    if (imported.length) return imported;
+    return [];
+  }
   const objRe = /\{([\s\S]*?)\}/g;
   const apps = [];
   let m;
