@@ -7,9 +7,12 @@
   "scripts": {
     "dev:all": "node scripts/start-all.mjs",
     "dev:app": "node scripts/start-app.mjs",
+    "dev:hall": "node scripts/start-hall.mjs",
     "dev:status": "node scripts/dev-status.mjs",
     "stop:all": "node scripts/stop-all.mjs",
     "stop:app": "node scripts/stop-app.mjs",
+    "stop:hall": "node scripts/stop-hall.mjs",
+    "hall:gen": "node scripts/gen-hall.mjs",
     "check:backends": "node scripts/check-backends.mjs",
     "sync:help": "node scripts/sync-settings-help.mjs",
     "sync:help:check": "node scripts/sync-settings-help.mjs --check",

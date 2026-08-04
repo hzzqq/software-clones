@@ -254,3 +254,67 @@ export async function waitForHttp(port, timeoutMs = 60_000) {
   }
   return false;
 }
+
+/** 大厅静态服务端口（刻意避开各 App 前端的 5180–5191）。 */
+export const HALL_PORT = 5192;
+
+/** 大厅产物目录（hall/index.html 由 scripts/gen-hall.mjs 生成并提交进 git）。 */
+export const HALL_DIR = path.join(ROOT, 'hall');
+
+/** 大厅静态服务器入口（node scripts/hall-server.mjs，被 startStaticServer 以子进程拉起）。 */
+export const HALL_SCRIPT = path.join(ROOT, 'scripts', 'hall-server.mjs');
+
+/**
+ * 启动一个零依赖的静态文件服务器（node 原生 http，复用大厅服务器实现）。
+ *
+ * 通过子进程运行 `node scripts/hall-server.mjs --serve <port> <dir>`：
+ * - 与 npm 无关，因此 Windows 上无需 shell，直接用 process.execPath（node.exe）；
+ * - daemon 模式沿用「detached + 日志文件 + unref」三件套，父进程可立即退出。
+ *
+ * @param {object}   [opts]
+ * @param {number}   [opts.port]     监听端口（默认大厅 5192）
+ * @param {string}   [opts.dir]      静态文件根目录（默认 hall/）
+ * @param {string}   [opts.logFile]  日志文件名（落盘到 logs/），不传则继承当前终端 stdio
+ * @param {boolean}  [opts.detached] 是否脱离启动窗口独立运行（daemon 模式）
+ * @returns {import('node:child_process').ChildProcess}
+ */
+export function startStaticServer({ port = HALL_PORT, dir = HALL_DIR, logFile = null, detached = false } = {}) {
+  const args = [HALL_SCRIPT, '--serve', String(port), dir];
+  let stdio = 'inherit';
+  if (logFile) {
+    const logPath = path.join(ROOT, 'logs', logFile);
+    fs.mkdirSync(path.dirname(logPath), { recursive: true });
+    const fd = fs.openSync(logPath, 'a');
+    stdio = ['ignore', fd, fd];
+  } else if (detached) {
+    // daemon 模式绝不能继承父进程 stdio，否则父进程退出/关窗会连带影响子进程。
+    stdio = 'ignore';
+  }
+
+  const child = spawn(process.execPath, args, { cwd: ROOT, stdio, detached: !!detached });
+  if (detached) child.unref();
+  return child;
+}
+
+/**
+ * 尝试用系统默认浏览器打开 URL。
+ *
+ * Windows 用 `cmd /c start` 且必须同步（execSync）：异步 spawn 在脚本退出时来不及执行；
+ * 沙箱 / CI 环境可能没有浏览器或弹权限，因此失败绝不能抛出，只打印手动访问提示。
+ *
+ * @param {string} url
+ */
+export function openBrowser(url) {
+  try {
+    if (IS_WIN) {
+      execSync(`cmd /c start "" "${url}"`, { stdio: 'ignore', windowsHide: true });
+    } else if (process.platform === 'darwin') {
+      execSync(`open "${url}"`, { stdio: 'ignore' });
+    } else {
+      execSync(`xdg-open "${url}"`, { stdio: 'ignore' });
+    }
+    console.log(`已尝试自动打开浏览器: ${url}`);
+  } catch {
+    console.log(`如未自动打开，请手动访问 ${url}`);
+  }
+}

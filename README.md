@@ -2,6 +2,21 @@
 
 三个全栈克隆 App 的单体仓库（B1）。每个 App 的 `client/` 与 `server/` 各自独立 `package.json`，互不耦合。
 
+## 🏠 启动大厅
+
+仓库自带一个「软件克隆大厅」（`hall/`，端口 **5192**），把 12 个 App 做成卡片：显示中文名 / 英文名 / 一句话简介 / 端口，并对每个前端端口做在线探活（绿点在线、灰点离线），点击卡片在新标签页打开对应 App。
+
+```bash
+npm run dev:hall          # 只拉起大厅（自动打开浏览器），App 需另行启动
+npm run dev:all           # 全部 12 个 App + 大厅一起拉起，自动打开浏览器指向大厅
+npm run stop:hall         # 停止大厅
+npm run hall:gen          # 重新生成 hall/index.html（数据来自 apps.ports.json + 各 App 的 helpContent.ts）
+```
+
+- 访问地址：http://localhost:5192/
+- 大厅是独立 daemon 进程，只负责展示与跳转，**不**负责启动 App。
+- `hall/index.html` 是生成产物且已提交进 git；修改了 App 的中文名/简介或端口表后，执行 `npm run hall:gen` 重新生成（`node scripts/gen-hall.mjs --check` 可校验产物是否过期）。
+
 | App | 说明 | 前端(dev) | 后端 | VITE_API_BASE |
 |---|---|---|---|---|
 | `it-tools` | 开发者工具箱（30+ 工具，计算纯前端，收藏/历史/设置可选后端） | 5173 | 4101 | http://localhost:4101/api |
