@@ -1,12 +1,21 @@
 {
-  "cycle": 254,
+  "cycle": 261,
   "max_cycles": 274,
-  "phase": "running",
-  "paused": false,
-  "log": [],
-  "last_task_id": null,
+  "phase": "completed",
+  "paused": true,
+  "pause_reason": "真实高价值收益枯竭：本批次从 r254 干净基线起跑了 7 轮实质性改进（255-261），全 12 App tsc 回归全绿。剩余可做的多是凑覆盖/换皮的低价值项，按自驱循环反自指铁律主动收尾，未灌水到 20。",
+  "log": [
+    { "cycle": 255, "task": "fix(settings): 减少动效真正生效", "gain": "reduceMotion 此前只写 dataset 无 CSS 消费，开关形同虚设；注入全局 reduced-motion 样式", "score": 70, "verify": "sync+markdown tsc 通过" },
+    { "cycle": 256, "task": "feat(settings): HelpModal 补充通用快捷键区块", "gain": "用户此前无从知晓 F1/Ctrl+, 全局快捷键", "score": 45, "verify": "sync+tsc 通过" },
+    { "cycle": 257, "task": "fix(a11y): 减少动效尊重系统 prefers-reduced-motion", "gain": "OS 级减弱动效偏好也自动生效", "score": 50, "verify": "sync+tsc 通过" },
+    { "cycle": 258, "task": "feat(settings): 设置导出/导入 JSON", "gain": "用户可备份/迁移偏好", "score": 55, "verify": "sync+tsc 通过" },
+    { "cycle": 259, "task": "fix(ux): 错误边界加 重试/重新加载 恢复入口", "gain": "崩溃后不再只能干瞪眼，12 App 统一", "score": 60, "verify": "copy12+tsc 通过" },
+    { "cycle": 260, "task": "fix(memos): 删除改用 MUI 确认弹窗", "gain": "替代原生 window.confirm，主题感知", "score": 40, "verify": "memos tsc 通过" },
+    { "cycle": 261, "task": "fix(kener): 删除服务改用 MUI 确认弹窗", "gain": "同上，清掉最后一处原生 confirm", "score": 40, "verify": "kener tsc 通过" }
+  ],
+  "last_task_id": "kener-confirm-dialog",
   "repeat_count": 0,
-  "last_score": 0,
-  "coverage": {},
-  "note": "从 r254 干净基线续跑 20 轮 (255-274)。settings+daemon 已入库于 9408dc1。"
+  "last_score": 40,
+  "coverage": { "settings-module": "255-258", "error-boundary": "259", "native-dialog-removal": "260-261", "a11y": "257" },
+  "note": "r254 起续跑。暗色模式 Tailwind 浅色表面假设经核查不成立（#fff 多为彩色背景上的白字，非 bug）；helpContent 经核对准确；lang=zh-CN 已齐；技术债近零。故 7 轮后收尾。"
 }
