@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: 'Inter', 'Roboto', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background-color: #f5f7fa;
+}
+
+/* Thin scrollbars for a cleaner developer-tool aesthetic. */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+/* 代码等宽字体回退。 */
+code,
+pre {
+  font-family: 'JetBrains Mono', 'Fira Code', Consolas, 'Courier New', monospace;
+}
+
+/* 语法高亮 token 配色（亮 / 暗主题通用，暗色下微调）。 */
+.tok-comment {
+  color: #6b7280;
+  font-style: italic;
+}
+.tok-string {
+  color: #16a34a;
+}
+.tok-number {
+  color: #d97706;
+}
+.tok-keyword {
+  color: #2563eb;
+  font-weight: 600;
+}
+.tok-tag {
+  color: #7c3aed;
+  font-weight: 600;
+}
+
+[data-mui-color-scheme='dark'] .tok-comment {
+  color: #9ca3af;
+}
+[data-mui-color-scheme='dark'] .tok-string {
+  color: #4ade80;
+}
+[data-mui-color-scheme='dark'] .tok-number {
+  color: #fbbf24;
+}
+[data-mui-color-scheme='dark'] .tok-keyword {
+  color: #60a5fa;
+}
+[data-mui-color-scheme='dark'] .tok-tag {
+  color: #c4b5fd;
+}

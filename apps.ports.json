@@ -1,5 +1,5 @@
 {
-  "_comment": "12 个克隆 App 的端口分配 —— 单一真源。e2e/apps.config.ts 与 scripts/*.mjs 都从这里读，避免各处各写一份导致漂移。serverPort 刻意错开各 app 的默认端口（大多默认 4101，会互相抢占）。",
+  "_comment": "20 个克隆 App 的端口分配 —— 单一真源。e2e/apps.config.ts 与 scripts/*.mjs 都从这里读，避免各处各写一份导致漂移。serverPort 刻意错开各 app 的默认端口（大多默认 4101，会互相抢占）。",
   "apps": [
     { "name": "markdown", "serverPort": 4201, "clientPort": 5180 },
     { "name": "apiclient", "serverPort": 4202, "clientPort": 5181 },
@@ -12,6 +12,14 @@
     { "name": "kener", "serverPort": 4209, "clientPort": 5188 },
     { "name": "memos", "serverPort": 4210, "clientPort": 5189 },
     { "name": "lofi", "serverPort": 4211, "clientPort": 5190 },
-    { "name": "nonio", "serverPort": 4212, "clientPort": 5191 }
+    { "name": "nonio", "serverPort": 4212, "clientPort": 5191 },
+    { "name": "shlink", "serverPort": 4213, "clientPort": 5193 },
+    { "name": "rssreader", "serverPort": 4214, "clientPort": 5194 },
+    { "name": "vault", "serverPort": 4215, "clientPort": 5195 },
+    { "name": "habit", "serverPort": 4216, "clientPort": 5196 },
+    { "name": "bookmarks", "serverPort": 4217, "clientPort": 5197 },
+    { "name": "snippets", "serverPort": 4218, "clientPort": 5198 },
+    { "name": "fileshare", "serverPort": 4219, "clientPort": 5199 },
+    { "name": "chatroom", "serverPort": 4220, "clientPort": 5200 }
   ]
 }

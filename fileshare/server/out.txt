@@ -1,0 +1,31 @@
+npm error code EPERM
+npm error syscall open
+npm error path C:\Users\Administrator\AppData\Local\npm-cache\_cacache\index-v5\f4\7b\7895b07a4ca3ce1a0a41daae56028bda29f5152dcd02479a181a7d999b66
+npm error errno EPERM
+npm error FetchError: Invalid response body while trying to fetch https://registry.npmjs.org/@types%2fbetter-sqlite3: EPERM: operation not permitted, open 'C:\Users\Administrator\AppData\Local\npm-cache\_cacache\index-v5\f4\7b\7895b07a4ca3ce1a0a41daae56028bda29f5152dcd02479a181a7d999b66'
+npm error     at E:\.workbuddy\binaries\node\versions\22.22.2\node_modules\npm\node_modules\minipass-fetch\lib\body.js:170:15
+npm error     at async Response.json (E:\.workbuddy\binaries\node\versions\22.22.2\node_modules\npm\node_modules\minipass-fetch\lib\body.js:75:17)
+npm error     at async RegistryFetcher.packument (E:\.workbuddy\binaries\node\versions\22.22.2\node_modules\npm\node_modules\pacote\lib\registry.js:98:25)
+npm error     at async RegistryFetcher.manifest (E:\.workbuddy\binaries\node\versions\22.22.2\node_modules\npm\node_modules\pacote\lib\registry.js:128:23)
+npm error     at async #fetchManifest (E:\.workbuddy\binaries\node\versions\22.22.2\node_modules\npm\node_modules\@npmcli\arborist\lib\arborist\build-ideal-tree.js:1202:20)
+npm error     at async #nodeFromEdge (E:\.workbuddy\binaries\node\versions\22.22.2\node_modules\npm\node_modules\@npmcli\arborist\lib\arborist\build-ideal-tree.js:1040:19)
+npm error     at async #buildDepStep (E:\.workbuddy\binaries\node\versions\22.22.2\node_modules\npm\node_modules\@npmcli\arborist\lib\arborist\build-ideal-tree.js:904:11)
+npm error     at async Arborist.buildIdealTree (E:\.workbuddy\binaries\node\versions\22.22.2\node_modules\npm\node_modules\@npmcli\arborist\lib\arborist\build-ideal-tree.js:181:7)
+npm error     at async Promise.all (index 1)
+npm error     at async Arborist.reify (E:\.workbuddy\binaries\node\versions\22.22.2\node_modules\npm\node_modules\@npmcli\arborist\lib\arborist\reify.js:133:5) {
+npm error   code: 'EPERM',
+npm error   errno: 'EPERM',
+npm error   syscall: 'open',
+npm error   path: 'C:\\Users\\Administrator\\AppData\\Local\\npm-cache\\_cacache\\index-v5\\f4\\7b\\7895b07a4ca3ce1a0a41daae56028bda29f5152dcd02479a181a7d999b66',
+npm error   type: 'system',
+npm error   requiredBy: '.'
+npm error }
+npm error
+npm error The operation was rejected by your operating system.
+npm error It's possible that the file was already in use (by a text editor or antivirus),
+npm error or that you lack permissions to access it.
+npm error
+npm error If you believe this might be a permissions issue, please double-check the
+npm error permissions of the file and its containing directories, or try running
+npm error the command again as root/Administrator.
+npm error A complete log of this run can be found in: C:\Users\Administrator\AppData\Local\npm-cache\_logs\2026-08-06T12_18_13_699Z-debug-0.log
