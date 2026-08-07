@@ -177,6 +177,46 @@ export function extractHeadings(content: string): Heading[] {
   return out;
 }
 
+/** 大纲条目：在 Heading 基础上补充行号与序号，便于编辑区定位与预览锚点对齐。 */
+export interface OutlineItem extends Heading {
+  /** 标题所在行的 0 基行号（用于在编辑器中滚动定位）。 */
+  line: number;
+  /** 在全部标题中的 0 基序号（与预览注入的锚点 id 一一对应）。 */
+  index: number;
+}
+
+/**
+ * 从 markdown 内容提取完整大纲（H1–H6，跳过围栏代码块内的 # 注释）。
+ * 与 `extractHeadings`（仅 H1–H3）互补：大纲侧栏与预览锚点统一使用本函数，
+ * 保证「点击大纲 → 跳到预览对应位置」的序号一致。纯函数，不修改入参。
+ */
+export function extractOutline(content: string): OutlineItem[] {
+  const lines = content.split('\n');
+  const out: OutlineItem[] = [];
+  let inFence = false;
+  let idx = 0;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (/^\s*```/.test(line)) {
+      inFence = !inFence;
+      continue;
+    }
+    if (inFence) continue;
+    const m = /^(#{1,6})\s+(.+)$/.exec(line);
+    if (!m) continue;
+    const raw = m[2].trim();
+    out.push({
+      level: m[1].length,
+      text: stripInlineMarkdown(raw),
+      id: slugifyHeading(raw, idx),
+      line: i,
+      index: idx,
+    });
+    idx += 1;
+  }
+  return out;
+}
+
 /**
  * 去除行内 markdown 语法，返回纯文本（用于大纲/目录展示，避免把 `**粗体**`、
  * `[链接](url)` 等标记原样暴露给用户）。纯函数，不修改入参。

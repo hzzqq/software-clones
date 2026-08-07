@@ -8,6 +8,8 @@ import { healthRouter } from './routes/health';
 import { boardsRouter } from './routes/boards';
 import { listsRouter } from './routes/lists';
 import { cardsRouter } from './routes/cards';
+import { checklistRouter } from './routes/checklist';
+import { activityRouter } from './routes/activity';
 import { tagsRouter } from './routes/tags';
 
 export const app = express();
@@ -20,6 +22,8 @@ app.use('/api', healthRouter);
 app.use('/api', boardsRouter);
 app.use('/api', listsRouter);
 app.use('/api', cardsRouter);
+app.use('/api', checklistRouter);
+app.use('/api', activityRouter);
 app.use('/api', tagsRouter);
 
 app.use(notFound);

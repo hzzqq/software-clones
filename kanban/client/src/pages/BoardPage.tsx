@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import {
   DragEndEvent,
   DragStartEvent,
@@ -23,9 +23,27 @@ import { boardsApi } from '../api/boards';
 import { ApiError } from '../api/client';
 import { CardPatch } from '../api/cards';
 import { Card } from '../types';
-import { countCardsByPriority, dueSoonCards, overdueCards, countCardsByTag, boardCompletion } from '../utils/filterCards';
+import {
+  applyCardFilters,
+  boardCompletion,
+  countCardsByPriority,
+  countCardsByTag,
+  dueSoonCards,
+  overdueCards,
+  type CardFilterCriteria,
+} from '../utils/filterCards';
 import { formatBoardSummary } from '../utils/boardSummary';
 import { parseIdParam } from '../utils/id';
+
+/** 空筛选条件：所有字段显式给出，避免各处对「缺省」理解不一致。 */
+const EMPTY_CRITERIA: CardFilterCriteria = {
+  query: '',
+  tagIds: [],
+  tagMode: 'or',
+  priority: null,
+  dueRange: 'all',
+  onlyIncomplete: false,
+};
 
 /** Single-board view: toolbar + drag-enabled columns + card editor. */
 export default function BoardPage(): JSX.Element {
@@ -37,15 +55,31 @@ export default function BoardPage(): JSX.Element {
   const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
   const [modalOpen, setModalOpen] = useState<boolean>(false);
   const [activeCard, setActiveCard] = useState<Card | null>(null);
-  const [filterTagId, setFilterTagId] = useState<number | null>(null);
-  const [filterPriority, setFilterPriority] = useState<number | null>(null);
-  const [onlyIncomplete, setOnlyIncomplete] = useState<boolean>(false);
-  const [search, setSearch] = useState<string>('');
+  const [criteria, setCriteria] = useState<CardFilterCriteria>(EMPTY_CRITERIA);
   const [error, setError] = useState<string>('');
   const [copyTip, setCopyTip] = useState<string>('');
 
   const selectedCard: Card | null =
     board.detail?.cards.find((c) => c.id === selectedCardId) ?? null;
+
+  const patchCriteria = useCallback((patch: Partial<CardFilterCriteria>): void => {
+    setCriteria((prev) => ({ ...prev, ...patch }));
+  }, []);
+
+  const resetCriteria = useCallback((): void => {
+    setCriteria(EMPTY_CRITERIA);
+  }, []);
+
+  /** 点击卡片上的标签：在多标签筛选中切换该标签（再次点击取消）。 */
+  const toggleFilterTag = useCallback((tagId: number): void => {
+    setCriteria((prev) => {
+      const cur: number[] = prev.tagIds ?? [];
+      return {
+        ...prev,
+        tagIds: cur.includes(tagId) ? cur.filter((t) => t !== tagId) : [...cur, tagId],
+      };
+    });
+  }, []);
 
   const onDragStart = (event: DragStartEvent): void => {
     const cid: number = Number(event.active.id);
@@ -138,6 +172,12 @@ export default function BoardPage(): JSX.Element {
       </MuiCard>
     ) : null;
 
+  const visibleCount: number = applyCardFilters(
+    board.detail.cards,
+    criteria,
+    board.tags
+  ).length;
+
   return (
     <Box>
       <Button
@@ -155,18 +195,14 @@ export default function BoardPage(): JSX.Element {
       <Toolbar
         board={board.detail}
         tags={board.tags}
-        filterTagId={filterTagId}
-        onFilterChange={setFilterTagId}
-        filterPriority={filterPriority}
-        onFilterPriorityChange={setFilterPriority}
-        onlyIncomplete={onlyIncomplete}
-        onOnlyIncompleteChange={setOnlyIncomplete}
+        criteria={criteria}
+        onCriteriaChange={patchCriteria}
+        onResetFilters={resetCriteria}
         onDeleteBoard={() => void deleteBoard()}
         onTagsChanged={() => board.reload()}
-        searchQuery={search}
-        onSearchChange={setSearch}
         onClearCompleted={() => void board.clearCompleted()}
         onCopySummary={() => void copySummary()}
+        visibleCards={visibleCount}
         totalCards={board.detail.cards.length}
         completedCards={board.detail.cards.filter((c) => c.completed === 1).length}
         completionPercent={boardCompletion(board.detail.cards)}
@@ -180,16 +216,16 @@ export default function BoardPage(): JSX.Element {
           lists={board.lists}
           cardsByList={board.cardsByList}
           tags={board.tags}
-          filterTagId={filterTagId}
-          filterPriority={filterPriority}
-          onlyIncomplete={onlyIncomplete}
-          searchQuery={search}
-          onTagClick={setFilterTagId}
+          criteria={criteria}
+          onTagClick={toggleFilterTag}
           onAddList={(t) => void board.addList(t)}
           onDeleteList={(lid) => void board.removeList(lid)}
+          onUpdateListWip={(lid, limit) => void board.setListWipLimit(lid, limit)}
           onAddCard={(lid, t) => void board.addCard(lid, t)}
           onOpenCard={openCard}
           onToggleComplete={toggleComplete}
+          onMoveCardToList={(cid, lid) => void board.moveCardToList(cid, lid)}
+          onBatchList={(lid, action, target) => void board.batchList(lid, action, target)}
         />
       </DndProvider>
       <CardModal
@@ -200,6 +236,14 @@ export default function BoardPage(): JSX.Element {
         onSave={saveCard}
         onDelete={deleteCard}
         onToggleTag={toggleTag}
+        onAddChecklistItem={(cid, text) => void board.addChecklistItem(cid, text)}
+        onToggleChecklistItem={(cid, itemId, done) =>
+          void board.toggleChecklistItem(cid, itemId, done)
+        }
+        onRemoveChecklistItem={(cid, itemId) => void board.removeChecklistItem(cid, itemId)}
+        onLoadActivity={board.loadActivity}
+        onAddComment={board.addComment}
+        onRemoveComment={board.removeComment}
       />
       <Snackbar
         open={copyTip !== ''}

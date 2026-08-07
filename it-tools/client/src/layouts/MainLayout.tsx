@@ -21,6 +21,7 @@ import {
   Typography,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
+import SearchIcon from '@mui/icons-material/Search';
 import StarIcon from '@mui/icons-material/Star';
 import SettingsIcon from '@mui/icons-material/Settings';
 import HistoryIcon from '@mui/icons-material/History';
@@ -29,6 +30,7 @@ import ClearIcon from '@mui/icons-material/Clear';
 import { sortTools, fuzzyMatchTools, summarizeTools, toolCategoryLabel } from '../utils/search';
 import { compactNumber } from '../utils/tools';
 import { useSettingsHelp } from '../components/SettingsHelp';
+import CommandPalette from '../components/CommandPalette';
 
 import { tools } from '../tools/registry';
 
@@ -58,6 +60,7 @@ export default function MainLayout(): JSX.Element {
   const [query, setQuery] = useState<string>('');
   const [sortBy, setSortBy] = useState<'title' | 'key'>('title');
   const [catFilter, setCatFilter] = useState<string>('');
+  const [paletteOpen, setPaletteOpen] = useState<boolean>(false);
   const navigate = useNavigate();
   // 设置已统一收敛到共享的「设置」面板（右下角悬浮入口 / Ctrl+, 亦可打开）。
   const { openSettings } = useSettingsHelp();
@@ -238,6 +241,9 @@ export default function MainLayout(): JSX.Element {
           <IconButton color="inherit" onClick={openSettings} aria-label="settings">
             <SettingsIcon />
           </IconButton>
+          <IconButton color="inherit" onClick={() => setPaletteOpen(true)} aria-label="command palette" title="命令面板 (Ctrl/Cmd + K)">
+            <SearchIcon />
+          </IconButton>
         </Toolbar>
       </AppBar>
 
@@ -275,6 +281,12 @@ export default function MainLayout(): JSX.Element {
           <Outlet />
         </Box>
       </Box>
+
+      <CommandPalette
+        open={paletteOpen}
+        onOpen={() => setPaletteOpen(true)}
+        onClose={() => setPaletteOpen(false)}
+      />
     </Box>
   );
 }

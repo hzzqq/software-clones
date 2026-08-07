@@ -41,6 +41,27 @@ export interface HistoryItem {
   createdAt: string;
 }
 
+/** 环境：一组可在请求中以 {{key}} 引用的变量。 */
+export interface Environment {
+  id: number;
+  name: string;
+  variables: Record<string, string>;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateEnvironmentInput {
+  name: string;
+  variables?: Record<string, string>;
+  active?: boolean;
+}
+
+export interface UpdateEnvironmentInput {
+  name?: string;
+  variables?: Record<string, string>;
+}
+
 export interface CreateRequestInput {
   name?: string;
   method: HttpMethod;

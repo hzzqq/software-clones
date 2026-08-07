@@ -15,7 +15,20 @@ import UnarchiveOutlinedIcon from '@mui/icons-material/UnarchiveOutlined';
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { Note } from '../types';
-import { visibilityLabel, formatRelativeTime, countChars, countWords, countParagraphs, formatCharCount, estimateReading, extractTitle, truncatePreview, highlightSegments } from '../utils/notes';
+import {
+  visibilityLabel,
+  formatRelativeTime,
+  countChars,
+  countWords,
+  countParagraphs,
+  formatCharCount,
+  estimateReading,
+  extractTitle,
+  truncatePreview,
+  highlightSegments,
+  highlightSegmentsMulti,
+  snippetAround,
+} from '../utils/notes';
 
 interface Props {
   note: Note;
@@ -28,6 +41,12 @@ interface Props {
   onTagClick?: (tag: string) => void;
   /** 高亮词（通常来自搜索框）：命中片段用 <mark> 包裹渲染，留空不高亮。 */
   highlight?: string;
+  /**
+   * 多关键词高亮（来自结构化查询解析出的 terms）。
+   * 传入后优先于 `highlight`，并且正文预览会切换成「命中上下文摘要」，
+   * 让长笔记也能直接看到匹配的那句话。
+   */
+  highlightTerms?: string[];
 }
 
 const visColor: Record<Note['visibility'], 'success' | 'warning' | 'default'> = {
@@ -37,8 +56,13 @@ const visColor: Record<Note['visibility'], 'success' | 'warning' | 'default'> = 
 };
 
 /** 安全渲染高亮：命中片段用 <mark> 包裹，避免 dangerouslySetInnerHTML 的 XSS 风险。 */
-function renderHighlighted(text: string, query: string): JSX.Element | string {
-  const segs = highlightSegments(text, query);
+function renderHighlighted(
+  text: string,
+  query: string,
+  terms: string[] = []
+): JSX.Element | string {
+  const segs = terms.length > 0 ? highlightSegmentsMulti(text, terms) : highlightSegments(text, query);
+  if (segs.length === 0) return '';
   if (segs.length === 1 && !segs[0].match) return text;
   return (
     <>
@@ -83,20 +107,23 @@ export default function NoteCard(props: Props): JSX.Element {
         </Stack>
         {(() => {
           const title = extractTitle(note.content);
-          const preview = truncatePreview(note.content);
           const hl = props.highlight ?? '';
+          const terms = (props.highlightTerms ?? []).filter((t) => t.trim() !== '');
+          // 有关键词时展示「命中上下文摘要」，否则维持原来的开头预览。
+          const preview =
+            terms.length > 0 ? snippetAround(note.content, terms) : truncatePreview(note.content);
           return (
             <>
               {title && (
                 <Typography variant="subtitle2" fontWeight={700} sx={{ mt: 1 }}>
-                  {renderHighlighted(title, hl)}
+                  {renderHighlighted(title, hl, terms)}
                 </Typography>
               )}
               <Typography
                 sx={{ whiteSpace: 'pre-wrap', mt: title ? 0.5 : 1 }}
                 color={preview ? 'text.primary' : 'text.secondary'}
               >
-                {preview ? renderHighlighted(preview, hl) : '（空笔记）'}
+                {preview ? renderHighlighted(preview, hl, terms) : '（空笔记）'}
               </Typography>
             </>
           );

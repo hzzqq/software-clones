@@ -1,4 +1,4 @@
-import { type Card, PRIORITY_LABELS } from '../types';
+import { type Card, type Tag, PRIORITY_LABELS } from '../types';
 
 /** Case-insensitive filter across title and description. */
 export function filterCardsByQuery(query: string, cards: Card[]): Card[] {
@@ -7,6 +7,110 @@ export function filterCardsByQuery(query: string, cards: Card[]): Card[] {
   return cards.filter(
     (c) => c.title.toLowerCase().includes(q) || c.description.toLowerCase().includes(q)
   );
+}
+
+/**
+ * 全字段搜索：标题、描述、指派人、子任务文本与**标签名**。
+ * 相比 filterCardsByQuery 多覆盖标签/指派人/子任务——用户往往记得的是
+ * 「那张挂了 #紧急 标签的卡」或「派给小王那张」，而不是确切标题。
+ * tags 传空数组时退化为标题/描述/指派人/子任务搜索。不修改入参。
+ */
+export function searchCards(cards: Card[], query: string, tags: Tag[] = []): Card[] {
+  const q: string = (query ?? '').trim().toLowerCase();
+  if (!q) return cards;
+  const tagNameById = new Map<number, string>();
+  for (const t of tags) tagNameById.set(t.id, (t.name ?? '').toLowerCase());
+  return cards.filter((c) => {
+    if (c.title.toLowerCase().includes(q)) return true;
+    if (c.description.toLowerCase().includes(q)) return true;
+    if ((c.assignee ?? '').toLowerCase().includes(q)) return true;
+    for (const id of c.tagIds ?? []) {
+      if ((tagNameById.get(id) ?? '').includes(q)) return true;
+    }
+    for (const item of c.checklist ?? []) {
+      if ((item?.text ?? '').toLowerCase().includes(q)) return true;
+    }
+    return false;
+  });
+}
+
+/** 多标签筛选的组合方式：全部命中 / 命中任一。 */
+export type TagMatchMode = 'and' | 'or';
+
+/**
+ * 多标签筛选（不修改入参）。
+ * tagIds 为空时返回全部；'and' 要求卡片含全部所选标签，'or' 只需命中任一。
+ * 与单标签的 filterCardsByTag 并存：后者仍服务于「点击标签快速过滤」的旧入口。
+ */
+export function filterCardsByTags(
+  cards: Card[],
+  tagIds: number[],
+  mode: TagMatchMode = 'or'
+): Card[] {
+  if (!Array.isArray(tagIds) || tagIds.length === 0) return cards;
+  return cards.filter((c) => {
+    const owned = new Set(c.tagIds ?? []);
+    return mode === 'and'
+      ? tagIds.every((id) => owned.has(id))
+      : tagIds.some((id) => owned.has(id));
+  });
+}
+
+/** 到期范围筛选选项。 */
+export type DueRange = 'all' | 'overdue' | 'today' | 'week' | 'none' | 'has';
+
+/** 到期范围的中文标签，供下拉菜单直接复用，避免 UI 与逻辑各写一份。 */
+export const DUE_RANGE_LABELS: Record<DueRange, string> = {
+  all: '全部',
+  overdue: '已逾期',
+  today: '今天到期',
+  week: '未来 7 天',
+  has: '有截止日',
+  none: '无截止日',
+};
+
+/**
+ * 按到期范围筛选（不修改入参）。
+ * 仅比较日历日，忽略具体时刻，与 formatDueLabel 的判定口径保持一致。
+ * - all     全部
+ * - overdue 截止日早于今天（含已完成，是否排除已完成交由 filterCardsByCompleted 组合）
+ * - today   截止日就是今天
+ * - week    今天起未来 7 个日历日内（含今天）
+ * - has     任何合法截止日
+ * - none    无截止日或日期非法
+ * 第三个参数 now 用于测试固定参考时间。
+ */
+export function filterCardsByDueRange(
+  cards: Card[],
+  range: DueRange,
+  now: Date = new Date()
+): Card[] {
+  if (range === 'all') return cards;
+  const msPerDay = 24 * 60 * 60 * 1000;
+  const startOfDay = (d: Date): number =>
+    new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const today = startOfDay(now);
+  return cards.filter((c) => {
+    const raw = c.dueDate;
+    if (raw === null || raw === '') return range === 'none';
+    const parsed = new Date(raw);
+    if (Number.isNaN(parsed.getTime())) return range === 'none';
+    const diffDays = Math.round((startOfDay(parsed) - today) / msPerDay);
+    switch (range) {
+      case 'overdue':
+        return diffDays < 0;
+      case 'today':
+        return diffDays === 0;
+      case 'week':
+        return diffDays >= 0 && diffDays <= 7;
+      case 'has':
+        return true;
+      case 'none':
+        return false;
+      default:
+        return true;
+    }
+  });
 }
 
 export type CardSort = 'position' | 'title' | 'priority' | 'dueDate' | 'updatedAt';
@@ -211,4 +315,78 @@ export function priorityColor(p: number): PriorityColor {
   if (p === 1) return 'info';
   if (p === 2) return 'warning';
   return 'error';
+}
+
+/** 列的在制品（WIP）状态。off 表示未设上限。 */
+export type WipState = 'off' | 'ok' | 'near' | 'over';
+
+/**
+ * 判定某列的 WIP 状态（纯函数，便于单测）。
+ * - limit <= 0 / 非有限 → 'off'（未启用限制）
+ * - count > limit       → 'over'（超限，UI 红色告警）
+ * - count === limit     → 'near'（已达上限，UI 橙色提示）
+ * - 其余                → 'ok'
+ * 注意 count 为负或非有限时按 0 处理，避免脏数据把状态算成 over。
+ */
+export function wipState(count: number, limit: number): WipState {
+  if (!Number.isFinite(limit) || limit <= 0) return 'off';
+  const n: number = Number.isFinite(count) && count > 0 ? count : 0;
+  if (n > limit) return 'over';
+  if (n === limit) return 'near';
+  return 'ok';
+}
+
+/** WIP 状态 → 展示文案。'off' 返回空串，调用方据此不渲染徽标。 */
+export function wipLabel(count: number, limit: number): string {
+  const state = wipState(count, limit);
+  if (state === 'off') return '';
+  const n: number = Number.isFinite(count) && count > 0 ? count : 0;
+  return `${n}/${limit}`;
+}
+
+/** 组合筛选条件。所有字段都有安全默认值，缺省即「不过滤」。 */
+export interface CardFilterCriteria {
+  /** 关键词，跨标题/描述/指派人/子任务/标签名匹配。 */
+  query?: string;
+  /** 多标签筛选所选的标签 id 列表。 */
+  tagIds?: number[];
+  /** 多标签的组合方式。 */
+  tagMode?: TagMatchMode;
+  /** 精确优先级；null 表示不限。 */
+  priority?: number | null;
+  /** 到期范围。 */
+  dueRange?: DueRange;
+  /** 仅看未完成。 */
+  onlyIncomplete?: boolean;
+}
+
+/**
+ * 依次套用全部筛选条件，返回新数组（不修改入参）。
+ * 把「过滤管线」收敛到一处，避免 Board 里散落一串嵌套调用导致顺序不一致；
+ * 各子过滤器仍单独导出，便于精细复用与单测。
+ * tags 用于让关键词能命中标签名；now 用于固定到期范围的参考时间。
+ */
+export function applyCardFilters(
+  cards: Card[],
+  criteria: CardFilterCriteria = {},
+  tags: Tag[] = [],
+  now: Date = new Date()
+): Card[] {
+  let out: Card[] = Array.isArray(cards) ? cards : [];
+  out = filterCardsByTags(out, criteria.tagIds ?? [], criteria.tagMode ?? 'or');
+  out = filterCardsByPriority(out, criteria.priority ?? null);
+  out = filterCardsByDueRange(out, criteria.dueRange ?? 'all', now);
+  out = filterCardsByCompleted(out, criteria.onlyIncomplete ?? false);
+  out = searchCards(out, criteria.query ?? '', tags);
+  return out;
+}
+
+/** 判断是否有任何激活的筛选条件，用于展示「清除筛选」入口。 */
+export function hasActiveFilters(criteria: CardFilterCriteria = {}): boolean {
+  if ((criteria.query ?? '').trim() !== '') return true;
+  if ((criteria.tagIds ?? []).length > 0) return true;
+  if (criteria.priority !== null && criteria.priority !== undefined) return true;
+  if ((criteria.dueRange ?? 'all') !== 'all') return true;
+  if (criteria.onlyIncomplete === true) return true;
+  return false;
 }

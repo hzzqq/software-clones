@@ -11,6 +11,8 @@ import {
   setPinned,
 } from '../repositories/noteRepo';
 import { parseTags } from '../services/noteService';
+import { parseSearchQuery, type ParsedQuery } from '../services/searchQuery';
+import type { NoteFilter } from '../repositories/noteRepo';
 import { Visibility } from '../types';
 import { requireAuth } from '../middleware/auth';
 
@@ -33,13 +35,27 @@ notesRouter.get(
   '/notes',
   asyncHandler((req: Request, res: Response): void => {
     const q = req.query;
-    const filter = {
+    const raw: string = typeof q.q === 'string' ? q.q : '';
+    // 搜索串走结构化语法解析（#标签 / is: / vis: / before: / after: / -排除 / "短语"）。
+    // 查询里的条件优先级高于同名 query 参数，因为它是用户当下明确写出来的意图。
+    const parsed: ParsedQuery = parseSearchQuery(raw);
+
+    const explicitArchived: boolean | undefined =
+      q.archived === undefined ? undefined : q.archived === 'true';
+    const explicitPinned: boolean | undefined =
+      q.pinned === undefined ? undefined : q.pinned === 'true';
+
+    const filter: NoteFilter = {
       userId: req.user!.id,
-      visibility: q.visibility ? parseVisibility(q.visibility) : undefined,
+      visibility: parsed.visibility ?? (q.visibility ? parseVisibility(q.visibility) : undefined),
       tag: typeof q.tag === 'string' ? q.tag : undefined,
-      archived: q.archived === undefined ? false : q.archived === 'true',
-      pinned: q.pinned === undefined ? undefined : q.pinned === 'true',
-      q: typeof q.q === 'string' ? q.q : undefined,
+      archived: parsed.archived ?? (explicitArchived === undefined ? false : explicitArchived),
+      pinned: parsed.pinned ?? explicitPinned,
+      terms: parsed.terms,
+      exclude: parsed.exclude,
+      tags: parsed.tags,
+      after: parsed.after ?? undefined,
+      before: parsed.before ?? undefined,
     };
     res.json({ code: 0, message: 'ok', data: listNotes(filter) });
   }),

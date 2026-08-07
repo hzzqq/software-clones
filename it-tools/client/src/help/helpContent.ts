@@ -3,26 +3,27 @@ import type { HelpContent } from '../components/SettingsHelp/types';
 /** 开发者工具箱的使用说明内容。 */
 export const helpContent: HelpContent = {
   appName: '开发者工具箱',
-  tagline: '25 个常用开发小工具，全部在浏览器本地计算。',
+  tagline: '31 个常用开发小工具，全部在浏览器本地计算。',
   sections: [
     {
       title: '找到需要的工具',
       items: [
         '左侧边栏按分类列出全部工具，点击即可打开。',
         '边栏顶部搜索框支持模糊匹配工具名称。',
+        '按 Ctrl / Cmd + K 打开命令面板，输入关键字即可模糊搜索并一键跳转到任意工具。',
         '可按名称或标识排序，也可只看某一个分类。',
       ],
     },
     {
       title: '工具清单',
       items: [
-        '加密与哈希：哈希（MD5 / SHA-1 / SHA-256 / SHA-512）、AES 加解密。',
+        '加密与哈希：哈希（MD5 / SHA-1 / SHA-256 / SHA-512）、AES 加解密、HMAC 生成。',
         '编码：Base64、URL 编解码、HTML 实体、摩斯密码。',
-        '格式化：JSON 格式化、YAML 转换、SQL 格式化。',
-        '文本：正则测试、文本对比、大小写转换、Slugify。',
-        '生成器：UUID、密码、Token、Lorem 占位文本。',
-        '转换：颜色转换、进制转换、单位换算、JSON ⇄ CSV。',
-        '其他：时间戳转换、JWT 解析、Cron 解析、二维码生成。',
+        '格式化：JSON 格式化、YAML 转换、SQL 格式化、XML 格式化。',
+        '文本：正则测试、文本对比、大小写转换、Slugify、文本统计。',
+        '生成器：UUID、密码、Token、Lorem 占位文本、ULID 生成。',
+        '转换：颜色转换、进制转换、单位换算、JSON ⇄ CSV、罗马数字转换。',
+        '其他：时间戳转换、JWT 解析、Cron 解析、二维码生成、Chmod 计算器。',
       ],
     },
     {
@@ -44,6 +45,7 @@ export const helpContent: HelpContent = {
   shortcuts: [
     { key: 'F1', desc: '打开使用说明' },
     { key: 'Ctrl / Cmd + ,', desc: '打开设置面板' },
+    { key: 'Ctrl / Cmd + K', desc: '打开命令面板，模糊搜索并跳转任意工具' },
   ],
   faq: [
     {

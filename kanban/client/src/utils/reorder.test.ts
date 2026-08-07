@@ -11,10 +11,13 @@ function makeCard(id: number, listId: number, position: number): Card {
     dueDate: null,
     priority: 0,
     completed: 0,
+    assignee: '',
     position,
     createdAt: '',
     updatedAt: '',
     tagIds: [],
+    checklist: [],
+    commentCount: 0,
   };
 }
 

@@ -1,4 +1,6 @@
 import { db } from '../db';
+import { checklistRepo, ChecklistItem } from './checklistRepo';
+import { activityRepo } from './activityRepo';
 
 export interface Board {
   id: number;
@@ -12,6 +14,8 @@ export interface List {
   boardId: number;
   title: string;
   position: number;
+  /** WIP 限制：0 表示不限制；>0 时超出该数量的未完成卡片会在界面上告警。 */
+  wipLimit: number;
   createdAt: string;
 }
 
@@ -23,10 +27,19 @@ export interface Card {
   dueDate: string | null;
   priority: number;
   completed: number;
+  /** 指派人（自由文本，空串表示未指派）。 */
+  assignee: string;
   position: number;
   createdAt: string;
   updatedAt: string;
   tagIds: number[];
+  /** 子任务清单（按 position 升序）。 */
+  checklist: ChecklistItem[];
+  /**
+   * 评论数量。完整时间线按需拉取（GET /cards/:id/activity），
+   * 这里只带一个计数，让卡片正面能显示评论徽标而不必把时间线塞进看板载荷。
+   */
+  commentCount: number;
 }
 
 export interface Tag {
@@ -58,6 +71,7 @@ export interface ListRow {
   board_id: number;
   title: string;
   position: number;
+  wip_limit: number;
   created_at: string;
 }
 export interface CardRow {
@@ -68,6 +82,7 @@ export interface CardRow {
   due_date: string | null;
   priority: number;
   completed: number;
+  assignee: string;
   position: number;
   created_at: string;
   updated_at: string;
@@ -92,17 +107,18 @@ function rowToBoard(row: BoardRow): Board {
   };
 }
 
-function rowToList(row: ListRow): List {
+export function rowToList(row: ListRow): List {
   return {
     id: row.id,
     boardId: row.board_id,
     title: row.title,
     position: row.position,
+    wipLimit: row.wip_limit ?? 0,
     createdAt: row.created_at,
   };
 }
 
-function rowToCard(row: CardRow): Card {
+export function rowToCard(row: CardRow): Card {
   return {
     id: row.id,
     listId: row.list_id,
@@ -111,10 +127,13 @@ function rowToCard(row: CardRow): Card {
     dueDate: row.due_date,
     priority: row.priority,
     completed: row.completed,
+    assignee: row.assignee ?? '',
     position: row.position,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     tagIds: [],
+    checklist: [],
+    commentCount: 0,
   };
 }
 
@@ -204,8 +223,13 @@ export const boardRepo = {
             .all(...cardIds) as CardTagRow[])
         : [];
 
+    const checklistByCard: Record<number, ChecklistItem[]> = checklistRepo.listByCards(cardIds);
+    const commentCounts: Record<number, number> = activityRepo.countCommentsByCards(cardIds);
+
     for (const card of cards) {
       card.tagIds = cardTags.filter((ct) => ct.card_id === card.id).map((ct) => ct.tag_id);
+      card.checklist = checklistByCard[card.id] ?? [];
+      card.commentCount = commentCounts[card.id] ?? 0;
     }
 
     return {

@@ -25,6 +25,12 @@ import LoremTool from './lorem/LoremTool';
 import SlugTool from './slug/SlugTool';
 import TokenTool from './token/TokenTool';
 import JsonCsvTool from './jsoncsv/JsonCsvTool';
+import UlidTool from './ulid/UlidTool';
+import HmacTool from './hmac/HmacTool';
+import TextStatsTool from './text-stats/TextStatsTool';
+import RomanTool from './roman/RomanTool';
+import XmlTool from './xml/XmlTool';
+import ChmodTool from './chmod/ChmodTool';
 
 /**
  * Central registry of every developer tool. Adding a new tool is a single
@@ -56,6 +62,12 @@ export const tools: ToolModule[] = [
   { key: 'cron', title: 'Cron 解析', category: '开发', description: '解析 5 段 Cron 表达式', Component: CronTool },
   { key: 'qrcode', title: '二维码', category: '图像', description: '生成可下载的二维码', Component: QrCodeTool },
   { key: 'jsoncsv', title: 'JSON ⇄ CSV', category: '转换', description: 'JSON 数组与 CSV 互转', Component: JsonCsvTool },
+  { key: 'ulid', title: 'ULID 生成', category: '生成器', description: '可排序的 Crockford Base32 ID', Component: UlidTool },
+  { key: 'hmac', title: 'HMAC 生成', category: '加密与哈希', description: 'MD5 / SHA-1 / SHA-256 / SHA-512', Component: HmacTool },
+  { key: 'text-stats', title: '文本统计', category: '文本', description: '字符 / 单词 / 行 / 字节', Component: TextStatsTool },
+  { key: 'roman', title: '罗马数字转换', category: '转换', description: '阿拉伯 ⇄ 罗马（1~3999）', Component: RomanTool },
+  { key: 'xml', title: 'XML 格式化', category: '格式化', description: '缩进美化 XML', Component: XmlTool },
+  { key: 'chmod', title: 'Chmod 计算器', category: '开发', description: '数字 ⇄ 符号权限', Component: ChmodTool },
 ];
 
 /** Look up a tool by its stable key. */

@@ -22,7 +22,9 @@ afterAll(() => {
 });
 
 beforeEach(() => {
-  db.exec('DELETE FROM card_tag; DELETE FROM card; DELETE FROM tag; DELETE FROM list; DELETE FROM board;');
+  db.exec(
+    'DELETE FROM card_activity; DELETE FROM checklist_item; DELETE FROM card_tag; DELETE FROM card; DELETE FROM tag; DELETE FROM list; DELETE FROM board;'
+  );
 });
 
 // Small helpers ---------------------------------------------------------------
@@ -167,7 +169,8 @@ describe('cards CRUD', () => {
     const listB = await createList(board.id, 'B', 1);
     const c1 = await createCard(listA.id, 'C1', 0);
     await createCard(listA.id, 'C2', 1);
-    await createCard(listB.id, 'C3', 0);
+    // 不要硬编码自增 id：DELETE FROM 不会重置 sqlite_sequence，跨用例 id 会持续增长。
+    const c3 = await createCard(listB.id, 'C3', 0);
 
     const patchRes = await request(app)
       .patch(`/api/cards/${c1.id}`)
@@ -177,7 +180,7 @@ describe('cards CRUD', () => {
     expect(patchRes.body.data.position).toBe(0);
 
     const listBRes = await request(app).get(`/api/lists/${listB.id}/cards`);
-    expect(listBRes.body.data.map((c: any) => c.id)).toEqual([c1.id, 3]);
+    expect(listBRes.body.data.map((c: any) => c.id)).toEqual([c1.id, c3.id]);
   });
 
   it('rejects PATCH with no updatable fields', async () => {
@@ -197,6 +200,134 @@ describe('cards CRUD', () => {
     expect(del.status).toBe(200);
     const get = await request(app).get(`/api/cards/${card.id}`);
     expect(get.status).toBe(404);
+  });
+
+  it('keeps other fields intact when patching only one field', async () => {
+    const board = await createBoard();
+    const list = await createList(board.id, 'A', 0);
+    const create = await request(app).post('/api/cards').send({
+      listId: list.id,
+      title: 'C',
+      position: 0,
+      description: 'keep me',
+      dueDate: '2024-06-01',
+      priority: 2,
+    });
+    const card = create.body.data;
+
+    const res = await request(app).patch(`/api/cards/${card.id}`).send({ completed: 1 });
+    expect(res.status).toBe(200);
+    expect(res.body.data.description).toBe('keep me');
+    expect(res.body.data.dueDate).toBe('2024-06-01');
+    expect(res.body.data.priority).toBe(2);
+    expect(res.body.data.listId).toBe(list.id);
+    expect(res.body.data.completed).toBe(1);
+  });
+});
+
+describe('card assignee', () => {
+  it('defaults assignee to an empty string', async () => {
+    const board = await createBoard();
+    const list = await createList(board.id, 'A', 0);
+    const card = await createCard(list.id, 'C', 0);
+    expect(card.assignee).toBe('');
+  });
+
+  it('creates and patches the assignee', async () => {
+    const board = await createBoard();
+    const list = await createList(board.id, 'A', 0);
+    const create = await request(app)
+      .post('/api/cards')
+      .send({ listId: list.id, title: 'C', position: 0, assignee: '  Alice  ' });
+    expect(create.body.data.assignee).toBe('Alice');
+
+    const patch = await request(app)
+      .patch(`/api/cards/${create.body.data.id}`)
+      .send({ assignee: 'Bob' });
+    expect(patch.status).toBe(200);
+    expect(patch.body.data.assignee).toBe('Bob');
+
+    const cleared = await request(app)
+      .patch(`/api/cards/${create.body.data.id}`)
+      .send({ assignee: '' });
+    expect(cleared.body.data.assignee).toBe('');
+  });
+});
+
+describe('card checklist', () => {
+  it('adds, toggles and removes checklist items', async () => {
+    const board = await createBoard();
+    const list = await createList(board.id, 'A', 0);
+    const card = await createCard(list.id, 'C', 0);
+
+    const a = await request(app).post(`/api/cards/${card.id}/checklist`).send({ text: ' step 1 ' });
+    expect(a.status).toBe(201);
+    expect(a.body.data.text).toBe('step 1');
+    expect(a.body.data.done).toBe(0);
+    expect(a.body.data.position).toBe(0);
+
+    const b = await request(app).post(`/api/cards/${card.id}/checklist`).send({ text: 'step 2' });
+    expect(b.body.data.position).toBe(1);
+
+    const listRes = await request(app).get(`/api/cards/${card.id}/checklist`);
+    expect(listRes.body.data.map((i: any) => i.text)).toEqual(['step 1', 'step 2']);
+
+    const toggled = await request(app).patch(`/api/checklist/${a.body.data.id}`).send({ done: 1 });
+    expect(toggled.status).toBe(200);
+    expect(toggled.body.data.done).toBe(1);
+
+    const del = await request(app).delete(`/api/checklist/${b.body.data.id}`);
+    expect(del.status).toBe(200);
+    const after = await request(app).get(`/api/cards/${card.id}/checklist`);
+    expect(after.body.data).toHaveLength(1);
+  });
+
+  it('exposes the checklist on the card and board detail payloads', async () => {
+    const board = await createBoard();
+    const list = await createList(board.id, 'A', 0);
+    const card = await createCard(list.id, 'C', 0);
+    await request(app).post(`/api/cards/${card.id}/checklist`).send({ text: 'sub' });
+
+    const single = await request(app).get(`/api/cards/${card.id}`);
+    expect(single.body.data.checklist).toHaveLength(1);
+    expect(single.body.data.checklist[0].text).toBe('sub');
+
+    const detail = await request(app).get(`/api/boards/${board.id}`);
+    expect(detail.body.data.cards[0].checklist).toHaveLength(1);
+  });
+
+  it('validates checklist input and missing resources', async () => {
+    const board = await createBoard();
+    const list = await createList(board.id, 'A', 0);
+    const card = await createCard(list.id, 'C', 0);
+
+    const empty = await request(app).post(`/api/cards/${card.id}/checklist`).send({ text: '  ' });
+    expect(empty.status).toBe(400);
+    expect(empty.body.code).toBe(40001);
+
+    const missingCard = await request(app).post('/api/cards/99999/checklist').send({ text: 'x' });
+    expect(missingCard.status).toBe(404);
+
+    const missingItem = await request(app).patch('/api/checklist/99999').send({ done: 1 });
+    expect(missingItem.status).toBe(404);
+
+    const noop = await request(app).patch('/api/checklist/1').send({});
+    expect(noop.status).toBe(400);
+  });
+});
+
+describe('list wip limit', () => {
+  it('defaults to 0 and can be updated', async () => {
+    const board = await createBoard();
+    const list = await createList(board.id, 'A', 0);
+    expect(list.wipLimit).toBe(0);
+
+    const res = await request(app).patch(`/api/lists/${list.id}`).send({ wipLimit: 3 });
+    expect(res.status).toBe(200);
+    expect(res.body.data.wipLimit).toBe(3);
+
+    const detail = await request(app).get(`/api/boards/${board.id}`);
+    expect(detail.body.data.lists[0].wipLimit).toBe(3);
   });
 });
 

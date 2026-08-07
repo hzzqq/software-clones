@@ -7,6 +7,7 @@ function rowToList(row: ListRow): List {
     boardId: row.board_id,
     title: row.title,
     position: row.position,
+    wipLimit: row.wip_limit ?? 0,
     createdAt: row.created_at,
   };
 }
@@ -15,6 +16,8 @@ export interface ListInput {
   boardId: number;
   title: string;
   position: number;
+  /** 在制品上限，0 表示不限制。 */
+  wipLimit?: number;
 }
 
 /** Data-access layer for lists (columns). */
@@ -23,9 +26,9 @@ export const listRepo = {
     const now: string = new Date().toISOString();
     const info = db
       .prepare(
-        'INSERT INTO list (board_id, title, position, created_at) VALUES (?, ?, ?, ?)'
+        'INSERT INTO list (board_id, title, position, wip_limit, created_at) VALUES (?, ?, ?, ?, ?)'
       )
-      .run(input.boardId, input.title, input.position, now);
+      .run(input.boardId, input.title, input.position, input.wipLimit ?? 0, now);
     const row = db.prepare('SELECT * FROM list WHERE id = ?').get(info.lastInsertRowid) as ListRow;
     return rowToList(row);
   },
@@ -35,14 +38,19 @@ export const listRepo = {
     return row ? rowToList(row) : undefined;
   },
 
-  update(id: number, patch: { title?: string; position?: number }): List | undefined {
+  update(
+    id: number,
+    patch: { title?: string; position?: number; wipLimit?: number }
+  ): List | undefined {
     const existing = this.getById(id);
     if (!existing) return undefined;
     const title: string = patch.title ?? existing.title;
     const position: number = patch.position ?? existing.position;
-    db.prepare('UPDATE list SET title = ?, position = ? WHERE id = ?').run(
+    const wipLimit: number = patch.wipLimit ?? existing.wipLimit;
+    db.prepare('UPDATE list SET title = ?, position = ?, wip_limit = ? WHERE id = ?').run(
       title,
       position,
+      wipLimit,
       id
     );
     return this.getById(id);

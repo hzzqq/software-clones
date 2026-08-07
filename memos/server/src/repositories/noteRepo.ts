@@ -20,6 +20,24 @@ export interface NoteFilter {
   archived?: boolean;
   pinned?: boolean;
   q?: string;
+  /** 必须全部命中的正文关键词（AND）。 */
+  terms?: string[];
+  /** 命中任一即排除的正文关键词。 */
+  exclude?: string[];
+  /** 必须全部带有的标签（AND），与单数 `tag` 可叠加。 */
+  tags?: string[];
+  /** 创建时间下界（含），YYYY-MM-DD。 */
+  after?: string;
+  /** 创建时间上界（不含），YYYY-MM-DD。 */
+  before?: string;
+}
+
+/**
+ * 转义 LIKE 的通配符，避免用户搜 `100%` 或 `a_b` 时被当成模式匹配。
+ * 配合 SQL 里的 `ESCAPE '\'` 使用。
+ */
+function likeEscape(value: string): string {
+  return value.replace(/[\\%_]/g, (ch) => `\\${ch}`);
 }
 
 function rowToNote(row: NoteRow): Note {
@@ -66,8 +84,35 @@ export function listNotes(filter: NoteFilter = {}): Note[] {
     params.push(filter.tag);
   }
   if (filter.q) {
-    clauses.push('n.content LIKE ?');
-    params.push(`%${filter.q}%`);
+    clauses.push(`n.content LIKE ? ESCAPE '\\'`);
+    params.push(`%${likeEscape(filter.q)}%`);
+  }
+  // 结构化检索：关键词 AND、排除词 NOT、标签 AND、创建时间半开区间 [after, before)。
+  for (const term of filter.terms ?? []) {
+    if (!term) continue;
+    clauses.push(`n.content LIKE ? ESCAPE '\\'`);
+    params.push(`%${likeEscape(term)}%`);
+  }
+  for (const term of filter.exclude ?? []) {
+    if (!term) continue;
+    clauses.push(`n.content NOT LIKE ? ESCAPE '\\'`);
+    params.push(`%${likeEscape(term)}%`);
+  }
+  for (const tag of filter.tags ?? []) {
+    if (!tag) continue;
+    clauses.push(
+      `n.id IN (SELECT nt.note_id FROM note_tags nt JOIN tags t ON t.id = nt.tag_id WHERE t.name = ?)`,
+    );
+    params.push(tag);
+  }
+  if (filter.after) {
+    // created_at 是 ISO 字符串，字典序与时间序一致，可直接比较。
+    clauses.push('n.created_at >= ?');
+    params.push(filter.after);
+  }
+  if (filter.before) {
+    clauses.push('n.created_at < ?');
+    params.push(filter.before);
   }
 
   const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';

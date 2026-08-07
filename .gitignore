@@ -33,3 +33,12 @@ scripts/.pids/
 
 # 一次性排障探针（用完即弃，不进版本库）
 scripts/_tmp-*.mjs
+
+# 自驱迭代/构建产生的瞬时产物（非源码，不进版本库）
+# - node_modules.old：依赖目录改名残留（清理中断时产生）
+# - .build-tmp：临时打包目录
+# - vite.config.js / .d.ts：vite 加载 vite.config.ts 时生成的编译产物
+node_modules.old/
+.build-tmp/
+vite.config.js
+vite.config.d.ts

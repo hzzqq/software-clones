@@ -9,6 +9,7 @@ export interface CardInput {
   dueDate?: string | null;
   priority?: number;
   completed?: number;
+  assignee?: string;
 }
 
 export type CardPatch = Partial<{
@@ -17,6 +18,7 @@ export type CardPatch = Partial<{
   dueDate: string | null;
   priority: number;
   completed: number;
+  assignee: string;
   position: number;
   listId: number;
 }>;

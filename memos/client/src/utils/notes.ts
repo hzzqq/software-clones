@@ -218,6 +218,50 @@ export function groupNotesByMonth(notes: Note[]): Record<string, Note[]> {
 }
 
 /**
+ * 将时间戳安全转为「本地时区」的 YYYY-MM-DD 键。
+ * 非法 / 空值返回 ''，调用方据此跳过该笔记；不修改入参。
+ */
+export function dayKeyOf(iso: string): string {
+  const d = new Date(iso);
+  if (!Number.isFinite(d.getTime())) return '';
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+/**
+ * 把 YYYY-MM-DD 转成人类友好的分组标题：今天 / 昨天 / 原日期。
+ * `now` 可注入，便于单测做确定性断言。
+ */
+export function dayLabel(dayKey: string, now: number = Date.now()): string {
+  if (!dayKey) return '';
+  const todayKey = dayKeyOf(new Date(now).toISOString());
+  const yesterdayKey = dayKeyOf(new Date(now - 24 * 60 * 60 * 1000).toISOString());
+  if (dayKey === todayKey) return '今天';
+  if (dayKey === yesterdayKey) return '昨天';
+  return dayKey;
+}
+
+/**
+ * 按创建日期（本地时区 YYYY-MM-DD）分组笔记，键按时间倒序（最新的一天在前）。
+ * 相比按月分组，日视图更贴合「今天 / 昨天写了什么」的回顾习惯。
+ * 空入参返回 {}；createdAt 无法解析的笔记会被忽略；不修改入参。
+ */
+export function groupNotesByDay(notes: Note[]): Record<string, Note[]> {
+  const buckets: Record<string, Note[]> = {};
+  for (const note of notes) {
+    const key = dayKeyOf(note.createdAt);
+    if (!key) continue;
+    (buckets[key] ??= []).push(note);
+  }
+  const keys = Object.keys(buckets).sort((a, b) => (a < b ? 1 : a > b ? -1 : 0));
+  const ordered: Record<string, Note[]> = {};
+  for (const key of keys) ordered[key] = buckets[key];
+  return ordered;
+}
+
+/**
  * 从笔记正文提取标题：取第一段非空行，去除开头 # 标题符号与首尾空白。
  * 空内容 / 全空白 / 无有效行返回 ''。用于列表卡片展示标题而非整段正文。
  */
@@ -271,4 +315,94 @@ export function highlightSegments(text: string, query: string): TextSegment[] {
   }
   if (prev < text.length) segments.push({ text: text.slice(prev), match: false });
   return segments;
+}
+
+/** 命中区间 [start, end)，内部使用。 */
+interface MatchRange {
+  start: number;
+  end: number;
+}
+
+/**
+ * 找出所有查询词在文本中的命中区间，并把重叠 / 相邻接触的区间合并。
+ * 结果按起点升序，且互不重叠——这是多词高亮不出现「标签套标签」的前提。
+ */
+function collectRanges(text: string, queries: string[]): MatchRange[] {
+  const lower = text.toLowerCase();
+  const ranges: MatchRange[] = [];
+  for (const raw of queries) {
+    const q = (raw ?? '').trim().toLowerCase();
+    if (!q) continue;
+    let from = 0;
+    while (from <= lower.length - q.length) {
+      const idx = lower.indexOf(q, from);
+      if (idx === -1) break;
+      ranges.push({ start: idx, end: idx + q.length });
+      // 允许同一位置被不同词覆盖，但同一个词按不重叠推进，避免死循环。
+      from = idx + q.length;
+    }
+  }
+  if (ranges.length === 0) return [];
+  ranges.sort((a, b) => (a.start - b.start) || (a.end - b.end));
+  const merged: MatchRange[] = [ranges[0]];
+  for (let i = 1; i < ranges.length; i += 1) {
+    const last = merged[merged.length - 1];
+    const cur = ranges[i];
+    if (cur.start <= last.end) {
+      // 重叠或首尾相接：扩展上一段，保证输出区间互不重叠。
+      if (cur.end > last.end) last.end = cur.end;
+    } else {
+      merged.push({ ...cur });
+    }
+  }
+  return merged;
+}
+
+/**
+ * 多关键词高亮：把文本切成交替的 {text, match} 片段（大小写不敏感、支持 CJK 子串）。
+ * 与单词版 highlightSegments 的区别是支持「北京 会议」这类多词查询，
+ * 重叠命中会自动合并，不会产生嵌套或重复片段。
+ * queries 为空 / 全为空白时：非空文本返回单个非匹配片段，空文本返回 []。
+ * 纯函数，不修改入参。
+ */
+export function highlightSegmentsMulti(text: string, queries: string[]): TextSegment[] {
+  const src = text ?? '';
+  const list = Array.isArray(queries) ? queries : [];
+  if (!src) return [];
+  const ranges = collectRanges(src, list);
+  if (ranges.length === 0) return [{ text: src, match: false }];
+
+  const segments: TextSegment[] = [];
+  let cursor = 0;
+  for (const r of ranges) {
+    if (r.start > cursor) segments.push({ text: src.slice(cursor, r.start), match: false });
+    segments.push({ text: src.slice(r.start, r.end), match: true });
+    cursor = r.end;
+  }
+  if (cursor < src.length) segments.push({ text: src.slice(cursor), match: false });
+  return segments;
+}
+
+/**
+ * 命中上下文摘要：在长正文里定位第一个命中位置，截取其前后各 radius 个字符，
+ * 两端按需加省略号。搜索结果里能直接看到「命中的那句话」，而不是永远只看开头。
+ * 未命中（或无查询词）时退化为开头截断，行为与 truncatePreview 一致。
+ * 会先把连续空白折叠成单空格，避免换行撑乱卡片布局。纯函数。
+ */
+export function snippetAround(text: string, queries: string[], radius: number = 60): string {
+  const flat = (text ?? '').replace(/\s+/g, ' ').trim();
+  if (!flat) return '';
+  const r = Number.isFinite(radius) && radius > 0 ? Math.floor(radius) : 60;
+  const list = Array.isArray(queries) ? queries : [];
+  const ranges = collectRanges(flat, list);
+  if (ranges.length === 0) {
+    const max = r * 2;
+    return flat.length <= max ? flat : `${flat.slice(0, max - 1)}…`;
+  }
+  const first = ranges[0];
+  const start = Math.max(0, first.start - r);
+  const end = Math.min(flat.length, first.end + r);
+  const head = start > 0 ? '…' : '';
+  const tail = end < flat.length ? '…' : '';
+  return `${head}${flat.slice(start, end)}${tail}`;
 }

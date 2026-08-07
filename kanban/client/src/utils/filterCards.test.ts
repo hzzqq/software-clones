@@ -22,10 +22,13 @@ function makeCard(overrides: Partial<Card> = {}): Card {
     dueDate: null,
     priority: 0,
     completed: 0,
+    assignee: '',
     position: 0,
     createdAt: '',
     updatedAt: '',
     tagIds: [],
+    checklist: [],
+    commentCount: 0,
     ...overrides,
   };
 }

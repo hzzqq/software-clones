@@ -39,3 +39,13 @@ export interface HistoryItem {
   timeMs: number;
   createdAt: string;
 }
+
+/** 环境：一组可在请求中以 {{key}} 引用的变量，同一时刻至多一个处于激活状态。 */
+export interface Environment {
+  id: number;
+  name: string;
+  variables: Record<string, string>;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}

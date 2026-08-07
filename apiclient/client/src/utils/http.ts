@@ -253,6 +253,40 @@ export function groupByMethod<T extends { method: string }>(items: T[]): Record<
   return ordered;
 }
 
+/** 未填写文件夹的集合项归入的默认分组名。 */
+export const UNGROUPED_FOLDER = '未分组';
+
+/**
+ * 按「文件夹」分组（不修改入参）。
+ * - folder 为空 / 全空白的条目归入 UNGROUPED_FOLDER。
+ * - 组内保持原始插入顺序；组间按名称升序，未分组固定排在最后。
+ */
+export function groupByFolder<T extends { folder?: string }>(items: T[]): Record<string, T[]> {
+  const map: Record<string, T[]> = {};
+  for (const it of items) {
+    const f = (it.folder ?? '').trim() || UNGROUPED_FOLDER;
+    (map[f] ||= []).push(it);
+  }
+  const names = Object.keys(map).sort((a, b) => {
+    if (a === UNGROUPED_FOLDER) return 1;
+    if (b === UNGROUPED_FOLDER) return -1;
+    return a.localeCompare(b);
+  });
+  const ordered: Record<string, T[]> = {};
+  for (const n of names) ordered[n] = map[n];
+  return ordered;
+}
+
+/** 从集合项中提取已有文件夹名（去重、升序，不含未分组）。用于保存时的候选建议。 */
+export function folderNamesOf<T extends { folder?: string }>(items: T[]): string[] {
+  const set = new Set<string>();
+  for (const it of items) {
+    const f = (it.folder ?? '').trim();
+    if (f) set.add(f);
+  }
+  return [...set].sort((a, b) => a.localeCompare(b));
+}
+
 /** 状态码 → 可读文案（兼容未知码与 0=网络错误）。 */
 const STATUS_TEXT: Record<number, string> = {
   200: 'OK', 201: 'Created', 202: 'Accepted', 204: 'No Content',
