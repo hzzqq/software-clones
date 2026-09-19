@@ -10,7 +10,7 @@
 |---|---|---|---|---|---|
 | `apiclient` | 全栈（前端 + 后端） | 5181 | 4109 | `apiclient/client` | `apiclient/server` |
 | `bookmarks` | 全栈（前端 + 后端） | 5197 | 4217 | `bookmarks/client` | `bookmarks/server` |
-| `canvas` | 全栈（前端 + 后端） | 5203 | 4101 | `canvas/client` | `canvas/server` |
+| `canvas` | 全栈（前端 + 后端） | 5203 | 4223 | `canvas/client` | `canvas/server` |
 | `chatroom` | 全栈（前端 + 后端） | 5200 | 4220 | `chatroom/client` | `chatroom/server` |
 | `excalidraw` | 全栈（前端 + 后端） | 5183 | 4111 | `excalidraw/client` | `excalidraw/server` |
 | `filemanager` | 全栈（前端 + 后端） | 5207 | 4101 | `filemanager/client` | `filemanager/server` |
@@ -24,7 +24,7 @@
 | `kanban` | 全栈（前端 + 后端） | 5186 | 4102 | `kanban/client` | `kanban/server` |
 | `keep` | 全栈（前端 + 后端） | 5201 | 4101 | `keep/client` | `keep/server` |
 | `kener` | 全栈（前端 + 后端） | 5188 | 4104 | `kener/client` | `kener/server` |
-| `knowledge` | 全栈（前端 + 后端） | 5204 | 4101 | `knowledge/client` | `knowledge/server` |
+| `knowledge` | 全栈（前端 + 后端） | 5204 | 4224 | `knowledge/client` | `knowledge/server` |
 | `lofi` | 全栈（前端 + 后端） | 5190 | 4106 | `lofi/client` | `lofi/server` |
 | `markdown` | 全栈（前端 + 后端） | 5180 | 4108 | `markdown/client` | `markdown/server` |
 | `memos` | 全栈（前端 + 后端） | 5189 | 4105 | `memos/client` | `memos/server` |

@@ -58,3 +58,14 @@ finance/
 | DELETE | `/api/watchlists/:id` | 删除自选清单 |
 | POST | `/api/watchlists/:id/items` | 向清单添加标的 |
 | DELETE | `/api/watchlists/:id/items/:tickerId` | 移除标的 |
+
+## 验证（本地验收红线）
+
+```bash
+# 前端单测（vitest）
+cd finance/client && npm install && npm test
+# 后端单测（node --test，零依赖）
+cd finance/server && npm install && npm test
+```
+
+仓库级统一验收：`npm test`（自动编排全部 App 的单测）。

@@ -41,3 +41,14 @@ cd canvas/server && npm install && npm run dev
 | DELETE | `/api/nodes/:id` | 删除节点 |
 | POST | `/api/canvases/:id/edges` | 新建连线 |
 | DELETE | `/api/edges/:id` | 删除连线 |
+
+## 验证（本地验收红线）
+
+```bash
+# 前端单测（vitest）
+cd canvas/client && npm install && npm test
+# 后端单测（node --test，零依赖）
+cd canvas/server && npm install && npm test
+```
+
+仓库级统一验收：`npm test`（自动编排全部 App 的单测）。

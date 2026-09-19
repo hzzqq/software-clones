@@ -34,3 +34,14 @@ cd pastebin/server && npm install && npm run dev
 | GET | `/api/pastes` | 公开粘贴列表 |
 | GET | `/api/pastes/:code` | 查看（过期 404） |
 | DELETE | `/api/pastes/:code` | 删除 |
+
+## 验证（本地验收红线）
+
+```bash
+# 前端单测（vitest）
+cd pastebin/client && npm install && npm test
+# 后端单测（node --test，零依赖）
+cd pastebin/server && npm install && npm test
+```
+
+仓库级统一验收：`npm test`（自动编排全部 App 的单测）。

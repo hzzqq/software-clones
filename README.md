@@ -1,14 +1,14 @@
 # software-clones · B1 批次
 
-三个全栈克隆 App 的单体仓库（B1）。每个 App 的 `client/` 与 `server/` 各自独立 `package.json`，互不耦合。
+30 个全栈克隆 App 的单体仓库（B1）。每个 App 的 `client/` 与 `server/` 各自独立 `package.json`，互不耦合。
 
 ## 🏠 启动大厅
 
-仓库自带一个「软件克隆大厅」（`hall/`，端口 **5192**），把 12 个 App 做成卡片：显示中文名 / 英文名 / 一句话简介 / 端口，并对每个前端端口做在线探活（绿点在线、灰点离线），点击卡片在新标签页打开对应 App。
+仓库自带一个「软件克隆大厅」（`hall/`，端口 **5192**），把 30 个 App 做成卡片：显示中文名 / 英文名 / 一句话简介 / 端口，并对每个前端端口做在线探活（绿点在线、灰点离线），点击卡片在新标签页打开对应 App。
 
 ```bash
 npm run dev:hall          # 只拉起大厅（自动打开浏览器），App 需另行启动
-npm run dev:all           # 全部 12 个 App + 大厅一起拉起，自动打开浏览器指向大厅
+npm run dev:all           # 全部 30 个 App + 大厅一起拉起，自动打开浏览器指向大厅
 npm run stop:hall         # 停止大厅
 npm run hall:gen          # 重新生成 hall/index.html（数据来自 apps.ports.json + 各 App 的 helpContent.ts）
 ```
@@ -23,9 +23,9 @@ npm run hall:gen          # 重新生成 hall/index.html（数据来自 apps.por
 | `kanban` | 任务/看板（Board→List→Card→Tag，拖拽排序持久化） | 5174 | 4102 | http://localhost:4102/api |
 | `glance` | 信息聚合仪表盘（RSS/天气/书签/状态/时钟，后端代理 + YAML 导入导出） | 5175 | 4103 | http://localhost:4103/api |
 
-> 完整 12 个 App 的端口与目录约定见 [docs/APP_CATALOG.md](docs/APP_CATALOG.md)（由 `scripts/gen-catalog.mjs` 从 `playwright.config.ts` 自动生成，可用 `node scripts/check-consistency.mjs` 校验文档是否漂移）。新增 / 修改 App 的流程见 [CONTRIBUTING.md](CONTRIBUTING.md)。
+> 完整 30 个 App 的端口与目录约定见 [docs/APP_CATALOG.md](docs/APP_CATALOG.md)（由 `scripts/gen-catalog.mjs` 从 `playwright.config.ts` 自动生成，可用 `node scripts/check-consistency.mjs` 校验文档是否漂移）。新增 / 修改 App 的流程见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
-### 全部克隆 App（12）
+### 全部克隆 App（30）
 本仓库包含以下全栈克隆 App，每个 App 的 `client/` 与 `server/` 各自独立 `package.json`：
 
 - `apiclient` — API 调试 / 请求客户端
@@ -40,6 +40,24 @@ npm run hall:gen          # 重新生成 hall/index.html（数据来自 apps.por
 - `nonio` — 专注 / 时间记录
 - `photopea` — 在线图像编辑
 - `tvtime` — 影视追踪 / 看单
+- `bookmarks` — 书签管理
+- `canvas` — 在线画布 / 涂鸦板
+- `chatroom` — 实时聊天室
+- `filemanager` — 文件管理器
+- `fileshare` — 文件分享 / P2P 传输
+- `finance` — 金融终端（行情 / 自选股 / 个股简表）
+- `gallery` — 图片画廊 / 相册
+- `gridbase` — 网格笔记 / 表格知识库
+- `habit` — 习惯打卡追踪
+- `keep` — 轻量笔记 / 待办（Google Keep 风）
+- `knowledge` — 个人知识库
+- `pastebin` — 文本 / 代码粘贴板
+- `pomodoro` — 番茄钟专注计时
+- `rssreader` — RSS 订阅阅读器
+- `shlink` — 短链接服务
+- `snippets` — 代码片段管理
+- `todo` — 待办清单
+- `vault` — 密码保险库（端到端加密）
 
 ## 技术栈
 
@@ -78,7 +96,7 @@ software-clones/
 本仓库提供仓库级统一验收红线，无需先 `npm install` 任何 App 即可运行纯 Node 校验：
 
 ```bash
-npm test                # 一键全量验收：结构一致性 + 规则单测 + 12 个 App 的 client 单测
+npm test                # 一键全量验收：结构一致性 + 规则单测 + 30 个 App 的 client 单测
 npm run verify          # 结构一致性校验 + 规则单元测试 + 目录新鲜度
 npm run fix             # 自动修复可自愈项（如重新生成过期的 docs/APP_CATALOG.md）
 node scripts/check-consistency.mjs   # 单独运行一致性校验器

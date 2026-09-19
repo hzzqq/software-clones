@@ -38,3 +38,14 @@ cd knowledge/server && npm install && npm run dev
 | PATCH | `/api/blocks/:id` | 更新块内容 / 位置 |
 | DELETE | `/api/blocks/:id` | 删除块 |
 | GET | `/api/backlinks` | 反链查询（?target=page:ID 或 block:ID） |
+
+## 验证（本地验收红线）
+
+```bash
+# 前端单测（vitest）
+cd knowledge/client && npm install && npm test
+# 后端单测（node --test，零依赖）
+cd knowledge/server && npm install && npm test
+```
+
+仓库级统一验收：`npm test`（自动编排全部 App 的单测）。

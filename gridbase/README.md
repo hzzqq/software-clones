@@ -37,3 +37,14 @@ cd gridbase/server && npm install && npm run dev
 | PATCH | `/api/fields/:id` | 更新字段 |
 | POST | `/api/tables/:id/rows` | 新增行 |
 | PATCH | `/api/rows/:id/cells` | 更新单元格 |
+
+## 验证（本地验收红线）
+
+```bash
+# 前端单测（vitest）
+cd gridbase/client && npm install && npm test
+# 后端单测（node --test，零依赖）
+cd gridbase/server && npm install && npm test
+```
+
+仓库级统一验收：`npm test`（自动编排全部 App 的单测）。

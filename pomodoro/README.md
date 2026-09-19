@@ -34,3 +34,14 @@ cd pomodoro/server && npm install && npm run dev
 | DELETE | `/api/tasks/:id` | 删除任务 |
 | POST | `/api/sessions` | 记录一条专注会话 |
 | GET | `/api/stats` | 统计（今日 / 累计番茄数与专注时长） |
+
+## 验证（本地验收红线）
+
+```bash
+# 前端单测（vitest）
+cd pomodoro/client && npm install && npm test
+# 后端单测（node --test，零依赖）
+cd pomodoro/server && npm install && npm test
+```
+
+仓库级统一验收：`npm test`（自动编排全部 App 的单测）。
