@@ -1,10 +1,11 @@
 import { createBrowserRouter } from 'react-router-dom';
 import MainLayout from './layouts/MainLayout';
 import ErrorBoundary from './components/ErrorBoundary';
+import TablesPage from './pages/TablesPage';
+import TableDetailPage from './pages/TableDetailPage';
 
 /**
- * Application route table. The template ships with a single placeholder route
- * under the main layout; apps replace this with their real routes.
+ * gridbase routes: table list at index, grid editor at /tables/:id.
  */
 export const router = createBrowserRouter([
   {
@@ -12,10 +13,8 @@ export const router = createBrowserRouter([
     element: <MainLayout />,
     errorElement: <ErrorBoundary />,
     children: [
-      {
-        index: true,
-        element: <div style={{ padding: 24 }}>Welcome to the template.</div>,
-      },
+      { index: true, element: <TablesPage /> },
+      { path: 'tables/:id', element: <TableDetailPage /> },
     ],
   },
 ]);

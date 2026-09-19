@@ -3,7 +3,7 @@ import { Box, AppBar, Toolbar, Typography, Container } from '@mui/material';
 
 /**
  * Main layout shell: top app bar plus a content container that renders the
- * matched child route via `<Outlet />`. Apps extend this with a sidebar.
+ * matched child route via `<Outlet />`.
  */
 export default function MainLayout(): JSX.Element {
   return (
@@ -11,7 +11,7 @@ export default function MainLayout(): JSX.Element {
       <AppBar position="static" color="primary" elevation={1}>
         <Toolbar>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            App
+            金融终端
           </Typography>
         </Toolbar>
       </AppBar>

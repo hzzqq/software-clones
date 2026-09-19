@@ -25,7 +25,10 @@ export class ApiError extends Error {
   }
 }
 
-const BASE_URL: string = import.meta.env.VITE_API_BASE ?? 'http://localhost:4101/api';
+const BASE_URL: string = import.meta.env.VITE_API_BASE ?? 'http://localhost:4227/api';
+
+/** 后端 API 基址（含 /api 前缀），供需要自定义请求（如流式下载）的模块复用。 */
+export const API_BASE: string = BASE_URL;
 
 const DEFAULT_TIMEOUT_MS = 30000;
 

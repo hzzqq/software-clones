@@ -1,17 +1,26 @@
-import { Outlet } from 'react-router-dom';
-import { Box, AppBar, Toolbar, Typography, Container } from '@mui/material';
+import { Link, Outlet } from 'react-router-dom';
+import { AppBar, Box, Container, Toolbar, Typography } from '@mui/material';
+import ChecklistIcon from '@mui/icons-material/Checklist';
 
 /**
- * Main layout shell: top app bar plus a content container that renders the
- * matched child route via `<Outlet />`. Apps extend this with a sidebar.
+ * 清单任务外壳：品牌顶栏 + 内容容器，通过 `<Outlet />` 渲染子路由。
  */
 export default function MainLayout(): JSX.Element {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <AppBar position="static" color="primary" elevation={1}>
         <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            App
+          <ChecklistIcon sx={{ mr: 1 }} />
+          <Typography
+            variant="h6"
+            component={Link}
+            to="/"
+            sx={{ flexGrow: 1, color: 'inherit', textDecoration: 'none' }}
+          >
+            清单 · Todo
+          </Typography>
+          <Typography variant="body2" sx={{ opacity: 0.85 }}>
+            项目分隔，优先级优先
           </Typography>
         </Toolbar>
       </AppBar>

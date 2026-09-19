@@ -1,10 +1,10 @@
 import { createBrowserRouter } from 'react-router-dom';
 import MainLayout from './layouts/MainLayout';
 import ErrorBoundary from './components/ErrorBoundary';
+import TasksPage from './pages/TasksPage';
 
 /**
- * Application route table. The template ships with a single placeholder route
- * under the main layout; apps replace this with their real routes.
+ * 清单任务路由表：单一主页承载项目管理与任务列表。
  */
 export const router = createBrowserRouter([
   {
@@ -14,7 +14,7 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <div style={{ padding: 24 }}>Welcome to the template.</div>,
+        element: <TasksPage />,
       },
     ],
   },

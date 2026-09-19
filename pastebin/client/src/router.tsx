@@ -1,10 +1,11 @@
 import { createBrowserRouter } from 'react-router-dom';
 import MainLayout from './layouts/MainLayout';
 import ErrorBoundary from './components/ErrorBoundary';
+import Pastebin from './pages/Pastebin';
 
 /**
- * Application route table. The template ships with a single placeholder route
- * under the main layout; apps replace this with their real routes.
+ * Application route table for the Pastebin clone.
+ * The index route renders the create/view paste UI.
  */
 export const router = createBrowserRouter([
   {
@@ -14,7 +15,7 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <div style={{ padding: 24 }}>Welcome to the template.</div>,
+        element: <Pastebin />,
       },
     ],
   },

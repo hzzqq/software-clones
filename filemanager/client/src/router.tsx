@@ -1,21 +1,16 @@
 import { createBrowserRouter } from 'react-router-dom';
 import MainLayout from './layouts/MainLayout';
 import ErrorBoundary from './components/ErrorBoundary';
+import FileManagerPage from './pages/FileManagerPage';
 
 /**
- * Application route table. The template ships with a single placeholder route
- * under the main layout; apps replace this with their real routes.
+ * 路由表：单页文件管理器。
  */
 export const router = createBrowserRouter([
   {
     path: '/',
     element: <MainLayout />,
     errorElement: <ErrorBoundary />,
-    children: [
-      {
-        index: true,
-        element: <div style={{ padding: 24 }}>Welcome to the template.</div>,
-      },
-    ],
+    children: [{ index: true, element: <FileManagerPage /> }],
   },
 ]);

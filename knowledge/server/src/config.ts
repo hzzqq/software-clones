@@ -6,8 +6,8 @@ dotenv.config();
 
 /** Application configuration resolved from environment variables. */
 const config = {
-  port: Number(process.env.PORT ?? 4101),
-  corsOrigin: process.env.CORS_ORIGIN ?? 'http://localhost:5173',
+  port: Number(process.env.PORT ?? 4224),
+  corsOrigin: process.env.CORS_ORIGIN ?? 'http://localhost:5204',
   dbPath: process.env.DB_PATH
     ? path.resolve(process.env.DB_PATH)
     : path.resolve(process.cwd(), 'data', 'app.db'),

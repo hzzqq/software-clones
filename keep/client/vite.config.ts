@@ -1,12 +1,12 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-// Vite configuration for the shared frontend template.
-// The dev server port and API base are app-specific and overridden per app.
+// Vite configuration for the Keep client.
+// Dev server port is fixed per-app; API base is injected via VITE_API_BASE (.env).
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 5173,
+    port: 5201,
     host: true,
   },
   build: {
