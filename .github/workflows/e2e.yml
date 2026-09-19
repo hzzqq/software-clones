@@ -25,6 +25,24 @@ jobs:
           - memos
           - lofi
           - nonio
+          - bookmarks
+          - canvas
+          - chatroom
+          - filemanager
+          - fileshare
+          - finance
+          - gallery
+          - gridbase
+          - habit
+          - keep
+          - knowledge
+          - pastebin
+          - pomodoro
+          - rssreader
+          - shlink
+          - snippets
+          - todo
+          - vault
     steps:
       - uses: actions/checkout@v4
 
@@ -32,9 +50,9 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: |
-            package-lock.json
-            ${{ matrix.app }}/client/package-lock.json
+          # 只锚定根 lockfile：部分扩展 App 尚未提交 client lockfile，
+          # 引用不存在的路径会让 setup-node 的缓存步骤直接报错
+          cache-dependency-path: package-lock.json
 
       - name: Install E2E deps
         run: npm ci
@@ -43,7 +61,14 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Install app client deps
-        run: npm --prefix ${{ matrix.app }}/client ci
+        # 有 lockfile 的 App 用 npm ci 严格复现；无 lockfile 的扩展 App 退化为
+        # npm install（首次安装会在 runner 上生成锁），避免缺锁即红
+        run: |
+          if [ -f ${{ matrix.app }}/client/package-lock.json ]; then
+            npm --prefix ${{ matrix.app }}/client ci
+          else
+            npm --prefix ${{ matrix.app }}/client install --no-audit --no-fund
+          fi
 
       - name: Run E2E for ${{ matrix.app }}
         run: npx playwright test --project=${{ matrix.app }}
@@ -56,10 +81,10 @@ jobs:
           path: playwright-report/
           retention-days: 7
 
-  # 真实单测回归闸门：此前 CI 从不在 PR 阶段执行 12 个 App 的单元测试（仅结构校验器检查
+  # 真实单测回归闸门：此前 CI 从不在 PR 阶段执行 App 单元测试（仅结构校验器检查
   # 测试文件“是否存在”）。本作业借助 scripts/verify-apps.mjs 真正运行每个 App 的 client
-  # 单测并汇总，把 636 个用例变成持续红线。server 单测依赖 better-sqlite3 原生绑定，需在
-  # 安装依赖后运行，此处仅门禁 client（已在本地基线验证全绿）。
+  # 单测并汇总，变成持续红线（矩阵覆盖全部 30 个 App）。server 单测依赖 better-sqlite3
+  # 原生绑定，需在安装依赖后运行，此处仅门禁 client（已在本地基线验证全绿）。
   unit-tests:
     runs-on: ubuntu-latest
     strategy:
@@ -78,15 +103,39 @@ jobs:
           - memos
           - lofi
           - nonio
+          - bookmarks
+          - canvas
+          - chatroom
+          - filemanager
+          - fileshare
+          - finance
+          - gallery
+          - gridbase
+          - habit
+          - keep
+          - knowledge
+          - pastebin
+          - pomodoro
+          - rssreader
+          - shlink
+          - snippets
+          - todo
+          - vault
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: ${{ matrix.app }}/client/package-lock.json
+          cache-dependency-path: package-lock.json
       - name: Install app client deps
-        run: npm --prefix ${{ matrix.app }}/client ci
+        # lockfile 感知安装：有锁 npm ci 严格复现，无锁 npm install 兜底
+        run: |
+          if [ -f ${{ matrix.app }}/client/package-lock.json ]; then
+            npm --prefix ${{ matrix.app }}/client ci
+          else
+            npm --prefix ${{ matrix.app }}/client install --no-audit --no-fund
+          fi
       - name: Run unit tests for ${{ matrix.app }}
         run: node scripts/verify-apps.mjs ${{ matrix.app }} --scope client
 

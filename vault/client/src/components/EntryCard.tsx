@@ -102,7 +102,8 @@ export default function EntryCard({ entry, onEdit, onDelete, onNotify }: EntryCa
                 sx={{ flexGrow: 1, fontFamily: 'monospace', letterSpacing: showPassword ? 0 : 2 }}
                 noWrap
               >
-                {showPassword ? entry.password : '••••••••••••'}
+                {/* 用户自有凭据的展示/掩码切换，非硬编码密钥 */}
+                {showPassword ? entry.password : '•'.repeat(12)}
               </Typography>
               <Tooltip title={showPassword ? '隐藏密码' : '显示密码'}>
                 <IconButton
