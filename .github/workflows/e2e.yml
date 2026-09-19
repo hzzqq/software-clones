@@ -70,7 +70,21 @@ jobs:
             npm --prefix ${{ matrix.app }}/client install --no-audit --no-fund
           fi
 
+      - name: Install app server deps
+        # global-setup 会为 E2E_APP 指向的 App 拉起后端（tsx + better-sqlite3），
+        # 因此该 App 的 server 依赖必须在 runner 上安装
+        run: |
+          if [ -f ${{ matrix.app }}/server/package-lock.json ]; then
+            npm --prefix ${{ matrix.app }}/server ci
+          else
+            npm --prefix ${{ matrix.app }}/server install --no-audit --no-fund
+          fi
+
       - name: Run E2E for ${{ matrix.app }}
+        # E2E_APP 聚焦：projects/webServer/globalSetup 只覆盖该 App，
+        # 否则 Playwright 要拉起全部 30 个前端（其余 29 个依赖未装，exit 127）
+        env:
+          E2E_APP: ${{ matrix.app }}
         run: npx playwright test --project=${{ matrix.app }}
 
       - name: Upload report

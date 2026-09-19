@@ -43,6 +43,19 @@ function runSuite(appName, scope) {
   if (!hasTestScript(pkgPath)) {
     return { scope, status: 'no-script', passed: 0, failed: 0, output: '' };
   }
+  // 依赖未安装（无 node_modules）时 vitest 根本无法运行：这是环境缺失，不是用例失败。
+  // 把它记为 env 跳过而非 fail，避免「结构体检」作业在未装依赖的环境里 30 个 App 全数假红；
+  // 真实回归由 CI 的 unit-tests 矩阵作业（逐 App 安装依赖后运行）与本地 npm install 后的
+  // verify-apps 全量运行承担。
+  if (!existsSync(join(cwd, 'node_modules'))) {
+    return {
+      scope,
+      status: 'env',
+      passed: 0,
+      failed: 0,
+      message: '依赖未安装（node_modules 缺失），跳过真实回归',
+    };
+  }
   const r = spawnSync('npm test', {
     cwd,
     encoding: 'utf8',

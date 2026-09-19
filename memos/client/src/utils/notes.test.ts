@@ -195,9 +195,13 @@ describe('monthKeyOf', () => {
   it('月末 UTC 边界在本地跨月时归入本地月份（东八区下 12-31 23:00Z 属次年 1 月）', () => {
     const iso = '2023-12-31T23:00:00.000Z';
     const d = new Date(iso);
-    expect(monthKeyOf(iso)).toBe(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
-    // 在 UTC+8 下应为 2024-01，而非 UTC 的 2023-12。
-    expect(monthKeyOf(iso)).toBe('2024-01');
+    // 期望值由 Date 本地解析派生，不在测试里硬编码 CI（UTC）与本机（UTC+8）的具体时区。
+    const localKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    expect(monthKeyOf(iso)).toBe(localKey);
+    // 该时刻的 UTC 月份是 2023-12：本地时区把它推进次年 1 月时（如 UTC+8）断言跨月生效
+    if (localKey !== iso.slice(0, 7)) {
+      expect(localKey).toBe('2024-01');
+    }
   });
   it('非法 / 空值返回空串', () => {
     expect(monthKeyOf('')).toBe('');
@@ -213,15 +217,21 @@ describe('groupNotesByMonth', () => {
     { id: 4, content: '', visibility: 'private', pinned: false, archived: false, createdAt: '2024-01-05T09:00:00.000Z', updatedAt: '', tags: [] },
     { id: 5, content: '', visibility: 'private', pinned: false, archived: false, createdAt: '2023-12-31T23:00:00.000Z', updatedAt: '', tags: [] },
   ];
+  // note 5 落在 UTC 月末边界：本地月份在东八区为 2024-01、UTC 及以西为 2023-12。
+  // 期望以 monthKeyOf 自身派生，避免把 CI（UTC）或本机（UTC+8）的时区写死进断言。
+  const note5Key = monthKeyOf(notes[4].createdAt);
+  const expectedKeys = [...new Set(['2024-03', '2024-01', note5Key])].sort();
   it('按 YYYY-MM 分到不同月份（本地时区）', () => {
     const grouped = groupNotesByMonth(notes);
-    // 2023-12-31T23:00Z 在 UTC+8 等东八区属 2024-01，按本地月份归入 2024-01。
-    expect(Object.keys(grouped).sort()).toEqual(['2024-01', '2024-03']);
+    expect(Object.keys(grouped).sort()).toEqual(expectedKeys);
     expect(grouped['2024-03'].map((n) => n.id)).toEqual([1, 2]);
-    expect(grouped['2024-01'].map((n) => n.id)).toEqual([3, 4, 5]);
+    // 2024-01 桶在东八区含 note 5，在 UTC 及以西不含
+    expect(grouped['2024-01'].filter((n) => n.id !== 5).map((n) => n.id)).toEqual([3, 4]);
+    expect(grouped[note5Key].map((n) => n.id)).toContain(5);
   });
   it('键按时间倒序（最新月份在前）', () => {
-    expect(Object.keys(groupNotesByMonth(notes))).toEqual(['2024-03', '2024-01']);
+    const keys = Object.keys(groupNotesByMonth(notes));
+    expect(keys).toEqual([...keys].sort().reverse());
   });
   it('空入参返回空对象', () => {
     expect(groupNotesByMonth([])).toEqual({});
@@ -232,7 +242,10 @@ describe('groupNotesByMonth', () => {
     expect(notes.map((n) => n.id)).toEqual(before);
     // 每个桶内的笔记保持原相对顺序
     expect(grouped['2024-03'].map((n) => n.id)).toEqual([1, 2]);
-    expect(grouped['2024-01'].map((n) => n.id)).toEqual([3, 4, 5]);
+    expect(grouped[note5Key].filter((n) => n.id !== 3 && n.id !== 4).map((n) => n.id)).toEqual(
+      note5Key === '2024-01' ? [5] : []
+    );
+    expect(grouped['2024-01'].filter((n) => n.id !== 5).map((n) => n.id)).toEqual([3, 4]);
   });
   it('忽略无法解析为 YYYY-MM 的 createdAt', () => {
     const dirty: Note[] = [
