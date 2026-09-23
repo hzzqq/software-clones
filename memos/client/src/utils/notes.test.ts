@@ -242,10 +242,11 @@ describe('groupNotesByMonth', () => {
     expect(notes.map((n) => n.id)).toEqual(before);
     // 每个桶内的笔记保持原相对顺序
     expect(grouped['2024-03'].map((n) => n.id)).toEqual([1, 2]);
-    expect(grouped[note5Key].filter((n) => n.id !== 3 && n.id !== 4).map((n) => n.id)).toEqual(
-      note5Key === '2024-01' ? [5] : []
-    );
-    expect(grouped['2024-01'].filter((n) => n.id !== 5).map((n) => n.id)).toEqual([3, 4]);
+    // 2024-01 桶在东八区为 [3,4,5]，UTC 及以西为 [3,4]
+    expect(grouped['2024-01'].map((n) => n.id)).toEqual(note5Key === '2024-01' ? [3, 4, 5] : [3, 4]);
+    if (note5Key === '2023-12') {
+      expect(grouped['2023-12'].map((n) => n.id)).toEqual([5]);
+    }
   });
   it('忽略无法解析为 YYYY-MM 的 createdAt', () => {
     const dirty: Note[] = [

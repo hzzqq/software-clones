@@ -24,13 +24,14 @@ import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import TableChartIcon from '@mui/icons-material/TableChart';
 import { ApiError } from '../api/client';
 import { gridApi } from '../api/gridbase';
-import type { Table } from '../types';
+// MUI 的 <Table> 组件与领域类型 Table 同名，类型侧别名为 GridTable 避免重复声明
+import type { Table as GridTable } from '../types';
 
 /**
  * 表列表主页：新建 / 重命名 / 删除表，并进入网格视图。
  */
 export default function TablesPage(): JSX.Element {
-  const [tables, setTables] = useState<Table[]>([]);
+  const [tables, setTables] = useState<GridTable[]>([]);
   const [newName, setNewName] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
@@ -66,7 +67,7 @@ export default function TablesPage(): JSX.Element {
     }
   };
 
-  const handleRename = async (table: Table): Promise<void> => {
+  const handleRename = async (table: GridTable): Promise<void> => {
     const next = window.prompt('重命名表', table.name);
     if (next === null) {
       return;
@@ -84,7 +85,7 @@ export default function TablesPage(): JSX.Element {
     }
   };
 
-  const handleDelete = async (table: Table): Promise<void> => {
+  const handleDelete = async (table: GridTable): Promise<void> => {
     if (!window.confirm(`删除表「${table.name}」？该表所有字段与数据将一并删除。`)) {
       return;
     }

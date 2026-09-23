@@ -14,7 +14,7 @@ import { pomodoroRouter } from './routes/pomodoro';
 export const app = express();
 
 app.use(cors({ origin: CORS_ORIGIN }));
-app.use(securityHeaders());
+app.use(securityHeaders);
 app.use(express.json({ limit: '2mb' }));
 
 // Mount API routes under the shared `/api` prefix.
