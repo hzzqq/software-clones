@@ -41,7 +41,7 @@ test('便签创建（含标签与清单）后详情与活动列表均可查询�
       title,
       body: 'e2e 便签正文',
       color: 'teal',
-      labels: 'e2e, Smoke',
+      labels: ['e2e', 'Smoke'],
       items: [
         { text: '清单项一', done: false },
         { text: '清单项二', done: true },

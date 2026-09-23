@@ -19,7 +19,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
 import NoteIcon from '@mui/icons-material/Note';
 import type { Note, NoteLabel, NoteView } from '../types';
-import { NOTE_COLOR_OPTIONS } from '../types';
+import { NOTE_COLORS, NOTE_COLOR_OPTIONS } from '../types';
 import { ApiError } from '../api/client';
 import { notesApi } from '../api/notes';
 import NoteCard from '../components/NoteCard';
